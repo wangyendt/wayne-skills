@@ -7,12 +7,193 @@ import email.policy
 import json
 import mimetypes
 import os
+import re
 import smtplib
 import ssl
 import sys
 from email.utils import formataddr
 from pathlib import Path
 from typing import Optional
+
+import markdown
+
+
+def is_markdown_content(content: str) -> bool:
+    """Detect if content is in markdown format.
+
+    Args:
+        content: Text content to check
+
+    Returns:
+        True if content appears to be markdown
+    """
+    # Check for common markdown patterns
+    markdown_patterns = [
+        r'^#{1,6}\s+.+$',  # Headers
+        r'^\*{1,3}.+\*{1,3}$',  # Bold/italic
+        r'^\s*[-*+]\s+',  # Unordered lists
+        r'^\s*\d+\.\s+',  # Ordered lists
+        r'^\s*>\s+',  # Blockquotes
+        r'```',  # Code blocks
+        r'\[.+\]\(.+\)',  # Links
+        r'^\s*---+\s*$',  # Horizontal rules
+        r'^\*\*.+\*\*',  # Bold
+    ]
+
+    lines = content.split('\n')
+    markdown_score = 0
+
+    for line in lines:
+        for pattern in markdown_patterns:
+            if re.match(pattern, line.strip(), re.MULTILINE):
+                markdown_score += 1
+                break
+
+    # If more than 20% of lines have markdown syntax, consider it markdown
+    return markdown_score > len(lines) * 0.2 or markdown_score > 3
+
+
+def markdown_to_html(content: str) -> str:
+    """Convert markdown content to styled HTML.
+
+    Args:
+        content: Markdown text
+
+    Returns:
+        HTML formatted content with styling
+    """
+    # Use markdown library with extensions
+    html = markdown.markdown(
+        content,
+        extensions=['extra', 'nl2br', 'sane_lists', 'tables']
+    )
+
+    # Wrap with email-friendly styling
+    styled_html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }}
+        .email-content {{
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }}
+        h1 {{
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }}
+        h2 {{
+            color: #34495e;
+            border-bottom: 2px solid #95a5a6;
+            padding-bottom: 8px;
+            margin-top: 30px;
+        }}
+        h3 {{
+            color: #5d6d7e;
+            margin-top: 25px;
+        }}
+        h4 {{
+            color: #7f8c8d;
+        }}
+        p {{
+            margin: 12px 0;
+        }}
+        ul, ol {{
+            margin: 12px 0;
+            padding-left: 30px;
+        }}
+        li {{
+            margin: 8px 0;
+        }}
+        code {{
+            background-color: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #e74c3c;
+        }}
+        pre {{
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+            overflow-x: auto;
+        }}
+        pre code {{
+            background-color: transparent;
+            padding: 0;
+            color: inherit;
+        }}
+        blockquote {{
+            border-left: 4px solid #3498db;
+            padding-left: 20px;
+            margin: 15px 0;
+            color: #555;
+            font-style: italic;
+        }}
+        strong {{
+            color: #2c3e50;
+            font-weight: 600;
+        }}
+        em {{
+            color: #34495e;
+        }}
+        hr {{
+            border: none;
+            border-top: 2px solid #ecf0f1;
+            margin: 30px 0;
+        }}
+        table {{
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }}
+        th, td {{
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }}
+        th {{
+            background-color: #3498db;
+            color: white;
+            font-weight: 600;
+        }}
+        tr:nth-child(even) {{
+            background-color: #f8f9fa;
+        }}
+        a {{
+            color: #3498db;
+            text-decoration: none;
+        }}
+        a:hover {{
+            text-decoration: underline;
+        }}
+    </style>
+</head>
+<body>
+    <div class="email-content">
+        {html}
+    </div>
+</body>
+</html>
+"""
+    return styled_html
 
 
 def read_template(template_path: str, variables: dict) -> str:
@@ -169,6 +350,13 @@ def main():
     else:
         content = ""
 
+    # Auto-detect and convert markdown to HTML
+    content_type = args.content_type
+    if content and content_type == 'plain' and is_markdown_content(content):
+        print("Detected markdown content, converting to HTML...", file=sys.stderr)
+        content = markdown_to_html(content)
+        content_type = 'html'
+
     success = send_email(
         to=args.to,
         subject=args.subject,
@@ -179,7 +367,7 @@ def main():
         password=args.password,
         from_addr=args.from_addr,
         from_name=args.from_name,
-        content_type=args.content_type,
+        content_type=content_type,
         attachments=args.attach,
         use_tls=not args.no_tls,
         use_ssl=args.use_ssl,

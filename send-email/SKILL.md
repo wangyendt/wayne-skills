@@ -1,6 +1,7 @@
 ---
 name: send-email
 description: "Send emails via SMTP with support for HTML formatting, file attachments, and email templates. Use when users ask to: (1) Send an email, (2) Email someone, (3) Send a notification, (4) Use email templates, or (5) Send files via email."
+dependencies: python>=3.8, markdown>=3.4.0
 ---
 
 # Send Email
@@ -20,7 +21,9 @@ Ask the user for the following required information. If any is missing, prompt t
 | **Recipient** (`--to`) | Email address to send to | `user@example.com` |
 | **Subject** (`--subject`) | Email subject line | `Monthly Report` |
 | **Content** (`--content`) | Email body text or HTML | `Hello, here is your report.` |
-| **Sender Email** | Your email address to send from | `your@gmail.com` |
+| **Sender Email** | Your email address to send from (defaults to `agent_skill_test@126.com` if not provided) | `your@gmail.com` |
+
+**Default Sender Email**: If the user doesn't specify a sender email, use `agent_skill_test@126.com` as the default. You'll need to ask for the authorization code for this 126.com email account.
 
 ### Step 2: Identify Email Provider and Collect Credentials
 
@@ -125,15 +128,32 @@ Ask the user to provide:
 - Username
 - Password
 
-### Step 3: Collect Optional Information (if needed)
+### Step 3: Auto-detect and Handle Markdown Content
+
+The script automatically detects if the email content is in Markdown format by looking for common patterns:
+- Headers (`#`, `##`, `###`)
+- Bold/italic text (`**bold**`, `*italic*`)
+- Lists (`- item` or `1. item`)
+- Code blocks (```)
+- Links (`[text](url)`)
+
+If Markdown is detected, the content is automatically converted to beautifully styled HTML with:
+- Professional typography and spacing
+- Color-coded headers
+- Styled tables and code blocks
+- Responsive design for email clients
+
+**You don't need to manually specify `--content-type html` for Markdown content** - it's handled automatically!
+
+### Step 4: Collect Optional Information (if needed)
 
 - `--from-name`: Display name for sender (e.g., "John Doe")
-- `--content-type html`: For HTML formatted emails (defaults to plain text)
+- `--content-type html`: For HTML formatted emails (defaults to plain text, but auto-converts Markdown)
 - `--attach`: File path(s) to attach (can specify multiple)
 - `--template`: Use template file instead of content
 - `--template-vars`: JSON string of template variables
 
-### Step 4: Confirm and Send
+### Step 5: Confirm and Send
 
 Before sending, confirm with the user:
 
@@ -184,7 +204,37 @@ Proceed to send? (y/n)
 
 ---
 
-### Example 2: QQ Mail with HTML
+### Example 2: Markdown Content with Default Sender
+
+**User**: 发一封邮件给 manager@company.com,主题是"AR眼镜行业分析",内容是 [用户提供的 Markdown 报告]
+
+**Skill**: 我来帮您发送这封邮件。检测到您没有指定发件人邮箱,我将使用默认邮箱 `agent_skill_test@126.com` 发送。
+
+同时,我发现您的内容是 Markdown 格式,将自动转换为美观的 HTML 格式,让报告更易读。
+
+为了使用 126 邮箱发送,我需要您提供 **SMTP 授权码**。
+
+获取授权码步骤:
+1. 登录 126 邮箱 → 设置 → POP3/SMTP/IMAP
+2. 启用 "IMAP/SMTP 服务"
+3. 复制显示的授权密码
+
+**请提供 agent_skill_test@126.com 的授权码:**
+
+**User**: [提供授权码]
+
+**Skill**: 准备发送邮件:
+- 发件人: agent_skill_test@126.com
+- 收件人: manager@company.com
+- 主题: AR眼镜行业分析
+- 格式: Markdown → HTML (自动转换)
+- 内容预览: 包含标题、列表、表格等格式化内容
+
+确认发送? (y/n)
+
+---
+
+### Example 3: QQ Mail with HTML
 
 **User**: 发邮件给 user@qq.com，主题是项目报告
 
@@ -219,7 +269,7 @@ Proceed to send? (y/n)
 
 ---
 
-### Example 3: Email with Attachment
+### Example 4: Email with Attachment
 
 **User**: Send a report to boss@company.com about the Q4 results
 
@@ -248,7 +298,7 @@ Proceed to send? (y/n)
 
 ---
 
-### Example 4: Custom SMTP
+### Example 5: Custom SMTP
 
 **User**: Send email to test@domain.com from my@domain.com
 
@@ -368,6 +418,16 @@ python3 scripts/send_email.py \
 | SendGrid | smtp.sendgrid.net | 587 | TLS | API Key | `apikey` |
 | SendGrid | smtp.sendgrid.net | 465 | SSL | API Key | `apikey` |
 | Mailgun | smtp.mailgun.org | 587 | TLS | SMTP Password | From dashboard |
+
+## Installation
+
+Before using this skill, install the required Python dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+This installs the `markdown` library (version ≥3.4.0) which is required for automatic Markdown to HTML conversion.
 
 ## Resources
 
