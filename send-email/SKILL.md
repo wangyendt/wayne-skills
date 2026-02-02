@@ -8,6 +8,14 @@ dependencies: python>=3.8, markdown>=3.4.0
 
 Send emails via SMTP using Python with support for plain text, HTML formatting, file attachments, and template-based emails.
 
+## Key Features
+
+- **Default Sender Email**: Automatically uses `agent_skill_test@126.com` when no sender is specified
+- **Automatic Markdown to HTML**: Detects Markdown content and converts to beautifully styled HTML
+- **Multiple Email Providers**: Supports Gmail, Outlook, QQ Mail, 163/126 Mail, and custom SMTP
+- **File Attachments**: Attach multiple files to emails
+- **Email Templates**: Use template files with variable substitution
+
 ## Interactive Email Sending Flow
 
 This skill guides you through the email sending process step by step.
@@ -21,9 +29,14 @@ Ask the user for the following required information. If any is missing, prompt t
 | **Recipient** (`--to`) | Email address to send to | `user@example.com` |
 | **Subject** (`--subject`) | Email subject line | `Monthly Report` |
 | **Content** (`--content`) | Email body text or HTML | `Hello, here is your report.` |
-| **Sender Email** | Your email address to send from (defaults to `agent_skill_test@126.com` if not provided) | `your@gmail.com` |
 
-**Default Sender Email**: If the user doesn't specify a sender email, use `agent_skill_test@126.com` as the default. You'll need to ask for the authorization code for this 126.com email account.
+**IMPORTANT - Default Sender Email Behavior**:
+
+**If the user does NOT specify a sender email in their initial request, AUTOMATICALLY use `agent_skill_test@126.com` as the default sender. DO NOT ask the user which email to send from.**
+
+Only ask the user for a different sender email if they explicitly mention wanting to use their own email address.
+
+When using the default `agent_skill_test@126.com`, proceed directly to Step 2 and ask for the 126 email authorization code.
 
 ### Step 2: Identify Email Provider and Collect Credentials
 
@@ -234,52 +247,48 @@ Proceed to send? (y/n)
 
 ---
 
-### Example 3: QQ Mail with HTML
+### Example 3: Default Sender with Missing Content
 
-**User**: 发邮件给 user@qq.com，主题是项目报告
+**User**: 发邮件给 user@company.com，主题是项目报告
 
-**Skill**: 我需要收集一些信息来发送邮件：
+**Skill**: 我需要收集邮件内容：
 
-1. **发件人邮箱**: 您用哪个邮箱发送？
-2. **邮件内容**: 邮件正文是什么？
-3. **邮件格式**: 普通文本还是HTML格式？
+**邮件正文是什么？**
 
-**User**: 发件人是 my@qq.com，内容是项目已完成，用HTML
+**User**: 项目已完成，所有里程碑都已达成。
 
-**Skill**: 检测到您使用 QQ 邮箱。QQ 邮箱需要使用 SMTP 授权码（不是登录密码）。
+**Skill**: 我将使用默认邮箱 `agent_skill_test@126.com` 发送。
+
+为了使用 126 邮箱发送，我需要您提供 **SMTP 授权码**。
 
 获取授权码步骤：
-1. 登录 QQ 邮箱 → 设置 → 账户
-2. 开启 "POP3/SMTP 服务" 或 "IMAP/SMTP 服务"
-3. 点击 "生成授权码"
-4. 验证身份后复制授权码
+1. 登录 126 邮箱 → 设置 → POP3/SMTP/IMAP
+2. 启用 "IMAP/SMTP 服务"
+3. 复制显示的授权密码
 
-**请提供您的 QQ 邮箱 SMTP 授权码：**
+**请提供 agent_skill_test@126.com 的授权码：**
 
-**User**: mycode123
+**User**: [提供授权码]
 
 **Skill**: 准备发送邮件：
-- 发件人: my@qq.com
-- 收件人: user@qq.com
+- 发件人: agent_skill_test@126.com
+- 收件人: user@company.com
 - 主题: 项目报告
-- 内容: 项目已完成
-- 格式: HTML
+- 内容: 项目已完成，所有里程碑都已达成。
 
 确认发送？(y/n)
 
 ---
 
-### Example 4: Email with Attachment
+### Example 4: User Specifies Custom Sender Email
 
-**User**: Send a report to boss@company.com about the Q4 results
+**User**: Send a report to boss@company.com from myname@outlook.com about Q4 results, with attachment /home/user/q4_report.pdf
 
-**Skill**: I'll help you send that email. Please provide:
+**Skill**: I'll help you send that email. Please provide the email content:
 
-1. **Sender Email**: What email address should I send from?
-2. **Report Content**: What should the email say about the Q4 results?
-3. **Attachment**: What is the path to the report file?
+**What should the email say about the Q4 results?**
 
-**User**: myname@outlook.com, the email says "Please find attached the Q4 financial report. Let me know if you have any questions." Attachment is /home/user/q4_report.pdf
+**User**: Please find attached the Q4 financial report. Let me know if you have any questions.
 
 **Skill**: I see you're using Outlook. You'll need your Outlook account password (same as web login).
 
