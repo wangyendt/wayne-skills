@@ -1,5 +1,5 @@
 ---
-name: pywayne-llm-chat_bot
+name: pywayne-llm-chat-bot
 description: LLM chat interface using OpenAI-compatible APIs with streaming support and session management. Use when working with pywayne.llm.chat_bot module for creating LLM chat instances with custom configuration, managing multi-turn conversations with history, handling streaming responses, or managing multiple chat sessions with ChatManager
 ---
 

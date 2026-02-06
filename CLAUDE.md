@@ -6,8 +6,8 @@
 
 **目录结构：**
 - 所有 pywayne skill 都应放在 `pywayne/` 目录下
-- 子目录名使用连字符（`-`），对应源码模块名（下划线转连字符）
-- SKILL.md 的 `name` 字段使用完整路径（连字符分隔）
+- 子目录名使用连字符（`-`），Python 模块的下划线 `_` 转连字符 `-`
+- SKILL.md 的 `name` 字段使用完整路径（连字符分隔，符合 hyphen-case 规范）
 
 **示例：**
 
@@ -18,16 +18,17 @@
 | `pywayne/tts` | `pywayne/tts/` | `pywayne-tts` |
 | `pywayne/bin/gettool` | `pywayne/bin/gettool/` | `pywayne-bin-gettool` |
 | `pywayne/bin/gitstats` | `pywayne/bin/gitstats/` | `pywayne-bin-gitstats` |
-| `pywayne/calibration/magnetometer_calibration.py` | `pywayne/calibration/magnetometer_calibration/` | `pywayne-calibration-magnetometer-calibration` |
+| `pywayne/calibration/magnetometer_calibration.py` | `pywayne/calibration/magnetometer-calibration/` | `pywayne-calibration-magnetometer-calibration` |
 | `pywayne/vio/tools.py` | `pywayne/vio/tools/` | `pywayne-vio-tools` |
 | `pywayne/vio/SE3.py` | `pywayne/vio/se3/` | `pywayne-vio-se3` |
-| `pywayne/vio/tools.py` | `pywayne/vio/tools/` | `pywayne-vio-tools` |
 | `pywayne/vio/SO3.py` | `pywayne/vio/so3/` | `pywayne-vio-so3` |
+| `pywayne/llm/chat_bot.py` | `pywayne/llm/chat-bot/` | `pywayne-llm-chat-bot` |
 
 **命名原则：**
-1. 目录结构：`pywayne/<module-name>/`，Python 模块的下划线 `_` 转连字符 `-`
-2. Skill name：将路径 `/` 替换为 `-`，全部使用小写
-3. 保持与 pywayne 源码目录一致的结构
+1. 源码使用下划线：Python 模块名遵循 PEP8 规范使用下划线（如 `chat_bot.py`）
+2. Skill 目录使用连字符：下划线 `_` 转连字符 `-`（如 `chat-bot/`）
+3. Skill name 使用连字符：将路径 `/` 替换为 `-`，全部使用小写（如 `pywayne-llm-chat-bot`）
+4. 符合 hyphen-case 规范：只允许小写字母、数字和连字符（打包脚本验证要求）
 
 **目的：**
 - 使 skill 目录结构与 pywayne 库的代码组织保持一致
