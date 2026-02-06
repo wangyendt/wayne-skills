@@ -30,24 +30,28 @@
 
 ## Skill 创建后清理
 
-创建 skill 并打包后，**必须删除以下文件/目录**：
+创建 skill 并打包后，**必须执行以下清理**：
 
-1. **`.skill` 文件** - 打包后的文件不需要保留
-2. **空的 skill 目录** - 如果 skill 没有 scripts/references/assets，只包含 SKILL.md，则删除其中空的目录
+1. **删除 `.skill` 文件** - 打包文件不需要保留在源码仓库中
+2. **删除 `scripts/references/assets` 中的空文件夹** - 保留非空的文件夹
 
 **原因：**
-- `.skill` 文件只是用于分发，源码仓库中不需要保留
-- 只有 SKILL.md 的 skill 可以直接放在父目录，减少目录层级
+- `.skill` 文件只用于分发，源码仓库不需要
+- 避免空目录占用仓库空间
 
 **示例：**
 ```
 # 创建后（需要清理）
 pywayne/
-├── pywayne-plot/          # 只包含 SKILL.md，删除
-│   └── SKILL.md
+├── plot/
+│   ├── SKILL.md
+│   ├── scripts/           # 空，删除
+│   ├── references/        # 空，删除
+│   └── assets/            # 空，删除
 └── pywayne-plot.skill      # 打包文件，删除
 
 # 清理后
 pywayne/
-└── SKILL.md               # pywayne-plot/SKILL.md 移到这里
+├── plot/
+│   └── SKILL.md
 ```
