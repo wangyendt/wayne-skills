@@ -18,6 +18,7 @@
 | `pywayne/tts` | `pywayne/tts/` | `pywayne-tts` |
 | `pywayne/bin/gettool` | `pywayne/bin/gettool/` | `pywayne-bin-gettool` |
 | `pywayne/bin/gitstats` | `pywayne/bin/gitstats/` | `pywayne-bin-gitstats` |
+| `pywayne/calibration/magnetometer_calibration.py` | `pywayne/calibration/magnetometer_calibration/` | `pywayne-calibration-magnetometer-calibration` |
 
 **命名原则：**
 1. 目录结构：`pywayne/<module-name>/`，Python 模块的下划线 `_` 转连字符 `-`
