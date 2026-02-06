@@ -1,66 +1,39 @@
 ---
 name: pywayne-tools
-description: Collection of Python utility decorators and helper functions from pywayne.tools module. Use when users need: (1) Function execution timing and profiling (@func_timer, @func_timer_batch), (2) Colored console output with debug modes (wayne_print), (3) File operations (list_all_files, count_file_lines), (4) YAML config read/write (read_yaml_config, write_yaml_config), (5) Logger setup with colored output (wayne_logger), (6) Function call tracing (@trace_calls), or (7) Other utilities like @singleton, @maximize_figure, compose_funcs, say().
+description: Utility functions from pywayne.tools module. Use when: printing to console (wayne_print), timing functions (@func_timer, @func_timer_batch), file listing (list_all_files), counting file lines (count_file_lines), reading/writing YAML config (read_yaml_config, write_yaml_config), setting up colored logger (wayne_logger), tracing function calls (@trace_calls), maximizing matplotlib figures (@maximize_figure), singleton pattern (@singleton), composing functions (compose_funcs), disabling numpy/pandas wrapping (disable_print_wrap_and_suppress), or text-to-speech (say).
 ---
 
 # Pywayne Tools
 
 Utility decorators and helper functions from `pywayne.tools` module.
 
-## Quick Start
-
-```python
-# Color output
-from pywayne.tools import wayne_print
-wayne_print("Success", color="green")
-
-# Function timing
-from pywayne.tools import func_timer
-
-@func_timer
-def my_function():
-    time.sleep(1)
-```
-
 ## Decorators
 
-### @func_timer
-
-Measure single function execution time.
+### @func_timer - Time function execution
 
 ```python
 from pywayne.tools import func_timer
 
 @func_timer
 def compute():
-    # Heavy computation
-    pass
+    time.sleep(1)
 ```
 
-**Use case**: Performance tuning, monitoring critical functions.
-
-### @func_timer_batch
-
-Track multiple function calls with total elapsed time.
+### @func_timer_batch - Track multiple calls with total time
 
 ```python
 from pywayne.tools import func_timer_batch
 
 @func_timer_batch
 def process_data(data):
-    # Batch processing
     pass
 
-# Get statistics
+# Access statistics
 print(f"Calls: {process_data.num_calls}")
 print(f"Total time: {process_data.elapsed_time:.3f}s")
 ```
 
-**Use case**: Batch processing, repeated function calls performance analysis.
-
-### @maximize_figure
-
-Maximize matplotlib figure window automatically.
+### @maximize_figure - Maximize matplotlib window
 
 ```python
 from pywayne.tools import maximize_figure
@@ -72,11 +45,7 @@ def plot_results(results):
     plt.show()
 ```
 
-**Use case**: Full-screen presentations, matplotlib visualization.
-
-### @singleton
-
-Ensure a class is instantiated only once.
+### @singleton - Ensure single instance
 
 ```python
 from pywayne.tools import singleton
@@ -85,17 +54,12 @@ from pywayne.tools import singleton
 class ConfigManager:
     pass
 
-# Both calls return same instance
 c1 = ConfigManager()
 c2 = ConfigManager()
-assert c1 is c2  # True
+assert c1 is c2
 ```
 
-**Use case**: Database connections, config managers, shared resources.
-
-### @trace_calls
-
-Trace function calls with detailed logging. Supports `print_type='default'` or `print_type='pprint'`.
+### @trace_calls - Trace function calls
 
 ```python
 from pywayne.tools import trace_calls
@@ -105,37 +69,24 @@ def some_function(x, y):
     return x + y
 ```
 
-**Use case**: Debugging complex systems, understanding call relationships.
-
 ## File Operations
 
-### list_all_files
-
-List files in directory with keyword filtering.
+### list_all_files - List files with keyword filtering
 
 ```python
 from pywayne.tools import list_all_files
 
-# All files with ".txt" in name
+# Files must contain ".txt"
 files = list_all_files("./data", keys_and=[".txt"], full_path=True)
 
-# Files with at least one keyword
+# Files must contain at least one keyword
 files = list_all_files("./src", keys_or=[".py", ".json"])
 
 # Exclude certain files
 files = list_all_files("./", outliers=["__pycache__", ".git"])
 ```
 
-**Parameters**:
-- `root`: Root directory to search
-- `keys_and`: Files must contain ALL these keywords
-- `keys_or`: Files must contain AT LEAST ONE of these keywords
-- `outliers`: Files must NOT contain these keywords
-- `full_path`: Return full paths if True
-
-### count_file_lines
-
-Count lines in a file efficiently (block-based reading for large files).
+### count_file_lines - Count lines in file
 
 ```python
 from pywayne.tools import count_file_lines
@@ -146,9 +97,7 @@ print(f"Lines: {num_lines}")
 
 ## Logging and Printing
 
-### wayne_logger
-
-Create colored logger with console and file output.
+### wayne_logger - Create colored logger
 
 ```python
 from pywayne.tools import wayne_logger
@@ -157,22 +106,16 @@ logger = wayne_logger(
     logger_name="myLogger",
     project_version="1.0.0",
     log_root="./logs",
-    stream_level=logging.DEBUG,      # Console level
-    single_file_level=logging.INFO,  # main.log level
-    batch_file_level=logging.DEBUG  # batch log level
+    stream_level=logging.DEBUG,
+    single_file_level=logging.INFO,
+    batch_file_level=logging.DEBUG
 )
 
 logger.info("Application started")
 logger.debug("Debug message")
 ```
 
-**Output files**:
-- `./logs/main.log` - Single rolling log file
-- `./logs/batches/{version}_{timestamp}.log` - Batch log files
-
-### wayne_print
-
-Colored console output with multi-level debug mode.
+### wayne_print - Colored console output with debug modes
 
 ```python
 from pywayne.tools import wayne_print
@@ -190,18 +133,11 @@ wayne_print("Detailed debug", color="red", verbose=2)
 
 **Colors**: `default`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`
 
-**Verbose levels**:
-- `0` or `False`: No debug (default)
-- `1` or `True`: Simple debug (timestamp + file + line)
-- `2`: Full debug (complete call stack)
-
-**Auto-pprint**: Complex data types (dict, list, tuple, set) are automatically formatted with pprint.
+**Verbose levels**: `0`/False (no debug), `1`/True (simple debug), `2` (full debug with call stack)
 
 ## Config File Operations
 
-### write_yaml_config
-
-Write config dictionary to YAML file with file lock protection.
+### write_yaml_config - Write config to YAML
 
 ```python
 from pywayne.tools import write_yaml_config
@@ -218,9 +154,7 @@ write_yaml_config("config.yaml", config, update=True)
 write_yaml_config("config.yaml", config, use_lock=True)
 ```
 
-### read_yaml_config
-
-Read config from YAML file with file lock protection.
+### read_yaml_config - Read config from YAML
 
 ```python
 from pywayne.tools import read_yaml_config
@@ -231,9 +165,7 @@ print(config)
 
 ## Other Utilities
 
-### compose_funcs
-
-Compose multiple functions into one.
+### compose_funcs - Compose multiple functions
 
 ```python
 from pywayne.tools import compose_funcs
@@ -241,24 +173,20 @@ from pywayne.tools import compose_funcs
 def f(x): return x + 1
 def g(x): return x * 2
 h = compose_funcs(f, g)
-print(h(3))  # Output: 8 (f(g(3)) = (3+1)*2 = 8)
+print(h(3))  # Output: 8 (f(g(3)) = (3+1)*2 = 8
 ```
 
-### disable_print_wrap_and_suppress
-
-Disable numpy/pandas line wrapping and scientific notation.
+### disable_print_wrap_and_suppress - Disable numpy/pandas wrapping
 
 ```python
 from pywayne.tools import disable_print_wrap_and_suppress
 
 disable_print_wrap_and_suppress()
 import numpy as np
-print(np.arange(1000))  # Now prints without wrapping
+print(np.arange(1000))
 ```
 
-### say
-
-Text-to-speech using system TTS engine.
+### say - Text-to-speech
 
 ```python
 from pywayne.tools import say
@@ -269,11 +197,9 @@ say("Hello, world", lang='en')
 say("你好，欢迎使用pywayne", lang='zh')
 ```
 
-**Note**: Supports macOS and Linux only. Raises `NotImplementedError` on Windows.
+**Note**: Supports macOS and Linux only.
 
-### leader_speech
-
-Generate corporate-style placeholder text (for fun/testing).
+### leader_speech - Generate corporate placeholder text
 
 ```python
 from pywayne.tools import leader_speech
@@ -308,5 +234,5 @@ from pywayne.tools import (
 
 - `matplotlib` - For @maximize_figure
 - `yaml` - For config operations
-- `filelock` - For file lock protection in config ops
+- `filelock` - For file lock protection
 - `Pillow` (optional) - PIL support
