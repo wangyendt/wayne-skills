@@ -1,9 +1,9 @@
 ---
-name: gitstats
+name: pywayne-bin-gitstats
 description: Analyze and visualize Git commit time distribution. Use when users need to analyze Git repository commit patterns, generate commit statistics, visualize commit activity by time, hour, or weekday. Triggered by requests to analyze commits, show commit distribution, visualize Git activity, or generate commit time statistics.
 ---
 
-# Gitstats
+# Pywayne Bin Gitstats
 
 Analyze Git repository commit time distribution and generate visualizations.
 
@@ -99,7 +99,7 @@ gitstats --since "1 year ago" --all --save yearly_stats.png
 gitstats --branch main --since "90 days ago" --tz UTC
 
 # Develop branch, date range, show plot
-gitstats --branch develop --since 2024-01-01 --until 2024-06-30 -p
+gitstats --branch develop --since "2024-01-01" --until "2024-06-30" -p
 ```
 
 ## Command Reference

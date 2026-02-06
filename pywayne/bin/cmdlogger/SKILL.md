@@ -1,9 +1,9 @@
 ---
-name: cmdlogger
+name: pywayne-bin-cmdlogger
 description: Execute commands with full I/O logging. Use when users need to record the complete execution of a command including stdin, stdout, and stderr to a log file while maintaining real-time console output. Triggered by requests to log, record, monitor, or trace command execution, especially for builds, long-running scripts, debugging sessions, or CI/CD processes.
 ---
 
-# Cmdlogger
+# Pywayne Bin Cmdlogger
 
 Execute a command and log all stdin, stdout, stderr to a file while forwarding I/O to console in real-time.
 
@@ -79,7 +79,7 @@ cmdlogger echo "Hello World"
 
 ## Log Format
 
-Each line in the log file is prefixed with the stream type:
+Each line in the log file is prefixed with stream type:
 
 - `输入: <content>` - Standard input
 - `输出: <content>` - Standard output

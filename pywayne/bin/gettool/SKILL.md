@@ -1,11 +1,11 @@
 ---
-name: gettool
-description: Fetch and install C++ tools/libraries from the cpp_tools repository. Use when users need to download or clone third-party C++ libraries such as eigen, opencv, pcl, fmt. Use for building tools from source using CMake, installing tools with installation scripts, listing available tools, or managing the cpp_tools repository URL. Triggered by requests to fetch, get, download, clone, or install C++ tools or libraries.
+name: pywayne-bin-gettool
+description: Fetch and install C++ tools/libraries from cpp_tools repository. Use when users need to download or clone third-party C++ libraries such as eigen, opencv, pcl, fmt. Use for building tools from source using CMake, installing tools with installation scripts, listing available tools, or managing cpp_tools repository URL. Triggered by requests to fetch, get, download, clone, or install C++ tools or libraries.
 ---
 
-# Gettool
+# Pywayne Bin Gettool
 
-Tool fetcher for C++ libraries from the cpp_tools repository. Supports sparse checkout, optional building with CMake/make, and installation scripts.
+Tool fetcher for C++ libraries from cpp_tools repository. Supports sparse checkout, optional building with CMake/make, and installation scripts.
 
 ## Quick Start
 
@@ -24,9 +24,6 @@ gettool <tool_name> -b
 
 # Fetch and install (if installable)
 gettool <tool_name> -i
-
-# Fetch specific version (only for submodules)
-gettool <tool_name> -v <version/tag>
 ```
 
 ## Usage Patterns
@@ -97,9 +94,14 @@ gettool fmt -v 9.1.0
 ### 8. Manage Repository URL
 
 ```bash
-gettool --get-url              # Show current URL
-gettool --set-url <URL>        # Set custom URL
-gettool --reset-url            # Reset to default: https://github.com/wangyendt/cpp_tools
+# Show current URL
+gettool --get-url
+
+# Set custom URL
+gettool --set-url <URL>
+
+# Reset to default URL
+gettool --reset-url
 ```
 
 ## Command Reference
@@ -138,7 +140,6 @@ Example: If `opencv` maps to `third_party/opencv`, running `gettool opencv` crea
 
 ## Prerequisites
 
-- Python 3 (required by CMake build process)
 - Git
 - CMake and make (for `-b` flag)
 - Appropriate C++ toolchain (for building)
