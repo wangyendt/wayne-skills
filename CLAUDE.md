@@ -20,14 +20,14 @@
 | `pywayne/bin/gitstats` | `pywayne/bin/gitstats/` | `pywayne-bin-gitstats` |
 | `pywayne/calibration/magnetometer_calibration.py` | `pywayne/calibration/magnetometer_calibration/` | `pywayne-calibration-magnetometer-calibration` |
 | `pywayne/vio/tools.py` | `pywayne/vio/tools/` | `pywayne-vio-tools` |
-| `pywayne/vio/SO3.py` | `pywayne/vio/SO3/` | `pywayne-vio-SO3` |
+| `pywayne/vio/SE3.py` | `pywayne/vio/se3/` | `pywayne-vio-se3` |
+| `pywayne/vio/tools.py` | `pywayne/vio/tools/` | `pywayne-vio-tools` |
+| `pywayne/vio/SO3.py` | `pywayne/vio/so3/` | `pywayne-vio-so3` |
 
 **命名原则：**
 1. 目录结构：`pywayne/<module-name>/`，Python 模块的下划线 `_` 转连字符 `-`
-2. Skill name：将路径 `/` 替换为 `-`，**保持源码/文档文件名的大小写**
+2. Skill name：将路径 `/` 替换为 `-`，全部使用小写
 3. 保持与 pywayne 源码目录一致的结构
-
-**重要：** SKILL.md 的 `name` 字段必须**保持源码/文档文件名的大小写**（如 `SO3` 不能改为 `so3`），其他部分使用小写。
 
 **目的：**
 - 使 skill 目录结构与 pywayne 库的代码组织保持一致

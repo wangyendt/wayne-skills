@@ -1,6 +1,6 @@
 ---
 name: pywayne-visualization-rerun-utils
-description: Static 3D visualization utilities wrapping Rerun SDK for adding point clouds, trajectories, cameras, planes, and chessboards. Use when visualizing 3D data in Rerun, including SLAM trajectories, robot poses, camera calibration targets, and debug visualizations. All methods are static and do not require viewer instance management.
+description: Static 3D visualization utilities wrapping Rerun SDK for adding point clouds, trajectories, cameras, planes, and chessboards. Use when visualizing 3D data in Rerun, including SLAM trajectories, robot poses, camera calibration targets, and debug visualizations. All methods are static and do not require viewer instance management. For SE(3)/SO(3) matrix operations, use pywayne-vio-se3 or pywayne-vio-so3 skills.
 ---
 
 # Pywayne Visualization Rerun Utils

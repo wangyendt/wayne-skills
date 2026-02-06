@@ -1,5 +1,5 @@
 ---
-name: pywayne-vio-SO3
+name: pywayne-vio-so3
 description: SO(3) rotation matrix utilities including Lie group/ Lie algebra operations, rotation representation conversions, skew-symmetric matrix operations, and rotation averaging. Use when working with 3D rotations, robot kinematics, computer vision, SLAM, or any task requiring SO(3) matrix validation and manipulation, quaternion/ axis-angle/ Euler angle conversions, Lie algebra Log/Exp mapping, skew-symmetric matrix operations, or rotation matrix averaging
 ---
 
