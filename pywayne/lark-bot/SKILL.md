@@ -1,6 +1,6 @@
 ---
 name: pywayne-lark-bot
-description: Feishu/Lark Bot API wrapper for full-featured Feishu bot interactions. Use when users need to send messages (text, image, audio, file, post, interactive, share), manage files (upload/download), query user/group info, or listen for incoming messages with LarkBotListener. Supports both sending and receiving messages via the official Lark SDK.
+description: Feishu/Lark Bot API wrapper for full-featured Feishu bot interactions. Use when users need to send messages (text, image, audio, file, post, interactive, share), especially Markdown delivery via send_markdown_to_chat with card_v2/post routing, table fallback, and auto chunking; manage files (upload/download); query user/group info; or listen for incoming messages with LarkBotListener.
 ---
 
 # Pywayne Lark Bot
@@ -50,6 +50,44 @@ link = TextContent.make_url_pattern("https://example.com", "点击访问")
 ```
 
 ## LarkBot - 消息发送与查询
+
+### 推荐路径：发送 Markdown（优先使用）
+
+优先使用 `send_markdown_to_chat`，它会自动处理大文本分包，并支持两种路由：
+
+- `prefer="card_v2"`（默认）：发送 schema 2.0 interactive 卡片，适合绝大多数 Markdown 场景
+- `prefer="post"`：发送 post 富文本；可设置 `table_fallback="code_block"` 将 Markdown 表格稳定降级
+
+```python
+md = """
+# 发布说明
+
+- 新增对账接口
+- 修复支付重试逻辑
+
+| 模块 | 状态 |
+| --- | --- |
+| API | 完成 |
+| FE  | 测试中 |
+"""
+
+# 默认走 card_v2（推荐）
+bot.send_markdown_to_chat(
+    chat_id="oc_xxx",
+    md_text=md,
+    title="版本进度",
+    prefer="card_v2"
+)
+
+# 需要 post 时切换路由
+bot.send_markdown_to_chat(
+    chat_id="oc_xxx",
+    md_text=md,
+    title="版本进度",
+    prefer="post",
+    table_fallback="code_block"
+)
+```
 
 ### 发送消息
 
@@ -106,12 +144,26 @@ bot.send_post_to_chat(chat_id, post.get_content())
 #### Interactive Card Message
 
 ```python
+# 直接传原始 interactive 卡片
 card = {
     "header": {"title": {"content": "卡片标题", "tag": "plain_text"}},
     "elements": [...]
 }
 bot.send_interactive_to_user(user_open_id, card)
 bot.send_interactive_to_chat(chat_id, card)
+```
+
+#### CardContentV2（schema 2.0 卡片构造器）
+
+```python
+from pywayne.lark_bot import CardContentV2
+
+card = CardContentV2(title="日报", template="blue")
+card.add_markdown("# 今日进展\n\n- 完成接口联调\n- 修复2个问题")
+card.add_hr()
+card.add_image(img_key="img_xxx")
+
+bot.send_interactive_to_chat(chat_id, card.get_card())
 ```
 
 #### Share Message
@@ -144,7 +196,19 @@ markdown = post.make_markdown_content("**Markdown**")
 
 # 添加内容
 post.add_content_in_new_line(text)
-post.add_content_in_line([link, at])  # 同一行添加多个元素
+post.add_contents_in_line([link, at])  # 同一行添加多个元素
+```
+
+```python
+# 推荐：直接添加 markdown，支持分块与表格降级
+md = """
+## 迭代计划
+| 任务 | 状态 |
+| --- | --- |
+| A   | done |
+| B   | doing |
+"""
+post.add_markdown(md, table_as="code_block", max_chunk_bytes=8000)
 ```
 
 ### 文件操作
