@@ -18,9 +18,9 @@ It converts practical modules into reusable `SKILL.md` playbooks so agents can p
 
 | Metric | Value |
 | --- | --- |
-| Total skills | `36` |
+| Total skills | `37` |
 | `pywayne` skills | `34` |
-| General skills | `2` (`deep-think`, `send-email`) |
+| General skills | `3` (`deep-think`, `send-email`, `shell-shortcuts`) |
 | Canonical rules | `CLAUDE.md` |
 | Agent handoff doc | `AGENTS.md` |
 
@@ -29,6 +29,7 @@ It converts practical modules into reusable `SKILL.md` playbooks so agents can p
 - `pywayne/` - skills aligned with `pywayne` source modules
 - `send-email/` - SMTP email skill with templates and attachments
 - `deep-think/` - deep analysis and decomposition workflow
+- `shell-shortcuts/` - cross-platform terminal shortcut commands (`proxy_on`, `goto`, `gpu`)
 - `CLAUDE.md` - naming, structure, and documentation rules
 - `AGENTS.md` - concise instructions for external models/agents
 
@@ -48,6 +49,7 @@ Examples:
 
 - `deep-think`: structured deep reasoning workflow
 - `send-email`: SMTP sending with HTML templates and attachments
+- `shell-shortcuts`: set up `proxy_on/proxy_off/goto/gpu` and optional Conda autostart
 
 ### pywayne Domains
 

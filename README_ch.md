@@ -18,9 +18,9 @@
 
 | 指标 | 数值 |
 | --- | --- |
-| 技能总数 | `36` |
+| 技能总数 | `37` |
 | `pywayne` 技能 | `34` |
-| 通用技能 | `2`（`deep-think`、`send-email`） |
+| 通用技能 | `3`（`deep-think`、`send-email`、`shell-shortcuts`） |
 | 规范主文档 | `CLAUDE.md` |
 | Agent 入口文档 | `AGENTS.md` |
 
@@ -29,6 +29,7 @@
 - `pywayne/` - 与 `pywayne` 源码模块对齐的技能目录
 - `send-email/` - SMTP 邮件发送技能（模板+附件）
 - `deep-think/` - 深度分析与问题拆解流程
+- `shell-shortcuts/` - 跨平台终端快捷指令（`proxy_on`、`goto`、`gpu`）
 - `CLAUDE.md` - 命名、结构、文档规则
 - `AGENTS.md` - 给其他模型/代理的简明协作说明
 
@@ -48,6 +49,7 @@
 
 - `deep-think`：结构化深度思考流程
 - `send-email`：支持 HTML 模板与附件的 SMTP 邮件发送
+- `shell-shortcuts`：配置 `proxy_on/proxy_off/goto/gpu` 与可选 Conda 自动激活
 
 ### pywayne 技能领域
 
