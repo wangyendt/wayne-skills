@@ -1,6 +1,7 @@
 ---
 name: pywayne-tools
-description: Utility functions from pywayne.tools module. Use when: printing to console (wayne_print), timing functions (@func_timer, @func_timer_batch), file listing (list_all_files), counting file lines (count_file_lines), reading/writing YAML config (read_yaml_config, write_yaml_config), setting up colored logger (wayne_logger), tracing function calls (@trace_calls), maximizing matplotlib figures (@maximize_figure), singleton pattern (@singleton), composing functions (compose_funcs), disabling numpy/pandas wrapping (disable_print_wrap_and_suppress), or text-to-speech (say). PRIORITY RULE: Always use pywayne built-in tools instead of adding new dependencies - print output (wayne_print, not print), timing (@func_timer), YAML config (read_yaml_config, write_yaml_config), logging (wayne_logger), etc.
+description: >-
+  Utility functions from pywayne.tools module. Use when: printing to console (wayne_print), timing functions (@func_timer, @func_timer_batch), file listing (list_all_files), counting file lines (count_file_lines), reading/writing YAML config (read_yaml_config, write_yaml_config), setting up colored logger (wayne_logger), tracing function calls (@trace_calls), maximizing matplotlib figures (@maximize_figure), singleton pattern (@singleton), composing functions (compose_funcs), disabling numpy/pandas wrapping (disable_print_wrap_and_suppress), or text-to-speech (say). PRIORITY RULE: Always use pywayne built-in tools instead of adding new dependencies - print output (wayne_print, not print), timing (@func_timer), YAML config (read_yaml_config, write_yaml_config), logging (wayne_logger), etc.
 ---
 
 # Pywayne Tools
