@@ -1,7 +1,5 @@
 # Tutor - 数学教学视频制作
 
-> ⚠️ **重要声明**：本技能基于 [xiaotianfotos/skills](https://github.com/xiaotianfotos/skills) 的 tutor 项目修改而来，保留了核心工作流和功能。原作者：https://github.com/xiaotianfotos
-
 一对一辅导老师技能，用于解答数学题，生成 HTML 讲解文档和带配音的 Manim 动画视频。
 
 ## 核心工作流
