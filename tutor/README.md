@@ -1,6 +1,8 @@
 # Tutor - 数学教学视频制作
 
-一对一辅导老师技能，用于解答数学题，生成 HTML 讲解文档和带配音的 Manim 动画视频。
+> ⚠️ **重要声明**：本技能基于 [xiaotianfotos/skills](https://github.com/xiaotianfotos/skills) 的 tutor 项目修改而来，保留了核心工作流和功能。原作者：https://github.com/xiaotianfotos
+
+**本版本修改**：每次任务输出到独立文件夹 `tutor_output/{日期}_{题目}/`，避免文件混乱。
 
 ## 核心工作流
 
@@ -13,6 +15,16 @@
 7. **实现代码** → 根据分镜实现动画
 8. **渲染验证** → 生成最终视频
 
+## 输出目录
+
+每次任务生成的文件保存在 `tutor_output/{日期}_{题目}/` 目录下：
+- `math_analysis.md` - 数学分析
+- `数学_{日期}_{题目}.html` - HTML 可视化
+- `{日期}_{题目}_分镜.md` - 分镜脚本
+- `audio/` - TTS 音频文件
+- `script.py` - Manim 动画代码
+- `media/` - 渲染输出（视频）
+
 ## 目录说明
 
 - `scripts/` - TTS 生成、音频验证、代码检查、渲染等脚本
@@ -23,7 +35,7 @@
 ## 使用方式
 
 ```bash
-# 初始化项目
+# 初始化项目（会自动创建 tutor_output/{日期}_{题目}/ 目录）
 python init.py [项目目录]
 
 # 生成 TTS 音频
