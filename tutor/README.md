@@ -1,0 +1,46 @@
+# Tutor - 数学教学视频制作
+
+一对一辅导老师技能，用于解答数学题，生成 HTML 讲解文档和带配音的 Manim 动画视频。
+
+## 核心工作流
+
+1. **数学分析** → 推导数学事实，建立几何模型
+2. **HTML 可视化** → SVG 画图形，展示画图过程
+3. **分镜脚本** → 定义幕结构，设计画面/字幕/读白
+4. **TTS 音频** → 生成配音文件
+5. **验证更新** → 填充音频时长
+6. **脚手架** → 生成 Manim 代码框架
+7. **实现代码** → 根据分镜实现动画
+8. **渲染验证** → 生成最终视频
+
+## 目录说明
+
+- `scripts/` - TTS 生成、音频验证、代码检查、渲染等脚本
+- `templates/` - Manim 脚手架模板
+- `references/` - 分镜脚本示例
+- `sample/` - **早期探索时找到的一种风格，可以作为参考**
+
+## 使用方式
+
+```bash
+# 初始化项目
+python init.py [项目目录]
+
+# 生成 TTS 音频
+python scripts/generate_tts.py audio_list.csv ./audio
+
+# 验证音频并更新分镜
+python scripts/validate_audio.py 分镜.md ./audio
+
+# 检查代码结构
+python scripts/check.py
+
+# 渲染视频
+python scripts/render.py
+```
+
+## 依赖
+
+- uv
+- manim
+- edge-tts
