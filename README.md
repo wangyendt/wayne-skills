@@ -18,9 +18,9 @@ It converts practical modules into reusable `SKILL.md` playbooks so agents can p
 
 | Metric | Value |
 | --- | --- |
-| Total skills | `37` |
+| Total skills | `39` |
 | `pywayne` skills | `34` |
-| General skills | `3` (`deep-think`, `send-email`, `shell-shortcuts`) |
+| General skills | `5` (`deep-think`, `send-email`, `shell-shortcuts`, `tutor`, `proactive-agent`) |
 | Canonical rules | `CLAUDE.md` |
 | Agent handoff doc | `AGENTS.md` |
 
@@ -30,6 +30,8 @@ It converts practical modules into reusable `SKILL.md` playbooks so agents can p
 - `send-email/` - SMTP email skill with templates and attachments
 - `deep-think/` - deep analysis and decomposition workflow
 - `shell-shortcuts/` - cross-platform terminal shortcut commands (`proxy_on`, `goto`, `gpu`)
+- `tutor/` - math tutoring skill for generating educational videos with Manim
+- `proactive-agent/` - proactive agent architecture (WAL, Working Buffer, etc.)
 - `CLAUDE.md` - naming, structure, and documentation rules
 - `AGENTS.md` - concise instructions for external models/agents
 
@@ -50,6 +52,8 @@ Examples:
 - `deep-think`: structured deep reasoning workflow
 - `send-email`: SMTP sending with HTML templates and attachments
 - `shell-shortcuts`: set up `proxy_on/proxy_off/goto/gpu` and optional Conda autostart
+- `tutor`: math tutoring skill with Manim video generation
+- `proactive-agent`: proactive agent architecture (WAL, Working Buffer, etc.)
 
 ### pywayne Domains
 
