@@ -1,10 +1,10 @@
-# Tutor - 数学教学视频制作
+# Tutor Math Geometry - 数学几何教学视频制作
 
 > ⚠️ **重要声明**：本技能基于 [xiaotianfotos/skills](https://github.com/xiaotianfotos/skills) 的 tutor 项目修改而来，保留了核心工作流和功能。原作者：https://github.com/xiaotianfotos
 
-**本版本修改**：每次任务输出到独立文件夹 `tutor_output/{日期}_{题目}/`，避免文件混乱。
+**本版本修改**：每次任务输出到独立文件夹 `tutor_output/{日期}_{题目}/`，避免文件混乱。专注数学几何教学视频。
 
-## 核心工作流
+## 核心工作流（与原版一致）
 
 1. **数学分析** → 推导数学事实，建立几何模型
 2. **HTML 可视化** → SVG 画图形，展示画图过程

@@ -18,9 +18,9 @@ It converts practical modules into reusable `SKILL.md` playbooks so agents can p
 
 | Metric | Value |
 | --- | --- |
-| Total skills | `39` |
+| Total skills | `40` |
 | `pywayne` skills | `34` |
-| General skills | `5` (`deep-think`, `send-email`, `shell-shortcuts`, `tutor`, `proactive-agent`) |
+| General skills | `6` (`deep-think`, `send-email`, `shell-shortcuts`, `tutor`, `proactive-agent`) |
 | Canonical rules | `CLAUDE.md` |
 | Agent handoff doc | `AGENTS.md` |
 
