@@ -1,6 +1,6 @@
 ---
 name: pywayne-lark-bot-listener
-description: Feishu/Lark message listener for real-time event processing via WebSocket. Use when users need to listen for incoming Feishu messages (text, image, file, audio, media, sticker, post, interactive) and events (recall, read, reaction, bot added/removed, member changes, chat updates) with automatic deduplication, async handling, resource auto-download, and convenient decorators. Provides high-level handlers (text_handler, image_handler, file_handler, audio_handler, media_handler, sticker_handler, mention_handler) with automatic download/cleanup and optional file回传, plus event handlers (recall_handler, message_read_handler, reaction_handler, bot_added/removed_handler, member_changed_handler, chat_updated/disbanded_handler) and card action callback support.
+description: Feishu/Lark message listener for real-time event processing via WebSocket. Use when users need to listen for incoming Feishu messages (text, image, file, audio, media, sticker, post, interactive) and events (recall, read, reaction, bot added/removed, member changes, chat updates) with automatic deduplication, async handling, resource auto-download, and convenient decorators. Provides high-level handlers (text_handler, image_handler, file_handler, audio_handler, media_handler, sticker_handler, mention_handler) with automatic download/cleanup and optional file回传, plus event handlers (recall_handler, message_read_handler, reaction_handler, bot_added/removed_handler, member_changed_handler, chat_updated/disbanded_handler), card action callback support, and listener-level streaming card helpers such as reply_streaming_card, update_streaming_card, recolor_streaming_card, stream_reply_card, and astream_reply_card.
 ---
 
 # Pywayne Lark Bot Listener - Real-Time Event Processing
@@ -18,6 +18,7 @@ description: Feishu/Lark message listener for real-time event processing via Web
 - **Message Deduplication**: Per-handler deduplication with configurable expiry
 - **Async/Sync Compatible**: Support both `async def` and `def` handler functions
 - **Built-in LarkBot**: Access full `LarkBot` API via `listener.bot`
+- **Streaming Reply Helpers**: Keep one card updated in place during long-running work
 - **Card Action Callbacks**: HTTP handler for interactive card button clicks
 
 **Companion**:
@@ -523,6 +524,204 @@ async def handle_commands(text: str, chat_id: str):
         listener.send_message(chat_id, "Unknown command")
 ```
 
+### Streaming Card Reply Helpers
+
+These wrappers let a listener handler stream output back into one reply card without dropping down to raw `listener.bot` calls.
+
+```python
+reply = listener.reply_streaming_card(
+    target: Union[str, MessageContext],
+    *,
+    title: str = "Streaming Reply",
+    template: str = "blue",
+    initial_md: str = "",
+    reply_in_thread: bool = False,
+    uuid: str = "",
+    status_text: str = "Generating...",
+    max_chunk_bytes: int = 18_000
+) -> Dict
+
+response = listener.update_streaming_card(
+    card_message_id: str,
+    md_text: str,
+    *,
+    title: str = "Streaming Reply",
+    template: str = "blue",
+    done: bool = False,
+    status_text: str = "",
+    max_chunk_bytes: int = 18_000
+) -> Dict
+
+response = listener.recolor_streaming_card(
+    card_message_id: str,
+    md_text: str,
+    *,
+    title: str = "Streaming Reply",
+    template: str = "green",
+    status_text: str = "Done",
+    done: bool = True,
+    max_chunk_bytes: int = 18_000
+) -> Dict
+
+result = listener.stream_reply_card(
+    target: Union[str, MessageContext],
+    text_stream: Iterable[Any],
+    *,
+    title: str = "Streaming Reply",
+    template: str = "blue",
+    initial_md: str = "",
+    reply_in_thread: bool = False,
+    uuid: str = "",
+    update_interval: float = 0.25,
+    status_text: str = "Generating...",
+    final_status_text: str = "",
+    final_template: Optional[str] = "green",
+    max_chunk_bytes: int = 18_000
+) -> Dict[str, Any]
+
+result = await listener.astream_reply_card(
+    target: Union[str, MessageContext],
+    text_stream: AsyncIterable[Any],
+    *,
+    title: str = "Streaming Reply",
+    template: str = "blue",
+    initial_md: str = "",
+    reply_in_thread: bool = False,
+    uuid: str = "",
+    update_interval: float = 0.25,
+    status_text: str = "Generating...",
+    final_status_text: str = "",
+    final_template: Optional[str] = "green",
+    max_chunk_bytes: int = 18_000
+) -> Dict[str, Any]
+```
+
+**Key Rules**:
+- `target` can be either a raw `message_id` or the whole `MessageContext`.
+- `update_streaming_card()` updates the card message returned by `reply_streaming_card()`, not the original user message ID.
+- Streaming updates expect the full accumulated Markdown, not the latest delta only.
+- Use `final_template="green"` for success and `recolor_streaming_card(..., template="red")` for failure.
+- If you need token-level refresh, decrease `update_interval`, but remember Feishu message updates are rate-limited.
+
+**Example 1: Mention -> Async LLM Stream -> Auto Turn Green**:
+
+```python
+@listener.mention_handler(group_only=True)
+async def answer_when_mentioned(text: str, user_name: str, message_id: str):
+    async def fake_llm_stream():
+        yield f"Hello {user_name}.\n\n"
+        yield "## Draft answer\n"
+        yield f"- You asked: `{text}`\n"
+        yield "- Suggested next step: review the checklist.\n"
+
+    await listener.astream_reply_card(
+        message_id,
+        fake_llm_stream(),
+        title="Assistant Reply",
+        template="blue",
+        status_text="Thinking...",
+        final_status_text="Answer complete",
+        final_template="green",
+        update_interval=0.4
+    )
+```
+
+**Example 2: Universal Handler with Manual Progress Updates**:
+
+```python
+@listener.listen(message_type="text")
+async def run_job(ctx: MessageContext):
+    reply = listener.reply_streaming_card(
+        ctx,
+        title="Data Pipeline",
+        template="wathet",
+        initial_md="Queued job...",
+        status_text="Starting"
+    )
+
+    card_message_id = reply["message_id"]
+    current_text = "Queued job..."
+
+    current_text += "\n- Loaded source files"
+    listener.update_streaming_card(
+        card_message_id,
+        current_text,
+        title="Data Pipeline",
+        template="wathet",
+        status_text="Transforming"
+    )
+
+    current_text += "\n- Applied transformations"
+    listener.update_streaming_card(
+        card_message_id,
+        current_text,
+        title="Data Pipeline",
+        template="wathet",
+        status_text="Uploading output"
+    )
+
+    listener.recolor_streaming_card(
+        card_message_id,
+        current_text + "\n- Upload completed",
+        title="Data Pipeline",
+        template="green",
+        status_text="Finished"
+    )
+```
+
+**Example 3: Add Reaction While Working, Remove It When Done**:
+
+```python
+@listener.listen(message_type="text")
+async def process_with_progress(ctx: MessageContext):
+    reaction = listener.bot.add_reaction(ctx.message_id, "OK")
+    reaction_id = reaction.get("reaction_id", "")
+
+    reply = listener.reply_streaming_card(
+        ctx,
+        title="Risk Review",
+        template="blue",
+        initial_md="Parsing request..."
+    )
+    card_message_id = reply["message_id"]
+    current_text = "Parsing request..."
+
+    try:
+        for step in [
+            "Loaded policy rules",
+            "Matched request fields",
+            "Generated recommendation",
+        ]:
+            current_text += f"\n- {step}"
+            listener.update_streaming_card(
+                card_message_id,
+                current_text,
+                title="Risk Review",
+                template="blue",
+                status_text="Running"
+            )
+
+        listener.recolor_streaming_card(
+            card_message_id,
+            current_text + "\n\n**Decision**: approved",
+            title="Risk Review",
+            template="green",
+            status_text="Completed"
+        )
+    except Exception as exc:
+        listener.recolor_streaming_card(
+            card_message_id,
+            current_text + f"\n\n**Error**: {exc}",
+            title="Risk Review",
+            template="red",
+            status_text="Failed"
+        )
+        raise
+    finally:
+        if reaction_id:
+            listener.bot.delete_reaction(ctx.message_id, reaction_id)
+```
+
 ## Event Handlers
 
 ### recall_handler - Message Recall Event
@@ -604,6 +803,21 @@ async def on_reaction(action: str, message_id: str, emoji_type: str, user_id: st
             print(f"User {user_id} liked message {message_id}")
         elif emoji_type == "HEART":
             print(f"User {user_id} loved message {message_id}")
+```
+
+**Example: Reaction Event Triggers Batch Follow-Up**:
+
+```python
+@listener.reaction_handler()
+async def escalate_on_reaction(action: str, emoji_type: str, user_id: str, message_id: str):
+    if action != "created" or emoji_type != "OK":
+        return
+
+    listener.bot.batch_send_message(
+        "text",
+        content=f"Message {message_id} was acknowledged by {user_id}",
+        user_open_ids=["ou_manager_a", "ou_manager_b"]
+    )
 ```
 
 ### bot_added_handler - Bot Added to Group
@@ -846,6 +1060,38 @@ def handle_approval(card_event):
         listener.bot.update_interactive_card(message_id, rejected_card.get_card())
         
         return {"toast": {"type": "warning", "content": "Rejected"}}
+```
+
+**Example: Button Click Recolors an Existing Streaming Card**:
+
+```python
+@listener.card_action_handler(verification_token="your_token")
+def handle_review_action(card_event):
+    message_id = card_event.event.context.open_message_id
+    action = card_event.action.value.get("action")
+    summary = card_event.action.value.get("summary", "No summary provided")
+
+    if action == "approve":
+        listener.bot.recolor_streaming_card(
+            message_id,
+            f"## Review Result\n\n{summary}",
+            title="Manual Review",
+            template="green",
+            status_text="Approved"
+        )
+        return {"toast": {"type": "success", "content": "Approved"}}
+
+    if action == "reject":
+        listener.bot.recolor_streaming_card(
+            message_id,
+            f"## Review Result\n\n{summary}",
+            title="Manual Review",
+            template="red",
+            status_text="Rejected"
+        )
+        return {"toast": {"type": "warning", "content": "Rejected"}}
+
+    return {"toast": {"type": "info", "content": "No action taken"}}
 ```
 
 ### get_card_action_handler - Get HTTP Handler

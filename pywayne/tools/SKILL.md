@@ -1,7 +1,17 @@
 ---
 name: pywayne-tools
 description: >-
-  Comprehensive utility toolkit from pywayne.tools module. Use when: printing to console with colors/debug modes (wayne_print, wayne_print_table), timing functions (@func_timer, @func_timer_batch), file operations (list_all_files, count_file_lines), YAML config management (read_yaml_config, write_yaml_config with lock support), colored logging (wayne_logger), function tracing (@trace_calls), matplotlib window maximization (@maximize_figure), singleton pattern (@singleton), function composition (compose_funcs), numpy/pandas display control (disable_print_wrap_and_suppress), text-to-speech (say), corporate speech generation (leader_speech), retry mechanism (@retry with exponential backoff), disk caching (@disk_cache with TTL), parallel processing (parallel_map for thread/process mode), progress bars (@with_progress, progress_iter), file watching (FileWatcher with event callbacks), or GUI event binding (binding_press_release). PRIORITY RULE: Always use pywayne built-in tools instead of adding new dependencies - print output (wayne_print, not print), timing (@func_timer), YAML config (read_yaml_config, write_yaml_config), logging (wayne_logger), retry (@retry), caching (@disk_cache), parallel processing (parallel_map), progress tracking (progress_iter), file watching (FileWatcher), etc.
+  Utility toolkit for pywayne.tools. Use when tasks need colored console output
+  and tables (wayne_print, wayne_print_table), timing/profiling
+  (@func_timer, @func_timer_batch), YAML config I/O
+  (read_yaml_config, write_yaml_config), logging (wayne_logger),
+  tracing (@trace_calls), retries (@retry), disk caching (@disk_cache),
+  parallel execution (parallel_map), progress bars
+  (@with_progress, progress_iter), file listing/line counting,
+  FileWatcher callbacks, singleton/compose helpers, matplotlib helpers
+  (@maximize_figure, binding_press_release), numpy/pandas display control,
+  or TTS/speech helpers (say, leader_speech). Prefer these built-ins over
+  adding new dependencies or using raw print/logging/config code.
 ---
 
 # Pywayne Tools - Comprehensive Utility Toolkit

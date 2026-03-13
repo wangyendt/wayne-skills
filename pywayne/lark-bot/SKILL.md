@@ -1,6 +1,6 @@
 ---
 name: pywayne-lark-bot
-description: Feishu/Lark Bot API wrapper for full-featured Feishu bot interactions. Use when users need to send messages (text, image, audio, file, post, interactive, share), especially Markdown delivery via send_markdown_to_chat with card_v2/post routing, table fallback, and auto chunking; manage files (upload/download); query user/group info; reply to messages; forward/recall/update messages; add reactions; pin messages; manage chats (create, delete, update, members, admins); get message history; batch send; handle read receipts and urgent notifications.
+description: Feishu/Lark Bot API wrapper for full-featured Feishu bot interactions. Use when users need to send messages (text, image, audio, file, post, interactive, share), especially Markdown delivery via send_markdown_to_chat with card_v2/post routing, table fallback, and auto chunking; build or update schema 2.0 cards; send in-place streaming reply cards with reply_streaming_card, update_streaming_card, recolor_streaming_card, stream_reply_card, or astream_reply_card; manage files (upload/download); query user/group info; reply to messages; forward/recall/update messages; add reactions; pin messages; manage chats (create, delete, update, members, admins); get message history; batch send; handle read receipts and urgent notifications.
 ---
 
 # Pywayne Lark Bot - Full-Featured Feishu API Wrapper
@@ -12,6 +12,7 @@ description: Feishu/Lark Bot API wrapper for full-featured Feishu bot interactio
 **Key Capabilities**:
 - Send all message types (text, image, audio, video, file, post, interactive cards)
 - Reply, forward, recall, update messages
+- Build and update in-place streaming cards for long-running or LLM-style responses
 - Reactions, pins, read receipts, urgent notifications
 - Chat management (create, delete, update, members, admins, announcements)
 - File upload/download with message resource handling
@@ -251,9 +252,26 @@ card.add_hr()
 # Add image
 card.add_image(img_key: str, *, size: str = "large", preview: bool = True)
 
+# List commonly used header templates
+templates = CardContentV2.list_header_templates()  # ["blue", "wathet", ...]
+
 # Get complete card JSON
 card_json = card.get_card()
 ```
+
+**Common Header Templates**:
+- `blue`
+- `wathet`
+- `turquoise`
+- `green`
+- `yellow`
+- `orange`
+- `red`
+- `carmine`
+- `violet`
+- `purple`
+- `indigo`
+- `grey`
 
 **Example: Daily Report Card**:
 
@@ -766,6 +784,222 @@ completed_card = CardContentV2(title="Task Status", template="green")
 completed_card.add_markdown("✅ Task completed successfully!")
 
 bot.update_interactive_card(msg["message_id"], completed_card.get_card())
+```
+
+### In-Place Streaming Cards
+
+Use these helpers when a reply should stay in one message while the content keeps growing, such as LLM output, multi-step jobs, or approval workflows.
+
+```python
+card = bot.build_streaming_card(
+    md_text: str,
+    *,
+    title: str = "",
+    template: str = "blue",
+    streaming: bool = True,
+    status_text: str = "",
+    max_chunk_bytes: int = 18_000
+) -> Dict[str, Any]
+
+reply = bot.reply_streaming_card(
+    message_id: str,
+    *,
+    title: str = "Streaming Reply",
+    template: str = "blue",
+    initial_md: str = "",
+    reply_in_thread: bool = False,
+    uuid: str = "",
+    status_text: str = "Generating...",
+    max_chunk_bytes: int = 18_000
+) -> Dict
+
+response = bot.update_streaming_card(
+    message_id: str,
+    md_text: str,
+    *,
+    title: str = "Streaming Reply",
+    template: str = "blue",
+    done: bool = False,
+    status_text: str = "",
+    max_chunk_bytes: int = 18_000
+) -> Dict
+
+response = bot.recolor_streaming_card(
+    message_id: str,
+    md_text: str,
+    *,
+    title: str = "Streaming Reply",
+    template: str = "green",
+    status_text: str = "Done",
+    done: bool = True,
+    max_chunk_bytes: int = 18_000
+) -> Dict
+
+result = bot.stream_reply_card(
+    source_message_id: str,
+    text_stream: Iterable[Any],
+    *,
+    title: str = "Streaming Reply",
+    template: str = "blue",
+    initial_md: str = "",
+    reply_in_thread: bool = False,
+    uuid: str = "",
+    update_interval: float = 0.25,
+    status_text: str = "Generating...",
+    final_status_text: str = "",
+    final_template: Optional[str] = "green",
+    max_chunk_bytes: int = 18_000
+) -> Dict[str, Any]
+
+result = await bot.astream_reply_card(
+    source_message_id: str,
+    text_stream: AsyncIterable[Any],
+    *,
+    title: str = "Streaming Reply",
+    template: str = "blue",
+    initial_md: str = "",
+    reply_in_thread: bool = False,
+    uuid: str = "",
+    update_interval: float = 0.25,
+    status_text: str = "Generating...",
+    final_status_text: str = "",
+    final_template: Optional[str] = "green",
+    max_chunk_bytes: int = 18_000
+) -> Dict[str, Any]
+```
+
+**Important Behavior**:
+- `update_streaming_card()` expects the full current Markdown text, not only the newest delta chunk.
+- `stream_reply_card()` and `astream_reply_card()` coerce each chunk to text, so `str`, `bytes`, and other printable values can all be streamed.
+- Card updates are rate-limited by Feishu. Keep `update_interval` above zero and lower it only when the UX benefit is worth the extra traffic.
+- `final_template="green"` is the easiest way to turn a running blue card into a completed green card automatically.
+- `CardContentV2.list_header_templates()` gives you the built-in common template names when you want to switch status colors safely.
+
+**Example 1: Preview a Streaming Card Before Sending**:
+
+```python
+card = bot.build_streaming_card(
+    md_text="Step 1 complete\nStep 2 running",
+    title="Migration Progress",
+    template="orange",
+    streaming=True,
+    status_text="Waiting for final checks..."
+)
+
+bot.send_interactive_to_chat("oc_xxx", card)
+```
+
+**Example 2: Manual Start, Multiple Updates, Final Recolor**:
+
+```python
+reply = bot.reply_streaming_card(
+    "om_xxx",
+    title="Incident Analysis",
+    template="blue",
+    initial_md="Collecting logs...",
+    status_text="Working..."
+)
+
+card_message_id = reply["message_id"]
+
+bot.update_streaming_card(
+    card_message_id,
+    "Collecting logs...\n\n- API logs loaded\n- Worker logs loaded",
+    title="Incident Analysis",
+    template="blue"
+)
+
+bot.update_streaming_card(
+    card_message_id,
+    "Collecting logs...\n\n- API logs loaded\n- Worker logs loaded\n- Root cause isolated",
+    title="Incident Analysis",
+    template="blue",
+    status_text="Preparing summary..."
+)
+
+bot.recolor_streaming_card(
+    card_message_id,
+    "## Incident Summary\n\n- Root cause: expired credential\n- Fix: rotated secret\n- Follow-up: add alerting",
+    title="Incident Analysis",
+    template="green",
+    status_text="Completed"
+)
+```
+
+**Example 3: Synchronous Generator for Token-Style Output**:
+
+```python
+import time
+
+def fake_stream():
+    for chunk in ["Hello", ", ", "this ", "reply ", "streams ", "in place."]:
+        time.sleep(0.2)
+        yield chunk
+
+result = bot.stream_reply_card(
+    "om_xxx",
+    fake_stream(),
+    title="Assistant Reply",
+    template="wathet",
+    status_text="Generating...",
+    final_status_text="Answer complete",
+    final_template="green",
+    update_interval=0.4
+)
+
+print(result["message_id"])
+print(result["text"])
+```
+
+**Example 4: Async Generator for LLM Streaming**:
+
+```python
+async def llm_stream():
+    for chunk in ["## Findings\n", "- Issue reproduced\n", "- Fix validated\n"]:
+        yield chunk
+
+result = await bot.astream_reply_card(
+    "om_xxx",
+    llm_stream(),
+    title="LLM Analysis",
+    template="blue",
+    status_text="Thinking...",
+    final_status_text="Done",
+    final_template="green"
+)
+```
+
+**Example 5: Fail Fast and Turn the Card Red**:
+
+```python
+reply = bot.reply_streaming_card(
+    "om_xxx",
+    title="Deployment Job",
+    template="blue",
+    initial_md="Starting deploy pipeline..."
+)
+
+card_message_id = reply["message_id"]
+current_text = "Starting deploy pipeline...\n- Build passed\n- Smoke tests passed"
+
+try:
+    bot.update_streaming_card(
+        card_message_id,
+        current_text,
+        title="Deployment Job",
+        template="blue",
+        status_text="Rolling out..."
+    )
+    raise RuntimeError("Canary health check failed")
+except Exception as exc:
+    bot.recolor_streaming_card(
+        card_message_id,
+        current_text + f"\n\n**Error**: {exc}",
+        title="Deployment Job",
+        template="red",
+        status_text="Failed",
+        done=True
+    )
 ```
 
 ## Reactions, Pins, and Urgency
