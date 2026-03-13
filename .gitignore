@@ -1,2 +1,4 @@
 .claude/
 __pycache__/
+.agents/
+.cursor/

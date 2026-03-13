@@ -538,6 +538,11 @@ bot.send_interactive_to_user(user_open_id: str, interactive: Dict) -> Dict
 bot.send_interactive_to_chat(chat_id: str, interactive: Dict) -> Dict
 ```
 
+**Return Value**:
+- Both methods return a response `Dict`.
+- When the send succeeds, the response includes the created message metadata, including `message_id`.
+- Save that `message_id` if you plan to call `update_interactive_card()`, `patch_message()`, `pin_message()`, or other message lifecycle methods later.
+
 **Example with Raw Card JSON**:
 
 ```python
@@ -576,6 +581,25 @@ card.add_hr()
 card.add_image("img_xxx", size="large")
 
 bot.send_interactive_to_chat("oc_xxx", card.get_card())
+```
+
+**Example: Capture `message_id` for Later Update**:
+
+```python
+from pywayne.lark_bot import CardContentV2
+
+card = CardContentV2(title="Deployment Status", template="blue")
+card.add_markdown("⏳ Deployment started")
+
+msg = bot.send_interactive_to_chat("oc_xxx", card.get_card())
+message_id = msg["message_id"]
+
+# ... perform the long-running task ...
+
+done_card = CardContentV2(title="Deployment Status", template="green")
+done_card.add_markdown("✅ Deployment completed successfully")
+
+bot.update_interactive_card(message_id, done_card.get_card())
 ```
 
 ### Share Messages

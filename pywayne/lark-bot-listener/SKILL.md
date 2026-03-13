@@ -78,6 +78,27 @@ listener.bot.add_reaction("om_xxx", "THUMBSUP")
 # ... any LarkBot method
 ```
 
+**Tip**:
+- `listener.bot.send_interactive_to_chat(...)` returns a response `Dict`.
+- On success, that response includes `message_id`, which you can store and later pass to `listener.bot.update_interactive_card(...)`.
+
+```python
+from pywayne.lark_bot import CardContentV2
+
+card = CardContentV2(title="Job Status", template="blue")
+card.add_markdown("Job accepted. Waiting for worker...")
+
+msg = listener.bot.send_interactive_to_chat("oc_xxx", card.get_card())
+message_id = msg["message_id"]
+
+# ... later ...
+
+updated_card = CardContentV2(title="Job Status", template="green")
+updated_card.add_markdown("Job finished successfully")
+
+listener.bot.update_interactive_card(message_id, updated_card.get_card())
+```
+
 ## MessageContext
 
 All low-level `@listen()` handlers receive a `MessageContext` object.
