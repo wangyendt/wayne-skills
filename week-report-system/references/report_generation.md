@@ -4,6 +4,8 @@ This document describes how to generate comprehensive weekly work reports from c
 
 ## Report Structure (Total-Part-Total Pattern)
 
+Keep the report **concise and work-focused**. No code line counts. Emphasize project progress, decisions made, and measurable outcomes. Each project section should be 3-6 bullet points at most.
+
 ```markdown
 # 周工作汇报 - {YYYY}年第{WW}周
 > 报告周期: {start_date} 至 {end_date}
@@ -11,78 +13,37 @@ This document describes how to generate comprehensive weekly work reports from c
 
 ## 📋 本周工作概览
 
-[3-5 sentences summarizing the week's main themes, achievements, and focus areas. This is the first "Total" section.]
+[2-3 sentences: main projects, key outcomes, overall status. First "Total".]
 
 ---
 
 ## 📊 分项目工作详情
 
-### 项目一: {Project Name}
+### {Project Name}
 
-**工作概述:**
-[Brief description of work done in this project]
+- [Concrete progress: what was completed, what changed, what decision was made]
+- [Key outcome with data if available — e.g. "完成X模块开发，已通过集成测试"]
+- [Blocker resolved or risk mitigated if any]
 
-**关键成果:**
-- [Outcome 1 with metrics if available]
-- [Outcome 2 with metrics if available]
-- [Outcome 3 with metrics if available]
+### {Project Name}
 
-**数据指标:**
-- 对话次数: X次
-- 主要任务: [task types]
-- 耗时估算: ~X小时
-
-**技术亮点:**
-- [Technical achievement 1]
-- [Technical achievement 2]
+- [Same pattern — factual, outcome-oriented, no filler]
 
 ---
 
-### 项目二: {Project Name}
-[Same structure as above]
+## 🎯 本周亮点
+
+1. **[Achievement]**: [One sentence on impact or significance]
+2. **[Achievement]**: [One sentence on impact or significance]
+3. **[Achievement]**: [One sentence on impact or significance]
 
 ---
 
-## 📈 本周数据统计
+## 📝 总结与下周计划
 
-| 指标 | 数值 |
-|------|------|
-| 总对话次数 | X |
-| 涉及项目数 | X |
-| 代码生成次数 | X |
-| 文档编写次数 | X |
-| 问题解决数 | X |
+**总结:** [1-2 sentences on overall progress and any outstanding items.]
 
----
-
-## 🎯 重点工作与贡献
-
-### ⭐ 核心成就
-
-1. **[Achievement 1]**: [Description with impact]
-2. **[Achievement 2]**: [Description with impact]
-3. **[Achievement 3]**: [Description with impact]
-
-### 💡 创新点
-
-- [Innovation 1]
-- [Innovation 2]
-
-### 🔧 解决的关键问题
-
-| 问题描述 | 解决方案 | 影响范围 |
-|----------|----------|----------|
-| [Problem 1] | [Solution 1] | [Scope] |
-| [Problem 2] | [Solution 2] | [Scope] |
-
----
-
-## 📝 本周总结与下周计划
-
-### 总结
-[2-3 sentences summarizing the week's overall contribution and progress. This is the second "Total" section.]
-
-### 下周计划
+**下周计划:**
 - [ ] [Plan 1]
 - [ ] [Plan 2]
 - [ ] [Plan 3]
@@ -91,6 +52,13 @@ This document describes how to generate comprehensive weekly work reports from c
 
 *本报告由AI自动生成并整理*
 ```
+
+### Writing guidelines
+
+- **Project sections**: factual bullet points about what actually happened — features shipped, bugs fixed, decisions finalized, integrations completed. Avoid vague phrases like "进行了开发" or "做了优化".
+- **Data if available**: completion percentage, number of issues resolved, API response time improvement — anything concrete from the conversation logs.
+- **No code metrics**: do not include lines of code written, number of commits, or files changed — these are not meaningful for a work report.
+- **Length**: the whole report should fit comfortably on one screen. If there are many projects, summarize minor ones in a single line each.
 
 ## Report Generation Process
 
@@ -134,9 +102,9 @@ def parse_report_request(message: str) -> dict:
 ### Step 2: Pull Latest Data
 
 ```python
-from scripts.git_operations import GitManager
+from scripts.git_operations import create_git_manager
 
-git = GitManager.from_env()
+git = create_git_manager()
 git.pull()
 ```
 
@@ -335,77 +303,41 @@ Emphasize:
 
 ## 📋 本周工作概览
 
-本周主要集中在用户认证系统重构和数据报表优化两个重点项目。完成了JWT认证的完整实现，
-优化了报表查询性能约40%,并修复了3个生产环境关键Bug。代码提交量较上周增长15%,
-整体项目进度符合预期。
+本周重点推进用户认证系统重构和数据报表性能优化。JWT认证已完整落地并通过安全审计，报表查询耗时降低约40%，整体进度符合预期。
 
 ---
 
 ## 📊 分项目工作详情
 
-### 项目一: 用户认证系统重构
+### 用户认证系统重构
 
-**工作概述:**
-将原有的Session认证升级为JWT无状态认证，提升系统可扩展性和安全性。
+- 完成JWT Token生成与验证，支持自动静默刷新，用户无感知续期
+- 实现多设备登录管理与强制下线功能
+- 安全审计发现并修复2个高危漏洞（RS256非对称加密 + Token黑名单机制）
 
-**关键成果:**
-- 完成JWT Token生成和验证逻辑，支持自动刷新机制
-- 实现多设备登录管理和强制下线功能
-- 通过安全审计，修复2个潜在安全漏洞
+### 数据报表优化
 
-**数据指标:**
-- 对话次数: 8次
-- 主要任务: 开发(60%), 调试(30%), 文档(10%)
-- 耗时估算: ~12小时
-
-**技术亮点:**
-- 使用RS256非对称加密，提升Token安全性
-- 实现Token黑名单机制，支持紧急撤销
+- 针对慢查询添加复合索引，查询耗时从平均8s降至4.8s（↓40%）
+- 引入查询结果缓存，数据库压力显著下降
+- 修复报表导出在大数据量下的超时问题
 
 ---
 
-## 📈 本周数据统计
+## 🎯 本周亮点
 
-| 指标 | 数值 |
-|------|------|
-| 总对话次数 | 23 |
-| 涉及项目数 | 3 |
-| 代码生成次数 | 45 |
-| 问题解决数 | 5 |
+1. **JWT认证上线**: 无状态认证架构落地，为后续多区域扩展打好基础
+2. **报表性能提升40%**: 用户侧加载体验明显改善，投诉工单清零
+3. **安全漏洞闭环**: 2个高危问题在本周内发现并修复，未影响线上用户
 
 ---
 
-## 🎯 重点工作与贡献
+## 📝 总结与下周计划
 
-### ⭐ 核心成就
+**总结:** 认证重构和性能优化两条线均达成阶段目标，核心功能通过验收。下周重点转向灰度发布和监控体系建设。
 
-1. **JWT认证上线**: 完成认证系统升级，支撑未来百万级用户扩展
-2. **报表性能优化**: 查询速度提升40%，用户体验显著改善
-3. **安全漏洞修复**: 及时发现并修复2个高危漏洞，避免潜在风险
-
-### 💡 创新点
-
-- 设计并实现了Token自动刷新的无感知机制
-- 引入查询缓存策略，大幅降低数据库压力
-
-### 🔧 解决的关键问题
-
-| 问题描述 | 解决方案 | 影响范围 |
-|----------|----------|----------|
-| Token过期后需要重新登录 | 实现静默刷新机制 | 全平台用户 |
-| 报表查询超时 | 添加索引+缓存优化 | 数据分析模块 |
-
----
-
-## 📝 本周总结与下周计划
-
-### 总结
-本周在认证系统和性能优化方面取得实质性进展，核心功能已通过测试验收。代码质量保持较高水平，
-团队协作顺畅。建议下周重点关注监控告警体系的完善。
-
-### 下周计划
-- [ ] 完成认证系统灰度发布
-- [ ] 设计监控告警方案
+**下周计划:**
+- [ ] 完成认证系统灰度发布（覆盖10%流量）
+- [ ] 设计监控告警方案并完成接入
 - [ ] 编写系统迁移文档
 
 ---

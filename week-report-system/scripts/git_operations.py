@@ -105,17 +105,23 @@ class GitManager:
         return os.path.exists(os.path.join(self.repo_path, '.git'))
 
     def clone(self) -> bool:
-        """Clone the repository."""
+        """Clone the repository, cleaning up any corrupt local state first."""
+        import shutil
         try:
             os.makedirs(self.local_path, exist_ok=True)
+
+            # If directory exists but has no .git, it's corrupt — remove and re-clone
+            if os.path.exists(self.repo_path) and not os.path.exists(os.path.join(self.repo_path, '.git')):
+                logger.warning(f"Directory exists but is not a git repo, removing: {self.repo_path}")
+                shutil.rmtree(self.repo_path)
 
             cmd = ['git', 'clone', self.repo_url, self.repo_path]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
 
             if result.returncode != 0:
-                # Check if repo is empty - that's OK
+                # Empty repo is OK — init locally and point at remote
                 if 'empty repository' in result.stderr or 'repository is empty' in result.stderr.lower():
-                    logger.info("Repository is empty, will initialize")
+                    logger.info("Repository is empty, initializing locally")
                     os.makedirs(self.repo_path, exist_ok=True)
                     subprocess.run(['git', 'init'], cwd=self.repo_path, capture_output=True)
                     subprocess.run(['git', 'remote', 'add', 'origin', self.repo_url],
