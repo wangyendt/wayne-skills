@@ -11,12 +11,10 @@ This script handles:
 
 import os
 import uuid
-import json
 import logging
 import re
 from datetime import datetime
-from typing import Optional, Tuple
-from pathlib import Path
+from typing import Optional
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -188,8 +186,6 @@ class ConversationLogger:
             git_manager: GitManager instance for Git operations
         """
         self.git = git_manager
-        self.buffer = []
-        self.buffer_timestamp = None
 
     def get_week_path(self) -> str:
         """Get the path for current year/week directory."""
@@ -241,19 +237,29 @@ class ConversationLogger:
             return True
 
         try:
-            # Get session GUID
+            # Get session GUID and week path
             guid = SessionManager.get_or_create_guid()
-
-            # Get week path
-            week_path = self.get_week_path()
-
-            # Format entry
-            entry = self.format_entry(user_message, assistant_response)
-
-            # Append to Git — filename: {YYYYMMDD}-{guid}.txt
             start_date = SessionManager.get_or_create_start_date()
+            week_path = self.get_week_path()
             file_path = f"{week_path}/{start_date}-{guid}.txt"
-            success = self.git.append_file(file_path, entry, max_retries)
+
+            # Pull latest before writing to avoid conflicts
+            self.git.pull()
+
+            # Write file header if this is a new file
+            full_path = os.path.join(self.git.repo_path, file_path)
+            if not os.path.exists(full_path):
+                header = format_conversation_header(guid)
+                self.git.append_to_file(file_path, header)
+
+            # Format and append conversation entry
+            entry = self.format_entry(user_message, assistant_response)
+            self.git.append_to_file(file_path, entry)
+
+            success = self.git.commit_and_push(
+                f"Log conversation {guid} [{week_path}]",
+                max_retries=max_retries
+            )
 
             if success:
                 logger.info(f"Conversation logged: {file_path}")

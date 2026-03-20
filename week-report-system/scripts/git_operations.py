@@ -180,25 +180,29 @@ class GitManager:
         """
         Commit and push changes with automatic retry on conflicts.
 
+        Separates commit (done once) from push (retried on conflict).
+
         Args:
             message: Commit message
-            max_retries: Maximum number of retry attempts
+            max_retries: Maximum number of retry attempts for push
 
         Returns:
             True if successful, False otherwise
         """
+        try:
+            # Stage and commit once
+            self._run_git_command('add', '-A')
+            success, _, _ = self._run_git_command('commit', '-m', message)
+            if not success:
+                # Nothing to commit
+                return True
+        except Exception as e:
+            logger.error(f"Commit failed: {str(e)}")
+            return False
+
+        # Push with retry on conflict
         for attempt in range(max_retries):
             try:
-                # Stage all changes
-                self._run_git_command('add', '-A')
-
-                # Commit
-                success, _, _ = self._run_git_command('commit', '-m', message)
-                if not success:
-                    # Nothing to commit
-                    return True
-
-                # Push
                 self.push()
                 logger.info(f"Successfully committed and pushed: {message}")
                 return True
@@ -206,15 +210,14 @@ class GitManager:
             except PushConflictError:
                 if attempt < max_retries - 1:
                     logger.warning(f"Push conflict, retrying ({attempt + 1}/{max_retries})")
-                    time.sleep(1)  # Brief delay before retry
-                    self.pull(force=True)
-                    continue
+                    time.sleep(1)
+                    self.pull()  # Rebase local commit on top of remote changes
                 else:
                     logger.error("Max retries reached, giving up")
                     return False
 
             except Exception as e:
-                logger.error(f"Commit and push failed: {str(e)}")
+                logger.error(f"Push failed: {str(e)}")
                 return False
 
         return False
