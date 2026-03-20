@@ -18,9 +18,9 @@
 
 | 指标 | 数值 |
 | --- | --- |
-| 技能总数 | `40` |
+| 技能总数 | `41` |
 | `pywayne` 技能 | `34` |
-| 通用技能 | `6`（`deep-think`、`send-email`、`shell-shortcuts`、`tutor-general`、`tutor-math-geometry`、`proactive-agent`） |
+| 通用技能 | `7`（`deep-think`、`send-email`、`shell-shortcuts`、`tutor-general`、`tutor-math-geometry`、`proactive-agent`、`week-report-system`） |
 | 规范主文档 | `CLAUDE.md` |
 | Agent 入口文档 | `AGENTS.md` |
 
@@ -33,6 +33,7 @@
 - `tutor-general/` - 通用辅导技能（生成 Manim 教学视频）
 - `tutor-math-geometry/` - 数学几何辅导技能（交互式动画）
 - `proactive-agent/` - 主动式 Agent 架构（WAL、Working Buffer 等）
+- `week-report-system/` - AI 智能周报系统，自动记录对话并生成周报
 - `CLAUDE.md` - 命名、结构、文档规则
 - `AGENTS.md` - 给其他模型/代理的简明协作说明
 
@@ -56,6 +57,35 @@
 - `tutor-general`：通用辅导技能（Manim 视频生成）
 - `tutor-math-geometry`：数学几何辅导技能（交互式动画）
 - `proactive-agent`：主动式 Agent 架构（WAL、Working Buffer 等）
+- `week-report-system`：AI 智能周报系统——自动将每次对话记录到 GitHub，按需生成结构化周报
+
+## ⭐ 重点推荐：Week Report System
+
+> 让日常 AI 对话自动沉淀为每周工作汇报。
+
+`week-report-system` 在后台静默记录每次用户与 AI 的对话（压缩摘要版），按年份/周次存入私有 GitHub 仓库。需要写周报时，一句话触发——自动读取对话记录、按项目分类、提取关键数据，输出结构化 Markdown 周报。
+
+**仓库结构：**
+```
+week-reports/
+├── 2026/
+│   └── week12/
+│       ├── 20260318-a1b2c3d4.txt      # 简略对话记录
+│       ├── 20260319-e5f6g7h8.txt
+│       └── report-20260320-143022.md  # 生成的详细周报
+```
+
+**使用方式：**
+- 正常聊天即可，对话在后台自动记录
+- 说 `写周报` / `生成本周周报` 即可生成完整报告
+- 说 `总结2026年第12周的工作` 可指定任意周
+
+**一台电脑，所有 AI 智能体共享** — 通过 [Skill Manager](https://github.com/wangyendt/skillmanager) 安装：
+```bash
+npm -g install @wang121ye/skillmanager
+skillmanager install --global   # 从列表中勾选 week-report-system
+```
+安装一次，Claude、ChatGPT 等所有支持 skill 的 Agent 均可使用。
 
 ### pywayne 技能领域
 

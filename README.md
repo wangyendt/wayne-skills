@@ -18,9 +18,9 @@ It converts practical modules into reusable `SKILL.md` playbooks so agents can p
 
 | Metric | Value |
 | --- | --- |
-| Total skills | `40` |
+| Total skills | `41` |
 | `pywayne` skills | `34` |
-| General skills | `6` (`deep-think`, `send-email`, `shell-shortcuts`, `tutor-general`, `tutor-math-geometry`, `proactive-agent`) |
+| General skills | `7` (`deep-think`, `send-email`, `shell-shortcuts`, `tutor-general`, `tutor-math-geometry`, `proactive-agent`, `week-report-system`) |
 | Canonical rules | `CLAUDE.md` |
 | Agent handoff doc | `AGENTS.md` |
 
@@ -33,6 +33,7 @@ It converts practical modules into reusable `SKILL.md` playbooks so agents can p
 - `tutor-general/` - general tutoring skill for generating educational videos with Manim
 - `tutor-math-geometry/` - math geometry tutoring skill with interactive animations
 - `proactive-agent/` - proactive agent architecture (WAL, Working Buffer, etc.)
+- `week-report-system/` - AI-powered weekly work report system with Git-based conversation logging
 - `CLAUDE.md` - naming, structure, and documentation rules
 - `AGENTS.md` - concise instructions for external models/agents
 
@@ -56,6 +57,35 @@ Examples:
 - `tutor-general`: general tutoring skill with Manim video generation
 - `tutor-math-geometry`: math geometry tutoring skill with interactive animations
 - `proactive-agent`: proactive agent architecture (WAL, Working Buffer, etc.)
+- `week-report-system`: AI weekly work report system — auto-records every conversation to GitHub and generates structured weekly reports on demand
+
+## ⭐ Featured: Week Report System
+
+> Automatically turn your daily AI conversations into polished weekly reports.
+
+`week-report-system` silently logs every user–AI exchange (compressed + summarized) to a private GitHub repository, organized by year and week. At any point, ask it to generate a full weekly report — it reads the conversation logs, categorizes work by project, extracts key metrics, and outputs a structured markdown report.
+
+**Repository structure:**
+```
+week-reports/
+├── 2026/
+│   └── week12/
+│       ├── 20260318-a1b2c3d4.txt      # brief conversation log
+│       ├── 20260319-e5f6g7h8.txt
+│       └── report-20260320-143022.md  # generated weekly report
+```
+
+**How to use:**
+- Just chat normally — conversations are recorded in the background
+- Say `写周报` / `generate week report` to get a full report
+- Say `总结2026年第12周的工作` to report on a specific week
+
+**Install across all AI agents on your machine** with [Skill Manager](https://github.com/wangyendt/skillmanager):
+```bash
+npm -g install @wang121ye/skillmanager
+skillmanager install --global   # select week-report-system from the list
+```
+One install, works for Claude, ChatGPT, and any other agent that supports skills.
 
 ### pywayne Domains
 
