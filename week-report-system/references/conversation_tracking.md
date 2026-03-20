@@ -8,16 +8,14 @@ How conversations are recorded to the Git repository after every AI response.
 week-reports/
 ├── 2024/
 │   ├── week01/
-│   │   ├── 20240101-a1b2c3d4.txt    # Session started Jan 1
-│   │   ├── 20240103-e5f6g7h8.txt    # Session started Jan 3
-│   │   └── 20240105-i9j0k1l2.txt
+│   │   ├── 20240101-a1b2c3d4.txt    # Session started Jan 1 (brief log)
+│   │   ├── 20240103-e5f6g7h8.txt    # Session started Jan 3 (brief log)
+│   │   ├── 20240105-i9j0k1l2.txt
+│   │   └── report-20240107-183000.md # Generated weekly report (timestamped)
 │   ├── week02/
 │   │   └── ...
 │   └── ...
-├── 2025/
-│   └── ...
-└── reports/
-    ├── 2024_week01.md
+└── 2025/
     └── ...
 ```
 

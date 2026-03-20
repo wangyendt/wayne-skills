@@ -264,7 +264,7 @@ class GitManager:
         files = []
         for root, _, filenames in os.walk(full_path):
             for filename in filenames:
-                if filename.endswith('.txt') or filename.endswith('.md'):
+                if filename.endswith('.txt'):
                     rel_path = os.path.relpath(os.path.join(root, filename), self.repo_path)
                     files.append(rel_path)
 

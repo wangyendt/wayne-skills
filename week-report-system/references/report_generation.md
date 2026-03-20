@@ -293,7 +293,7 @@ Optionally save generated reports to Git:
 ```python
 def save_report(git: GitManager, report: str, year: int, week: int):
     """Save report to Git repository."""
-    reports_path = f"reports/{year}_week{week:02d}.md"
+    reports_path = f"{year}/week{week:02d}/report-{datetime.now().strftime('%Y%m%d-%H%M%S')}.md"
     git.write_file(reports_path, report)
     git.commit_and_push(f"Add weekly report for {year}-W{week:02d}")
 
@@ -421,7 +421,7 @@ Optionally save generated reports to Git:
 def save_report(git: GitManager, report: str, year: int, week: int):
     """Save report to Git repository."""
 
-    reports_path = f"reports/{year}_week{week:02d}.md"
+    reports_path = f"{year}/week{week:02d}/report-{datetime.now().strftime('%Y%m%d-%H%M%S')}.md"
     git.write_file(reports_path, report)
     git.commit_and_push(f"Add weekly report for {year}-W{week:02d}")
 ```

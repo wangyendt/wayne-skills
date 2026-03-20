@@ -51,7 +51,7 @@ Quick summary:
 2. Read all `.txt` files under `{year}/week{WW}/`
 3. Analyze conversations: categorize by project, extract metrics and highlights
 4. Render report using the Total–Part–Total structure
-5. Optionally save to `reports/{year}_week{WW}.md` in the repo
+5. Optionally save to `{year}/week{WW}/report-{YYYYMMDD}-{HHmmss}.md` in the repo (timestamped to avoid conflicts between agents)
 
 ## Install on All AI Agents (Recommended)
 
