@@ -1,6 +1,6 @@
 ---
 name: week-report-system
-description: AI weekly work report system that automatically records every conversation (compressed user messages + AI summaries) to a GitHub repository organized by year/week, and generates comprehensive weekly reports. ALWAYS use this skill when: user mentions "周报", "week report", "weekly report", "本周总结", "工作总结", "写周报", "生成周报", "帮我写周报", "本周工作", "上周周报", "查看周报", "周报系统", "记录工作", or asks to summarize/review weekly work. Also use for EVERY user conversation to silently record it to Git in the background. Trigger on any work-related chat to keep the log up to date.
+description: 'AI weekly work report system that automatically records every conversation (compressed user messages + AI summaries) to a GitHub repository organized by year/week, and generates comprehensive weekly reports. ALWAYS use this skill when the user mentions 周报, week report, weekly report, 本周总结, 工作总结, 写周报, 生成周报, 帮我写周报, 本周工作, 上周周报, 查看周报, 周报系统, 记录工作, or asks to summarize/review weekly work. Also use for EVERY user conversation to silently record it to Git in the background. Trigger on any work-related chat to keep the log up to date.'
 ---
 
 # Week Report System
