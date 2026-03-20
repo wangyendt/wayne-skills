@@ -1,0 +1,62 @@
+{
+  "skill_name": "week-report-system",
+  "evals": [
+    {
+      "id": 1,
+      "name": "environment-setup",
+      "prompt": "我想使用周报系统，写一份上周的工作总结",
+      "expected_output": "应该检测到环境变量缺失，并引导用户进行GitHub仓库和Token的配置",
+      "files": [],
+      "assertions": [
+        {
+          "name": "checks-env-vars",
+          "description": "检查是否正确识别环境变量缺失",
+          "expected": "Should detect missing WEEK_REPORT_GIT_USERNAME, WEEK_REPORT_GIT_PERSONAL_TOKEN, or WEEK_REPORT_GIT_REPO and guide user to setup"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "conversation-recording",
+      "prompt": "帮我写一个Python函数，实现斐波那契数列，(测试对话记录功能，环境变量已配置好)",
+      "expected_output": "生成斐波那契函数后，应该在后台记录这次对话",
+      "files": [],
+      "assertions": [
+        {
+          "name": "generates-code",
+          "description": "生成了有效的Python代码",
+          "expected": "Should output a working Python function for Fibonacci sequence"
+        },
+        {
+          "name": "mentions-recording",
+          "description": "提及或暗示对话将被记录",
+          "expected": "Should mention or imply that the conversation will be recorded for weekly report"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "weekly-report-generation",
+      "prompt": "总结2024年第51周的工作",
+      "expected_output": "从Git仓库读取该周的所有对话记录，生成结构化的周报",
+      "files": [],
+      "assertions": [
+        {
+          "name": "generates-structured-report",
+          "description": "生成结构化的周报",
+          "expected": "Should generate a report with: overview, project sections, statistics, key achievements, and summary"
+        },
+        {
+          "name": "total-part-total-structure",
+          "description": "遵循总分总结构",
+          "expected": "Report should follow Total-Part-Total structure (overview at beginning, detailed sections in middle, summary at end)"
+        },
+        {
+          "name": "data-driven",
+          "description": "包含数据支撑",
+          "expected": "Should include metrics like conversation count, project numbers, or other quantifiable data"
+        }
+      ]
+    }
+  ]
+}
