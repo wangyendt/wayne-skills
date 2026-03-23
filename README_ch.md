@@ -18,15 +18,16 @@
 
 | 指标 | 数值 |
 | --- | --- |
-| 技能总数 | `41` |
+| 技能总数 | `42` |
 | `pywayne` 技能 | `34` |
-| 通用技能 | `7`（`deep-think`、`send-email`、`shell-shortcuts`、`tutor-general`、`tutor-math-geometry`、`proactive-agent`、`week-report-system`） |
+| 通用技能 | `8`（`alapi`、`deep-think`、`send-email`、`shell-shortcuts`、`tutor-general`、`tutor-math-geometry`、`proactive-agent`、`week-report-system`） |
 | 规范主文档 | `CLAUDE.md` |
 | Agent 入口文档 | `AGENTS.md` |
 
 ## 🗂️ 仓库结构
 
 - `pywayne/` - 与 `pywayne` 源码模块对齐的技能目录
+- `alapi/` - ALAPI 全量 OpenAPI 技能，含接口路由与请求辅助脚本
 - `send-email/` - SMTP 邮件发送技能（模板+附件）
 - `deep-think/` - 深度分析与问题拆解流程
 - `shell-shortcuts/` - 跨平台终端快捷指令（`proxy_on`、`goto`、`gpu`）
@@ -51,6 +52,7 @@
 
 ### 通用技能
 
+- `alapi`：ALAPI 全量 OpenAPI 技能，提供接口路由、鉴权说明与请求辅助
 - `deep-think`：结构化深度思考流程
 - `send-email`：支持 HTML 模板与附件的 SMTP 邮件发送
 - `shell-shortcuts`：配置 `proxy_on/proxy_off/goto/gpu` 与可选 Conda 自动激活

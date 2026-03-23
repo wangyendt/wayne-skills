@@ -1,0 +1,4 @@
+interface:
+  display_name: "ALAPI Full API"
+  short_description: "ALAPI 全量 OpenAPI 接口文档与调用器"
+  default_prompt: "Use $alapi to find the correct ALAPI endpoint, explain its request body, and prepare or execute the API call."
