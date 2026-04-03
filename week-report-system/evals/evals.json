@@ -17,9 +17,9 @@
     },
     {
       "id": 2,
-      "name": "conversation-recording",
+      "name": "conversation-material-capture",
       "prompt": "帮我写一个Python函数，实现斐波那契数列，(测试对话记录功能，环境变量已配置好)",
-      "expected_output": "生成斐波那契函数后，应该在后台记录这次对话",
+      "expected_output": "生成斐波那契函数后，应该以 conversation material 的方式在后台记录这次对话",
       "files": [],
       "assertions": [
         {
@@ -28,23 +28,37 @@
           "expected": "Should output a working Python function for Fibonacci sequence"
         },
         {
-          "name": "mentions-recording",
-          "description": "提及或暗示对话将被记录",
-          "expected": "Should mention or imply that the conversation will be recorded for weekly report"
+          "name": "captures-conversation-material",
+          "description": "按 conversation material 的语义进行后台记录",
+          "expected": "Should capture the exchange as a conversation material with summary/outcome fields"
         }
       ]
     },
     {
       "id": 3,
+      "name": "document-material-ingestion",
+      "prompt": "把这份 experiment 方案总结成周报素材，项目是 rayneo_hotword_tflm",
+      "expected_output": "应该识别为 document 类型的周报素材，并提炼出标题、摘要、结果与下一步",
+      "files": [],
+      "assertions": [
+        {
+          "name": "uses-document-material-shape",
+          "description": "使用文档素材结构",
+          "expected": "Should capture document material with project, title, summary, outcome, and next_actions"
+        }
+      ]
+    },
+    {
+      "id": 4,
       "name": "weekly-report-generation",
       "prompt": "总结2024年第51周的工作",
-      "expected_output": "从Git仓库读取该周的所有对话记录，生成结构化的周报",
+      "expected_output": "优先从结构化 materials 读取该周素材，必要时回退到 legacy 对话摘要，并生成结构化周报",
       "files": [],
       "assertions": [
         {
           "name": "generates-structured-report",
           "description": "生成结构化的周报",
-          "expected": "Should generate a report with: overview, project sections, statistics, key achievements, and summary"
+          "expected": "Should generate a report with: overview, project sections, highlights, and summary"
         },
         {
           "name": "total-part-total-structure",
@@ -52,9 +66,9 @@
           "expected": "Report should follow Total-Part-Total structure (overview at beginning, detailed sections in middle, summary at end)"
         },
         {
-          "name": "data-driven",
-          "description": "包含数据支撑",
-          "expected": "Should include metrics like conversation count, project numbers, or other quantifiable data"
+          "name": "prioritizes-materials",
+          "description": "优先使用结构化素材",
+          "expected": "Should prioritize structured materials and use legacy conversation digests only as fallback"
         }
       ]
     }
