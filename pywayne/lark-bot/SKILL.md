@@ -1,29 +1,30 @@
 ---
 name: pywayne-lark-bot
-description: Feishu/Lark Bot API wrapper for full-featured Feishu bot interactions. Use when users need to send messages (text, image, audio, file, post, interactive, share), especially Markdown delivery via send_markdown_to_chat with card_v2/post routing, table fallback, and auto chunking; build or update schema 2.0 cards; send in-place streaming reply cards with reply_streaming_card, update_streaming_card, recolor_streaming_card, stream_reply_card, or astream_reply_card; manage files (upload/download); query user/group info; reply to messages; forward/recall/update messages; add reactions; pin messages; manage chats (create, delete, update, members, admins); get message history; batch send; handle read receipts and urgent notifications.
+description: Feishu/Lark Bot API wrapper for full-featured Feishu bot interactions. Use when users need to send messages (text, image, audio, file, rich_text, card, share), especially Markdown delivery via send_markdown_message_to_chat with card_v2/post routing, table fallback, and auto chunking; build or update schema 2.0 cards; send in-place streaming reply cards with reply_streaming_card, update_streaming_card, recolor_streaming_card, stream_reply_card, or astream_reply_card; manage files (upload/download); query user/group info; reply to messages; forward/recall/update messages; edit previously sent text/rich_text/card messages via edit_text_message, edit_post_message, edit_card_message; add reactions; pin messages; manage chats (create, delete, update, members, admins); get message history; batch send; handle read receipts and urgent notifications.
 ---
 
 # Pywayne Lark Bot - Full-Featured Feishu API Wrapper
 
 ## Overview
 
-`LarkBot` is a comprehensive Feishu (Lark) application bot wrapper that provides complete bidirectional interaction capabilities. It's designed for scenarios requiring **full message lifecycle management, chat administration, and complex interactive features**.
+`LarkBot` is a comprehensive Feishu (Lark) application bot wrapper that provides complete bidirectional interaction capabilities. It's designed for scenarios requiring **full message lifecycle management, chat administration, and complex card-based interactions**.
 
 **Key Capabilities**:
-- Send all message types (text, image, audio, video, file, post, interactive cards)
+- Send all message types (text, image, audio, video, file, rich_text, card)
 - Reply, forward, recall, update messages
+- Edit sent text/rich_text/card messages with semantic helper methods
 - Build and update in-place streaming cards for long-running or LLM-style responses
 - Reactions, pins, read receipts, urgent notifications
 - Chat management (create, delete, update, members, admins, announcements)
 - File upload/download with message resource handling
 - User and group information queries
 - Batch messaging to users/departments
-- **Recommended**: `send_markdown_to_chat` with auto-chunking and table fallback
+- **Recommended**: `send_markdown_message_to_chat` with auto-chunking and table fallback
 
 **Companion Classes**:
 - `TextContent`: Quick text formatting (@mentions, bold, italic, links)
-- `PostContent`: Rich text post builder with Markdown table handling
-- `CardContentV2`: Schema 2.0 interactive card builder
+- `PostContent`: Rich text builder with Markdown table handling
+- `CardContentV2`: Schema 2.0 card builder
 - `LarkBotListener`: Event listener for incoming messages (separate skill)
 
 ## Installation
@@ -186,7 +187,7 @@ post.add_markdown(
 )
 
 # Send
-bot.send_post_to_chat("oc_xxx", post.get_content())
+bot.send_rich_text_to_chat("oc_xxx", post.get_content())
 ```
 
 **Complete Example**:
@@ -222,12 +223,12 @@ post.add_content_in_new_line(
 )
 
 # Send
-bot.send_post_to_chat("oc_xxx", post.get_content())
+bot.send_rich_text_to_chat("oc_xxx", post.get_content())
 ```
 
 ### CardContentV2 - Schema 2.0 Interactive Card Builder
 
-Lightweight builder for Feishu schema 2.0 interactive cards, ideal for announcements, reports, and status updates with Markdown content.
+Lightweight builder for Feishu schema 2.0 cards, ideal for announcements, reports, and status updates with Markdown content.
 
 **Constructor**:
 
@@ -297,17 +298,17 @@ card.add_hr()
 card.add_markdown("**Next Steps**: Deploy to staging environment")
 
 # Send
-bot.send_interactive_to_chat("oc_xxx", card.get_card())
+bot.send_card_to_chat("oc_xxx", card.get_card())
 ```
 
 ## Core Messaging Methods
 
-### Recommended Entry Point: send_markdown_to_chat
+### Recommended Entry Point: send_markdown_message_to_chat
 
-**The preferred high-level method for sending Markdown content** with automatic chunking, table handling, and dual routing (card_v2/post).
+**The preferred high-level method for sending Markdown content** with automatic chunking, table handling, and dual routing (card_v2/rich_text).
 
 ```python
-responses = bot.send_markdown_to_chat(
+responses = bot.send_markdown_message_to_chat(
     chat_id: str,
     md_text: str,
     *,
@@ -323,12 +324,12 @@ responses = bot.send_markdown_to_chat(
 - `md_text`: Markdown content
 - `title`: Message title
 - `prefer`: Route preference:
-  - `"card_v2"` (default): Send as schema 2.0 interactive card (supports most Markdown)
-  - `"post"`: Send as rich text post (supports table fallback)
-- `table_fallback`: How to render Markdown tables in post route:
+  - `"card_v2"` (default): Send as schema 2.0 card (supports most Markdown)
+  - `"post"`: Send as rich_text message (supports table fallback)
+- `table_fallback`: How to render Markdown tables in rich_text route:
   - `"code_block"`: Convert tables to fixed-width text blocks (stable, recommended)
   - `"md"`: Keep tables as Markdown (may have layout issues)
-- `max_message_bytes`: Per-message byte limit (defaults: 18k for card_v2, 8k for post)
+- `max_message_bytes`: Per-message byte limit (defaults: 18k for card_v2, 8k for rich_text route)
 
 **Returns**: List of API response dicts for all sent chunks
 
@@ -345,7 +346,7 @@ md = """
 ✅ All services healthy
 """
 
-bot.send_markdown_to_chat(
+bot.send_markdown_message_to_chat(
     "oc_xxx",
     md_text=md,
     title="Deployment Status"
@@ -365,11 +366,11 @@ md = """
 | API      | ⚠️     | 72%      |
 """
 
-bot.send_markdown_to_chat(
+bot.send_markdown_message_to_chat(
     "oc_xxx",
     md_text=md,
     title="Test Report",
-    prefer="post",                    # Use post for table support
+    prefer="post",                    # Use rich_text route for table support
     table_fallback="code_block"       # Convert table to fixed-width text
 )
 ```
@@ -381,7 +382,7 @@ bot.send_markdown_to_chat(
 long_md = "\n".join([f"## Section {i}\n\n" + "- " * 50 for i in range(50)])
 
 # Automatically split into multiple messages
-responses = bot.send_markdown_to_chat(
+responses = bot.send_markdown_message_to_chat(
     "oc_xxx",
     md_text=long_md,
     title="Long Report",
@@ -392,10 +393,10 @@ responses = bot.send_markdown_to_chat(
 print(f"Sent {len(responses)} message chunks")
 ```
 
-**Why Use send_markdown_to_chat?**
+**Why Use send_markdown_message_to_chat?**
 - Handles large content automatically
 - Tables render reliably with fallback
-- Single API for both card and post routes
+- Single API for both card and rich_text routes
 - No manual JSON construction
 - Consistent chunking and encoding
 
@@ -511,10 +512,10 @@ bot.download_file(pdf_key, "/save/path/report.pdf")
 
 ```python
 # Send to user
-bot.send_post_to_user(user_open_id: str, post_content: Dict) -> Dict
+bot.send_rich_text_to_user(user_open_id: str, rich_text_content: Dict) -> Dict
 
 # Send to chat
-bot.send_post_to_chat(chat_id: str, post_content: Dict) -> Dict
+bot.send_rich_text_to_chat(chat_id: str, rich_text_content: Dict) -> Dict
 ```
 
 **Example** (see PostContent section for builder usage):
@@ -525,23 +526,23 @@ from pywayne.lark_bot import PostContent
 post = PostContent(title="Announcement")
 post.add_markdown("**Important update**: System will be upgraded tonight")
 
-bot.send_post_to_chat("oc_xxx", post.get_content())
+bot.send_rich_text_to_chat("oc_xxx", post.get_content())
 ```
 
 ### Interactive Card Messages
 
 ```python
 # Send to user
-bot.send_interactive_to_user(user_open_id: str, interactive: Dict) -> Dict
+bot.send_card_to_user(user_open_id: str, card: Dict) -> Dict
 
 # Send to chat
-bot.send_interactive_to_chat(chat_id: str, interactive: Dict) -> Dict
+bot.send_card_to_chat(chat_id: str, card: Dict) -> Dict
 ```
 
 **Return Value**:
 - Both methods return a response `Dict`.
 - When the send succeeds, the response includes the created message metadata, including `message_id`.
-- Save that `message_id` if you plan to call `update_interactive_card()`, `patch_message()`, `pin_message()`, or other message lifecycle methods later.
+- Save that `message_id` if you plan to call `edit_card_message()`, `pin_message()`, or other message lifecycle methods later.
 
 **Example with Raw Card JSON**:
 
@@ -567,7 +568,7 @@ card = {
     ]
 }
 
-bot.send_interactive_to_chat("oc_xxx", card)
+bot.send_card_to_chat("oc_xxx", card)
 ```
 
 **Example with CardContentV2 Builder**:
@@ -580,7 +581,7 @@ card.add_markdown("All systems operational ✅")
 card.add_hr()
 card.add_image("img_xxx", size="large")
 
-bot.send_interactive_to_chat("oc_xxx", card.get_card())
+bot.send_card_to_chat("oc_xxx", card.get_card())
 ```
 
 **Example: Capture `message_id` for Later Update**:
@@ -591,7 +592,7 @@ from pywayne.lark_bot import CardContentV2
 card = CardContentV2(title="Deployment Status", template="blue")
 card.add_markdown("⏳ Deployment started")
 
-msg = bot.send_interactive_to_chat("oc_xxx", card.get_card())
+msg = bot.send_card_to_chat("oc_xxx", card.get_card())
 message_id = msg["message_id"]
 
 # ... perform the long-running task ...
@@ -599,30 +600,30 @@ message_id = msg["message_id"]
 done_card = CardContentV2(title="Deployment Status", template="green")
 done_card.add_markdown("✅ Deployment completed successfully")
 
-bot.update_interactive_card(message_id, done_card.get_card())
+bot.edit_card_message(message_id, done_card.get_card())
 ```
 
 ### Share Messages
 
 ```python
 # Share chat to user
-bot.send_shared_chat_to_user(user_open_id: str, shared_chat_id: str) -> Dict
+bot.share_chat_to_user(user_open_id: str, shared_chat_id: str) -> Dict
 
 # Share chat to chat
-bot.send_shared_chat_to_chat(chat_id: str, shared_chat_id: str) -> Dict
+bot.share_chat_to_chat(chat_id: str, shared_chat_id: str) -> Dict
 
 # Share user to user
-bot.send_shared_user_to_user(user_open_id: str, shared_user_id: str) -> Dict
+bot.share_user_to_user(user_open_id: str, shared_user_id: str) -> Dict
 
 # Share user to chat
-bot.send_shared_user_to_chat(chat_id: str, shared_user_id: str) -> Dict
+bot.share_user_to_chat(chat_id: str, shared_user_id: str) -> Dict
 ```
 
 ### System Messages
 
 ```python
 # Send system message to user (special divider-style message)
-bot.send_system_msg_to_user(user_open_id: str, system_msg_text: str) -> Dict
+bot.send_system_message_to_user(user_open_id: str, system_msg_text: str) -> Dict
 ```
 
 ## Message Lifecycle Management
@@ -756,39 +757,40 @@ for msg in history.get("items", []):
     print(msg["message_id"], msg["msg_type"])
 ```
 
-### Update Message
+### Edit Text/Post Message
 
-Replace entire message content.
+Edit a previously sent text or rich_text (`post`) message.
 
 ```python
-response = bot.update_message(
+response = bot.edit_text_message(
     message_id: str,
-    msg_type: str,
-    content: Union[str, Dict[str, Any], List[Any]]
+    text: str
+) -> Dict
+
+response = bot.edit_post_message(
+    message_id: str,
+    post_content: Dict[str, Any]
 ) -> Dict
 ```
 
-### Patch Message
+### Edit Card Message
 
-Partially update message content (commonly used for interactive cards).
-
-```python
-response = bot.patch_message(
-    message_id: str,
-    content: Union[str, Dict[str, Any], List[Any]]
-) -> Dict
-```
-
-### Update Interactive Card
-
-Convenience wrapper for updating interactive cards in place.
+Update a card message in place.
 
 ```python
-response = bot.update_interactive_card(
+response = bot.edit_card_message(
     message_id: str,
     card: Dict[str, Any]
 ) -> Dict
 ```
+
+**Important Limits**:
+- `edit_text_message()` / `edit_post_message()` are for `text` and `post` only, i.e. text and rich_text messages
+- `edit_card_message()` is for cards
+- A single message can be edited at most 20 times
+- You can only edit messages sent by the current bot/app
+- Recalled, deleted, or expired messages cannot be edited
+- Text/rich_text and card update APIs are separate and must not be mixed
 
 **Example: Status Card Workflow**:
 
@@ -799,7 +801,7 @@ from pywayne.lark_bot import CardContentV2
 card = CardContentV2(title="Task Status", template="blue")
 card.add_markdown("⏳ Processing your request...")
 
-msg = bot.send_interactive_to_chat("oc_xxx", card.get_card())
+msg = bot.send_card_to_chat("oc_xxx", card.get_card())
 
 # ... perform task ...
 
@@ -807,7 +809,7 @@ msg = bot.send_interactive_to_chat("oc_xxx", card.get_card())
 completed_card = CardContentV2(title="Task Status", template="green")
 completed_card.add_markdown("✅ Task completed successfully!")
 
-bot.update_interactive_card(msg["message_id"], completed_card.get_card())
+bot.edit_card_message(msg["message_id"], completed_card.get_card())
 ```
 
 ### In-Place Streaming Cards
@@ -910,7 +912,7 @@ card = bot.build_streaming_card(
     status_text="Waiting for final checks..."
 )
 
-bot.send_interactive_to_chat("oc_xxx", card)
+bot.send_card_to_chat("oc_xxx", card)
 ```
 
 **Example 2: Manual Start, Multiple Updates, Final Recolor**:
@@ -1423,14 +1425,14 @@ groups = bot.get_group_list() -> List[Dict]
 Find chat IDs matching a group name.
 
 ```python
-chat_ids = bot.get_group_chat_id_by_name(group_name: str) -> List[str]
+chat_ids = bot.find_chat_ids_by_name(group_name: str) -> List[str]
 ```
 
 **Example**:
 
 ```python
 # Find "Project Alpha" groups
-chat_ids = bot.get_group_chat_id_by_name("Project Alpha")
+chat_ids = bot.find_chat_ids_by_name("Project Alpha")
 
 if chat_ids:
     bot.send_text_to_chat(chat_ids[0], "Hello, team!")
@@ -1441,7 +1443,7 @@ if chat_ids:
 Get list of members in a chat group.
 
 ```python
-members = bot.get_members_in_group_by_group_chat_id(
+members = bot.get_chat_members(
     group_chat_id: str
 ) -> List[Dict]
 ```
@@ -1451,7 +1453,7 @@ members = bot.get_members_in_group_by_group_chat_id(
 Find member open IDs matching a name in a chat.
 
 ```python
-open_ids = bot.get_member_open_id_by_name(
+open_ids = bot.find_member_open_ids_by_name(
     group_chat_id: str,
     member_name: str
 ) -> List[str]
@@ -1461,9 +1463,9 @@ open_ids = bot.get_member_open_id_by_name(
 
 ```python
 # Find member in group
-chat_ids = bot.get_group_chat_id_by_name("Project Alpha")
+chat_ids = bot.find_chat_ids_by_name("Project Alpha")
 if chat_ids:
-    member_ids = bot.get_member_open_id_by_name(chat_ids[0], "Alice")
+    member_ids = bot.find_member_open_ids_by_name(chat_ids[0], "Alice")
     if member_ids:
         bot.send_text_to_user(member_ids[0], "Hi Alice!")
 ```
@@ -1505,8 +1507,8 @@ response = bot.batch_send_message(
 
 **Parameters**:
 - `msg_type`: "text", "interactive", etc.
-- `content`: Message content (for non-interactive types)
-- `card`: Card content (for interactive type)
+- `content`: Message content (for non-card types)
+- `card`: Card content (for card type)
 - Target lists (at least one required):
   - `user_open_ids`: List of user open IDs
   - `department_ids`: List of department IDs
@@ -1556,7 +1558,7 @@ chat_id = "oc_xxx"
 card = CardContentV2(title="Deployment Status", template="blue")
 card.add_markdown("⏳ Deployment started...")
 
-msg = bot.send_interactive_to_chat(chat_id, card.get_card())
+msg = bot.send_card_to_chat(chat_id, card.get_card())
 message_id = msg["message_id"]
 
 # Step 2: Update progress
@@ -1566,7 +1568,7 @@ time.sleep(5)
 progress_card = CardContentV2(title="Deployment Status", template="blue")
 progress_card.add_markdown("📦 Building Docker images... 50%")
 
-bot.update_interactive_card(message_id, progress_card.get_card())
+bot.edit_card_message(message_id, progress_card.get_card())
 
 # Step 3: Update to completion
 time.sleep(5)
@@ -1583,7 +1585,7 @@ done_card.add_markdown("""
 **Health Check**: All systems operational
 """)
 
-bot.update_interactive_card(message_id, done_card.get_card())
+bot.edit_card_message(message_id, done_card.get_card())
 
 # Step 4: Pin the final status
 bot.pin_message(message_id)
@@ -1613,11 +1615,7 @@ bot.add_reaction("om_user_question", "THUMBSUP")
 answer = "The solution is to restart the service"
 
 # Update reply with answer
-bot.update_message(
-    reply_msg["message_id"],
-    "text",
-    {"text": f"✅ {answer}"}
-)
+bot.edit_text_message(reply_msg["message_id"], f"✅ {answer}")
 
 # Pin the solution
 bot.pin_message(reply_msg["message_id"])
@@ -1682,7 +1680,7 @@ briefing.add_markdown("""
 - Monitor connection pool
 """)
 
-bot.send_interactive_to_chat(chat_id, briefing.get_card())
+bot.send_card_to_chat(chat_id, briefing.get_card())
 
 # After incident resolved...
 bot.update_chat(
@@ -1692,7 +1690,7 @@ bot.update_chat(
 )
 ```
 
-### Example 5: Using send_markdown_to_chat with Tables
+### Example 5: Using send_markdown_message_to_chat with Tables
 
 ```python
 from pywayne.lark_bot import LarkBot
@@ -1721,7 +1719,7 @@ All critical tests passed this week.
 """
 
 # Send with post route and table fallback
-bot.send_markdown_to_chat(
+bot.send_markdown_message_to_chat(
     "oc_xxx",
     md_text=report,
     title="Weekly Test Report",
@@ -1791,7 +1789,7 @@ receipts = bot.get_message_read_users(msg["message_id"])
 readers = [reader["user_id"] for reader in receipts.get("items", [])]
 
 # Follow up with non-readers
-all_members = bot.get_members_in_group_by_group_chat_id("oc_xxx")
+all_members = bot.get_chat_members("oc_xxx")
 non_readers = [m["member_id"] for m in all_members if m["member_id"] not in readers]
 
 for user_id in non_readers:
@@ -1808,7 +1806,7 @@ pywayne>=0.1.0 (for tools integration)
 ## Important Notes
 
 1. **Message Content Encoding**:
-   - `reply_message`, `update_message`, `patch_message` automatically JSON-encode content
+   - `reply_message`, `edit_text_message`, `edit_post_message`, `edit_card_message` automatically JSON-encode content
    - Text messages typically use `{"text": "message"}`
    - Interactive cards pass the card JSON directly
 
@@ -1816,24 +1814,31 @@ pywayne>=0.1.0 (for tools integration)
    - Always store `message_id` from send responses for later operations
    - Message IDs are required for reply, forward, recall, update, reactions, pins
 
-3. **Reaction Emoji Codes**:
+3. **Message Editing Limits**:
+   - A single message can be edited at most 20 times
+   - Only messages sent by the current bot/app can be edited
+   - Recalled, deleted, or expired messages cannot be edited
+   - `edit_text_message` / `edit_post_message` are only for `text` / `post`, i.e. text / rich_text updates
+   - `edit_card_message` is for cards and should not be mixed with text/rich_text updates
+
+4. **Reaction Emoji Codes**:
    - Use Feishu's emoji type strings (e.g., `"THUMBSUP"`), not Unicode emojis
    - Get full list: `PostContent.list_emoji_types()` opens documentation
 
-4. **Batch Send Limitations**:
+5. **Batch Send Limitations**:
    - Cannot reply to or update batch-sent messages
    - Only supports user/department targets
    - Different from normal group messages
 
-5. **Chat Announcement**:
+6. **Chat Announcement**:
    - `set_chat_announcement` uses Feishu's patch API format
    - Requires understanding of Feishu announcement patch operations
    - Refer to Feishu OpenAPI documentation for patch request structure
 
-6. **send_markdown_to_chat Advantages**:
+7. **send_markdown_message_to_chat Advantages**:
    - Automatic byte-based chunking for large content
    - Table fallback for reliable rendering
-   - Dual routing (card_v2/post) flexibility
+   - Dual routing (card_v2/rich_text) flexibility
    - **Recommended for all Markdown sending**
 
 ## Integration with LarkBotListener
