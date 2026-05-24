@@ -1,6 +1,6 @@
 ---
 name: awesome-docs
-description: Use this skill whenever the user asks to record, save, organize, update, or maintain project documentation, including plan documents, experiment notes, know-how, roadmap items, decision records, summaries, or common command registries. Also use it when the user asks to save a generated shell command, append to 常用命令, or create a reusable AI/human project documentation interface. Defaults to <project-root>/docs unless the user specifies another documentation path.
+description: Use this skill whenever the user asks to record, save, organize, update, or maintain project documentation, including plan documents, experiment notes, know-how, roadmap items, decision records, summaries, story-telling documentation polish, or common command registries. Also use it when the user asks to save a generated shell command, append to 常用命令, or create a reusable AI/human project documentation interface. Defaults to <project-root>/docs unless the user specifies another documentation path.
 ---
 
 # Awesome Docs
@@ -14,8 +14,9 @@ When the user asks to record project knowledge:
 1. Resolve the documentation root.
 2. Classify the content.
 3. Create or update the right document.
-4. Write in a concise, factual, readable style.
-5. If the request is about reusable commands, update `常用命令.txt` with single-line commands.
+4. Write in a concise, factual, readable style with a clear story line.
+5. Re-read the full document after writing and tighten the logic, headings, transitions, and conclusions.
+6. If the request is about reusable commands, update `常用命令.txt` with single-line commands.
 
 ## Documentation Root
 
@@ -147,6 +148,8 @@ When updating an old document, preserve its structure and add the minimum necess
 
 Remove AI flavor. Write like an engineer preserving project state for another engineer.
 
+Use story-telling as the organizing principle: context -> tension or question -> action -> evidence -> conclusion -> next move. The document should feel like a clear engineering narrative, not a pile of notes.
+
 Prefer:
 
 - direct titles
@@ -155,6 +158,8 @@ Prefer:
 - commands and file paths in code formatting
 - tables for metrics and comparisons
 - bullets for decisions and next steps
+- one idea per paragraph
+- explicit transitions between background, evidence, and conclusion
 
 Avoid:
 
@@ -163,6 +168,8 @@ Avoid:
 - generic praise
 - vague claims without data
 - long paragraphs that mix setup, result, and conclusion
+- orphaned details that are not tied back to the main question
+- dumping raw logs without explaining what they prove
 
 Good documentation answers:
 
@@ -171,6 +178,55 @@ Good documentation answers:
 - What evidence supports it?
 - What should be done next?
 - Where are the commands, data, or files?
+
+## Quality Bar By Document Type
+
+### Experiments
+
+Experiment documents must be organized and self-contained. Every experiment needs enough background for a future reader to understand why the run existed before reading the numbers.
+
+Always make clear:
+
+- the project context or regression that triggered the experiment
+- the question or hypothesis being tested
+- what changed and what stayed fixed
+- the dataset, model, environment, commands, and key parameters
+- which metrics decide success or failure
+- what the results prove, what they do not prove, and the next experiment if any
+
+### Know-how
+
+Know-how documents should be easy to reuse under pressure. Start with the practical situation, then explain the symptom, root cause, procedure, verification method, and boundary conditions.
+
+The reader should leave knowing when to apply the recipe, when not to apply it, and which command or file confirms the fix.
+
+### Plans
+
+Plan documents should turn ambiguity into an executable path. Start from the background and constraint story, then explain the goal, scope, proposed approach, sequence of work, risks, decision points, and checkpoints.
+
+Prefer readable section flow over exhaustive task dumps. If the plan contains many tasks, group them by phase and explain the reason for each phase.
+
+### Roadmaps
+
+Roadmap documents should explain direction, not just list milestones. Start with the current state and why the direction matters, then describe the target state, sequencing logic, milestones, priorities, dependencies, risks, and unresolved questions.
+
+Make each milestone testable: a future reader should know what evidence proves the milestone is done.
+
+## Post-write Review
+
+After creating or updating any Markdown document, re-read the whole file once as an editor.
+
+Check:
+
+- the opening explains why the document exists
+- each section follows logically from the previous section
+- claims have evidence, commands, files, or explicit assumptions
+- experiment conclusions are tied to the stated question
+- know-how, plan, and roadmap documents are easy to scan
+- duplicated or stale statements were removed or reconciled
+- the final section gives a concrete next step, decision, or remaining question
+
+If the document feels like disconnected notes, reorganize it before finishing. Keep the final document polished enough that another engineer or AI agent can continue from it without asking what the story was.
 
 ## Document Templates
 
@@ -183,13 +239,22 @@ Use templates flexibly. Keep only sections that add value.
 
 ## 背景
 
+## 核心问题
+
 ## 目标
 
 ## 范围
 
 ## 方案
 
+## 执行路径
+
+| 阶段 | 目标 | 产出 | 判断标准 |
+|---|---|---|---|
+
 ## 风险
+
+## 检查点
 
 ## 下一步
 ```
@@ -199,18 +264,29 @@ Use templates flexibly. Keep only sections that add value.
 ```markdown
 # 标题
 
-## 问题
+## 背景
+
+## 实验问题
+
+## 假设
 
 ## 配置
+
+| 项目 | 内容 | 说明 |
+|---|---|---|
 
 ## 命令
 
 ## 结果
 
-| 项目 | 数值 | 说明 |
-|---|---:|---|
+| 指标 | 数值 | 对比基线 | 说明 |
+|---|---:|---:|---|
+
+## 分析
 
 ## 结论
+
+## 未覆盖问题
 
 ## 下一步
 ```
@@ -220,7 +296,9 @@ Use templates flexibly. Keep only sections that add value.
 ```markdown
 # 标题
 
-## 问题
+## 场景
+
+## 现象
 
 ## 原因
 
@@ -229,6 +307,8 @@ Use templates flexibly. Keep only sections that add value.
 ## 验证
 
 ## 适用条件
+
+## 注意事项
 ```
 
 ### Roadmap Template
@@ -238,14 +318,18 @@ Use templates flexibly. Keep only sections that add value.
 
 ## 当前状态
 
-## 目标
+## 背景与方向
+
+## 目标状态
 
 ## 里程碑
 
-| 阶段 | 内容 | 判断标准 |
-|---|---|---|
+| 阶段 | 目标 | 关键工作 | 判断标准 |
+|---|---|---|---|
 
 ## 优先级
+
+## 依赖与风险
 
 ## 未决问题
 ```
@@ -289,7 +373,8 @@ Action:
 
 - Classify as `experiment/`.
 - Create `docs/experiment/YYYYMMDD_full-int8与depthwise内存对比.md`.
-- Include model files, commands, memory table, accuracy table, conclusion, next step.
+- Explain the experiment background, question, fixed variables, model files, commands, memory table, accuracy table, analysis, conclusion, and next step.
+- Re-read the document and make sure the conclusion answers the experiment question.
 
 ### Example 2: Record Reusable Know-how
 
@@ -303,7 +388,7 @@ Action:
 
 - Classify as `knowhow/`.
 - Create `docs/knowhow/YYYYMMDD_onnx2tf_group_conv_lowering.md`.
-- Explain symptom, cause, diagnosis command, fix, and reuse condition.
+- Explain the scenario, symptom, cause, diagnosis command, fix, verification, reuse condition, and caveats.
 
 ### Example 3: Save A Command
 
@@ -334,6 +419,7 @@ Action:
 - Ensure `plan/ experiment/ knowhow/ roadmap/ 常用命令.txt` exist under it.
 - Classify as `roadmap/`.
 - Create `docs/xiaolei-xiaolei/roadmap/YYYYMMDD_Q2路线图.md`.
+- Explain current state, target state, milestone logic, testable completion criteria, risks, and unresolved questions.
 
 ### Example 5: Update An Existing Document
 
@@ -348,6 +434,7 @@ Action:
 - Update the specified existing file.
 - Add a dated subsection or extend the existing table.
 - Preserve old conclusions unless the new result invalidates them; if so, write the replacement conclusion clearly.
+- Re-read the full document after the update so the new result fits the existing narrative.
 
 ## Final Response After Writing
 
