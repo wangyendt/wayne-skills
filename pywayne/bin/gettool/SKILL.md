@@ -5,7 +5,7 @@ description: Fetch and install C++ tools/libraries from cpp_tools repository. Us
 
 # Pywayne Bin Gettool
 
-Tool fetcher for C++ libraries from cpp_tools repository. Supports sparse checkout, optional building with CMake/make, and installation scripts.
+Tool fetcher for C++ libraries from cpp_tools repository. Supports sparse/partial checkout, optional building with CMake, runtime dependency bundling for pybind modules, import verification, and installation scripts.
 
 ## Quick Start
 
@@ -56,10 +56,12 @@ gettool eigen -t external/eigen
 
 ### 4. Build from Source
 
-Build the tool using CMake and make. Requirements:
+Build the tool using CMake. Requirements:
 - Tool must be marked as `buildable: true` in name_to_path_map.yaml
 - Tool must have a `CMakeLists.txt` file
 - Build output (lib/) is copied to target directory
+- The active Python interpreter is passed to CMake as `PYTHON_EXECUTABLE`
+- If configured, runtime libraries are bundled into the target directory and the Python module import is verified
 
 ```bash
 gettool apriltag_detection -b
@@ -129,6 +131,7 @@ gettool --reset-url
 
 ### Non-Submodule Tools (Sparse Checkout)
 - Fetched via git sparse-checkout from cpp_tools repo
+- The fetcher should prefer `git clone --sparse --filter=blob:none --depth 1` and fall back to plain sparse clone for compatibility
 - Can be built with `-b` (requires buildable=true and CMakeLists.txt)
 - Build output (`lib/`) copied to target directory
 
@@ -141,9 +144,32 @@ Example: If `opencv` maps to `third_party/opencv`, running `gettool opencv` crea
 ## Prerequisites
 
 - Git
-- CMake and make (for `-b` flag)
+- CMake and a platform build tool (for `-b` flag)
 - Appropriate C++ toolchain (for building)
 - Write permissions for target directory
+
+## Network, Proxy, And Sandbox Troubleshooting
+
+When `gettool`, `git clone`, `curl`, or `git sparse-checkout` fails against GitHub, do not assume the user's proxy is off. In Codex or another restricted sandbox, localhost TCP connections can fail even when the host machine proxy is running.
+
+Use this diagnostic sequence:
+
+```bash
+git config --global --get http.proxy
+git config --global --get https.proxy
+lsof -nP -iTCP:7890 -sTCP:LISTEN
+nc -vz 127.0.0.1 7890
+curl -I --proxy http://127.0.0.1:7890 https://github.com --connect-timeout 5
+```
+
+Interpretation:
+
+- If `lsof` shows a proxy process listening on `*:7890`, the proxy is probably enabled.
+- If `nc` or `curl` fails with `Operation not permitted` or `Couldn't connect to server` inside the sandbox, rerun the same essential check with tool escalation.
+- In Codex, use `exec_command` with `sandbox_permissions: "require_escalated"` and a short justification instead of asking the user to rerun it manually.
+- Good escalation prefix rules are specific, for example `["nc", "-vz", "127.0.0.1", "7890"]`, `["curl", "-I", "--proxy", "http://127.0.0.1:7890"]`, or `["gettool", "<tool_name>"]`.
+- If elevated `nc`/`curl` succeeds but sandboxed `gettool` fails, report it as a sandbox networking limitation, not as a proxy configuration problem.
+- If elevated proxy checks fail too, then inspect proxy app settings, port number, and whether Git is configured to use the same proxy.
 
 ## Common Tool Names
 
