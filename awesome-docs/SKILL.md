@@ -1,6 +1,6 @@
 ---
 name: awesome-docs
-description: Use this skill whenever the user asks to record, save, organize, update, or maintain project documentation, including plan documents, experiment notes, know-how, roadmap items, decision records, summaries, story-telling documentation polish, or common command registries. Also use it when the user asks to save a generated shell command, append to 常用命令, or create a reusable AI/human project documentation interface. Defaults to <project-root>/docs unless the user specifies another documentation path.
+description: Use this skill whenever the user asks to record, save, organize, update, or maintain project documentation, including plan documents, todo documents, temporary ideas, project risks, next actions, experiment notes, know-how, roadmap items, decision records, summaries, story-telling documentation polish, or common command registries. Also use it when the user asks to save a generated shell command, append to 常用命令, or create a reusable AI/human project documentation interface. Defaults to <project-root>/docs unless the user specifies another documentation path.
 ---
 
 # Awesome Docs
@@ -43,6 +43,7 @@ Ensure the documentation root contains at least these directories:
 ```text
 docs/
 ├── plan/
+├── todo/
 ├── experiment/
 ├── knowhow/
 ├── roadmap/
@@ -65,6 +66,18 @@ Use for future-oriented planning and execution design:
 - migration plans
 - risk analysis before execution
 - design decisions that guide upcoming work
+
+### `todo/`
+
+Use for lightweight, living work queues and unresolved project state:
+
+- temporary ideas that are not ready for a full plan
+- project risks that need follow-up, monitoring, or mitigation
+- next actions discovered during implementation, review, or debugging
+- open questions, blockers, and assumptions to revisit
+- small task lists that are too tactical for `roadmap/`
+
+Choose `todo/` instead of `plan/` when the content is a loose backlog, risk watchlist, or next-action list rather than an execution design. Promote a todo item into `plan/`, `roadmap/`, `experiment/`, or `knowhow/` only after it becomes substantial enough to deserve its own document.
 
 ### `experiment/`
 
@@ -128,6 +141,7 @@ Examples:
 20260429_量化评测结果.md
 20260429_导出链路踩坑记录.md
 20260429_Q2功能路线图.md
+20260429_模型导出待办.md
 ```
 
 Use the current date from the environment. If the user gives an explicit date, use that date.
@@ -143,6 +157,34 @@ Update an existing document only when:
 - the new content corrects or extends a previous record from the same topic and same date
 
 When updating an old document, preserve its structure and add the minimum necessary changes. Do not rewrite the whole file unless the user asks for a cleanup.
+
+## Todo Documents
+
+Todo documents are living documents. Prefer updating an existing same-topic todo document instead of creating a new dated file for every small item.
+
+Create a new `todo/` document when:
+
+- the user asks to record loose future work, a temporary idea, or a next-action list
+- a project has several risks or unresolved questions that need tracking
+- the content is actionable but not mature enough for a plan or roadmap
+- no existing same-topic todo document exists
+
+Update an existing `todo/` document when:
+
+- a new idea, risk, blocker, or next action belongs to the same topic
+- an item is completed, invalidated, deferred, or promoted into another document
+- new evidence changes the priority, risk level, owner, trigger, mitigation, or next step
+- a plan, experiment, or review creates follow-up work that should not be lost
+
+Recommended item fields:
+
+- `状态`: `open`, `doing`, `blocked`, `done`, `dropped`, or `promoted`
+- `来源`: date, conversation, command, file, PR, issue, experiment, or decision that created the item
+- `内容`: one concrete idea, risk, question, or action
+- `下一步`: the smallest useful action that moves the item forward
+- `风险处理`: for risks, include impact, trigger, and mitigation when known
+
+Keep open items near the top. Do not delete completed items unless the user asks for cleanup; move them to a short `已处理` section with the completion date. If an item is promoted into another document, mark it as `promoted` and link or name the destination document.
 
 ## Writing Style
 
@@ -212,6 +254,20 @@ Roadmap documents should explain direction, not just list milestones. Start with
 
 Make each milestone testable: a future reader should know what evidence proves the milestone is done.
 
+### Todos
+
+Todo documents should be fast to update and easy to triage. They must preserve loose ideas without pretending they are plans.
+
+Each open item should make clear:
+
+- what the idea, risk, question, or next action is
+- why it matters now
+- what evidence or trigger created it
+- what the smallest useful next step is
+- whether it should stay in todo, be dropped, or be promoted into another document type
+
+Risk items must include at least a concrete impact and the next mitigation or observation step when that information is available.
+
 ## Post-write Review
 
 After creating or updating any Markdown document, re-read the whole file once as an editor.
@@ -222,7 +278,7 @@ Check:
 - each section follows logically from the previous section
 - claims have evidence, commands, files, or explicit assumptions
 - experiment conclusions are tied to the stated question
-- know-how, plan, and roadmap documents are easy to scan
+- know-how, plan, todo, and roadmap documents are easy to scan
 - duplicated or stale statements were removed or reconciled
 - the final section gives a concrete next step, decision, or remaining question
 
@@ -257,6 +313,31 @@ Use templates flexibly. Keep only sections that add value.
 ## 检查点
 
 ## 下一步
+```
+
+### Todo Template
+
+```markdown
+# 标题
+
+## 背景
+
+## 当前待办
+
+| 状态 | 类型 | 优先级 | 内容 | 来源 | 下一步 |
+|---|---|---|---|---|---|
+| open | action | P1 |  |  |  |
+
+## 风险与观察点
+
+| 状态 | 风险 | 影响 | 触发条件 | 缓解措施 | 下一步 |
+|---|---|---|---|---|---|
+| open |  |  |  |  |  |
+
+## 已处理
+
+| 日期 | 原事项 | 结果 | 去向 |
+|---|---|---|---|
 ```
 
 ### Experiment Template
@@ -405,7 +486,23 @@ Action:
 - Store the command as one single line.
 - Add or preserve a Chinese comment explaining when to use the command.
 
-### Example 4: Use A Custom Documentation Root
+### Example 4: Record A Todo List
+
+User:
+
+```text
+这个先记一下：导出链路后面要检查量化日志，另外 TFLite 体积可能有风险
+```
+
+Action:
+
+- Classify as `todo/`.
+- Create or update `docs/todo/YYYYMMDD_导出链路待办.md`.
+- Add the log check as an `action` item with a concrete next step.
+- Add the TFLite size concern as a `risk` item with impact, trigger, mitigation, and next observation step when known.
+- Keep unresolved items near the top and preserve completed items in `已处理`.
+
+### Example 5: Use A Custom Documentation Root
 
 User:
 
@@ -416,12 +513,12 @@ User:
 Action:
 
 - Use `docs/xiaolei-xiaolei` as the root.
-- Ensure `plan/ experiment/ knowhow/ roadmap/ 常用命令.txt` exist under it.
+- Ensure `plan/ todo/ experiment/ knowhow/ roadmap/ 常用命令.txt` exist under it.
 - Classify as `roadmap/`.
 - Create `docs/xiaolei-xiaolei/roadmap/YYYYMMDD_Q2路线图.md`.
 - Explain current state, target state, milestone logic, testable completion criteria, risks, and unresolved questions.
 
-### Example 5: Update An Existing Document
+### Example 6: Update An Existing Document
 
 User:
 
