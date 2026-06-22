@@ -1,6 +1,6 @@
 ---
 name: awesome-docs
-description: Use this skill whenever the user asks to record, save, organize, update, or maintain project documentation, including plan documents, todo documents, temporary ideas, project risks, next actions, experiment notes, know-how, roadmap items, decision records, summaries, story-telling documentation polish, or common command registries. Also use it when the user asks to save a generated shell command, append to 常用命令, or create a reusable AI/human project documentation interface. Defaults to <project-root>/docs unless the user specifies another documentation path.
+description: Use this skill whenever the user asks to record, save, organize, update, or maintain project documentation, including plan documents, todo documents, temporary ideas, project risks, next actions, experiment notes, know-how, roadmap items, decision records, summaries, story-telling documentation polish, technical book chapters, thesis-style derivations, or common command registries. Also use it when the user asks to save a generated shell command, append to 常用命令, or create a reusable AI/human project documentation interface. Defaults to <project-root>/docs unless the user specifies another documentation path.
 ---
 
 # Awesome Docs
@@ -15,7 +15,7 @@ When the user asks to record project knowledge:
 2. Classify the content.
 3. Create or update the right document.
 4. Write in a concise, factual, readable style with a clear story line.
-5. Re-read the full document after writing and tighten the logic, headings, transitions, and conclusions.
+5. Re-read the full document after writing and run the post-write checklist for readability, consistent structure, complete required modules, evidence, conclusions, and next steps.
 6. If the request is about reusable commands, update `常用命令.txt` with single-line commands.
 
 ## Documentation Root
@@ -225,22 +225,45 @@ Good documentation answers:
 
 ### Experiments
 
-Experiment documents must be organized and self-contained. Every experiment needs enough background for a future reader to understand why the run existed before reading the numbers.
+Experiment documents must be organized, self-contained, and comparable. A future reader should understand the question before the numbers and should be able to compare scenarios without decoding different table shapes.
 
 Always make clear:
 
-- the project context or regression that triggered the experiment
-- the question or hypothesis being tested
+- the project context, regression, or decision that triggered the experiment
+- the experiment question, hypothesis, and compared systems or configurations
+- the dataset, generated data, model, environment, commands, commit, and key parameters
 - what changed and what stayed fixed
-- the dataset, model, environment, commands, and key parameters
-- which metrics decide success or failure
+- metric definitions, units, which direction is better, and known metric limitations
+- result tables with consistent columns, scenario order, and units across comparable runs
+- a short reading conclusion after each table or scenario explaining what the numbers mean
 - what the results prove, what they do not prove, and the next experiment if any
+
+For Ceres/Kalibr-style calibration comparisons or any multi-scenario benchmark, prefer this shape:
+
+1. Background and comparison intent.
+2. Comparison scope: tools, datasets, sensor setup, parameters, and outputs being compared.
+3. Metric glossary: time, extrinsic error, rotation error, translation error, timeshift error, residuals, success/failure conditions.
+4. Result overview table with the same columns for every scenario.
+5. Per-scenario sections with the same structure: scenario meaning -> configuration -> result table -> interpretation.
+6. Cross-scenario analysis explaining trends, failure modes, and when a number is not directly comparable.
+7. Limitations, reproducibility notes, and concrete next actions.
+
+If a document contains historical diagnostic records, add a reading map near the top. Preserve the evidence, but label stale or superseded conclusions so they cannot be mistaken for the current conclusion.
 
 ### Know-how
 
 Know-how documents should be easy to reuse under pressure. Start with the practical situation, then explain the symptom, root cause, procedure, verification method, and boundary conditions.
 
 The reader should leave knowing when to apply the recipe, when not to apply it, and which command or file confirms the fix.
+
+Use this structure unless a shorter one is clearly enough:
+
+- scenario and trigger
+- symptom or failure signal
+- root cause or current best explanation
+- procedure or decision rule
+- verification command, expected output, or file to inspect
+- boundary conditions, traps, and rollback or alternative path
 
 ### Plans
 
@@ -268,21 +291,35 @@ Each open item should make clear:
 
 Risk items must include at least a concrete impact and the next mitigation or observation step when that information is available.
 
+## Technical Book Mode
+
+For book-like technical writing, keep `SKILL.md` lightweight and load the reference only when needed.
+
+Read `references/technical-book-writer.md` before writing or rewriting:
+
+- thesis-style chapters, textbook sections, or long-form technical explanations
+- derivation-heavy calibration, robotics, state-estimation, optimization, or code-derived math
+- formula, Jacobian, residual, coordinate-frame, or implementation-theory bridge explanations
+- requests to turn scattered notes into a coherent chapter rather than an experiment record
+
+Do not load that reference for ordinary plan, todo, experiment, roadmap, command, or short know-how updates.
+
 ## Post-write Review
 
-After creating or updating any Markdown document, re-read the whole file once as an editor.
+After creating or updating any Markdown document, re-read the whole file once as an editor. This is required for all document types, including small updates to an existing file.
 
 Check:
 
-- the opening explains why the document exists
-- each section follows logically from the previous section
-- claims have evidence, commands, files, or explicit assumptions
-- experiment conclusions are tied to the stated question
-- know-how, plan, todo, and roadmap documents are easy to scan
-- duplicated or stale statements were removed or reconciled
-- the final section gives a concrete next step, decision, or remaining question
+- readability: the opening explains why the document exists, the conclusion answers the opening question, and no paragraph is an orphaned note
+- structural consistency: repeated result blocks, scenarios, tools, or datasets use the same headings, table columns, units, and order
+- module completeness: the document contains the required background, scope, evidence, interpretation, limitations, and next action for its type
+- evidence: claims have data, commands, file paths, logs, references, or explicit assumptions
+- metric clarity: tables define units, comparison baseline, success direction, and conditions where values are not comparable
+- currentness: stale, superseded, or historical conclusions are marked instead of silently conflicting with the current conclusion
+- scanability: long documents have a reading map, result overview, or table of key findings near the top
+- actionability: the final section gives a concrete next step, decision, or remaining question
 
-If the document feels like disconnected notes, reorganize it before finishing. Keep the final document polished enough that another engineer or AI agent can continue from it without asking what the story was.
+If any checklist item fails, edit the document again and re-read the affected section in context. If the document feels like disconnected notes, reorganize it before finishing. Keep the final document polished enough that another engineer or AI agent can continue from it without asking what the story was.
 
 ## Document Templates
 
@@ -345,29 +382,47 @@ Use templates flexibly. Keep only sections that add value.
 ```markdown
 # 标题
 
+## 结论先行
+
 ## 背景
 
-## 实验问题
+## 对比目标 / 实验问题
 
-## 假设
-
-## 配置
+## 范围与配置
 
 | 项目 | 内容 | 说明 |
 |---|---|---|
 
-## 命令
+## 指标口径
 
-## 结果
+| 指标 | 单位 | 越大/越小越好 | 含义 | 注意事项 |
+|---|---|---|---|---|
+
+## 结果总览
+
+| 场景 | 配置 | 关键指标 | 结论 |
+|---|---|---|---|
+
+## 分场景结果
+
+### 场景 A
+
+#### 场景含义
+
+#### 结果
 
 | 指标 | 数值 | 对比基线 | 说明 |
 |---|---:|---:|---|
 
-## 分析
+#### 读数结论
+
+## 跨场景分析
 
 ## 结论
 
-## 未覆盖问题
+## 边界与未覆盖问题
+
+## 复现入口
 
 ## 下一步
 ```
@@ -377,19 +432,21 @@ Use templates flexibly. Keep only sections that add value.
 ```markdown
 # 标题
 
-## 场景
+## 触发场景
 
-## 现象
+## 现象 / 信号
 
-## 原因
+## 原因 / 判断
 
-## 方法
+## 处理方法
 
 ## 验证
 
 ## 适用条件
 
-## 注意事项
+## 陷阱与边界
+
+## 相关命令 / 文件
 ```
 
 ### Roadmap Template
@@ -429,109 +486,7 @@ Rules:
 - Avoid duplicate commands unless the new command is a meaningful variant.
 - If replacing an existing command, keep the group and update only the relevant line.
 
-Recommended format:
-
-```text
-# ====================================================================
-# 评测与分析
-# 作用：按固定数据集和固定误唤醒预算生成可复现指标
-# ====================================================================
-python evaluate.py --config exp/demo/config.yaml --checkpoint exp/demo/avg_10.pt --test_data data/test.list --result_dir exp/demo/test_avg10
-python analyze.py --exp-dir exp/demo --test-id test_avg10 --target-fa-per-hour 1.0
-```
-
-## Examples
-
-### Example 1: Record An Experiment
-
-User:
-
-```text
-把今天 full-int8 和 depthwise 的内存对比记录一下
-```
-
-Action:
-
-- Classify as `experiment/`.
-- Create `docs/experiment/YYYYMMDD_full-int8与depthwise内存对比.md`.
-- Explain the experiment background, question, fixed variables, model files, commands, memory table, accuracy table, analysis, conclusion, and next step.
-- Re-read the document and make sure the conclusion answers the experiment question.
-
-### Example 2: Record Reusable Know-how
-
-User:
-
-```text
-这个坑记一下：onnx2tf 会把 groups=dim 的 conv 落成普通 CONV_2D
-```
-
-Action:
-
-- Classify as `knowhow/`.
-- Create `docs/knowhow/YYYYMMDD_onnx2tf_group_conv_lowering.md`.
-- Explain the scenario, symptom, cause, diagnosis command, fix, verification, reuse condition, and caveats.
-
-### Example 3: Save A Command
-
-User:
-
-```text
-把这个评测命令存到常用命令
-```
-
-Action:
-
-- Update `docs/常用命令.txt`.
-- Find or create a relevant group such as `评测与分析`.
-- Store the command as one single line.
-- Add or preserve a Chinese comment explaining when to use the command.
-
-### Example 4: Record A Todo List
-
-User:
-
-```text
-这个先记一下：导出链路后面要检查量化日志，另外 TFLite 体积可能有风险
-```
-
-Action:
-
-- Classify as `todo/`.
-- Create or update `docs/todo/YYYYMMDD_导出链路待办.md`.
-- Add the log check as an `action` item with a concrete next step.
-- Add the TFLite size concern as a `risk` item with impact, trigger, mitigation, and next observation step when known.
-- Keep unresolved items near the top and preserve completed items in `已处理`.
-
-### Example 5: Use A Custom Documentation Root
-
-User:
-
-```text
-文档路径用 docs/xiaolei-xiaolei，记录一个 Q2 路线图
-```
-
-Action:
-
-- Use `docs/xiaolei-xiaolei` as the root.
-- Ensure `plan/ todo/ experiment/ knowhow/ roadmap/ 常用命令.txt` exist under it.
-- Classify as `roadmap/`.
-- Create `docs/xiaolei-xiaolei/roadmap/YYYYMMDD_Q2路线图.md`.
-- Explain current state, target state, milestone logic, testable completion criteria, risks, and unresolved questions.
-
-### Example 6: Update An Existing Document
-
-User:
-
-```text
-更新 docs/experiment/20260401_端侧评测.md，加上今天的新结果
-```
-
-Action:
-
-- Update the specified existing file.
-- Add a dated subsection or extend the existing table.
-- Preserve old conclusions unless the new result invalidates them; if so, write the replacement conclusion clearly.
-- Re-read the full document after the update so the new result fits the existing narrative.
+If a concrete command group or document-update pattern is needed, read `references/examples.md`. Do not load that reference for routine updates.
 
 ## Final Response After Writing
 
