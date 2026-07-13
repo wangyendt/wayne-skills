@@ -117,8 +117,9 @@ gitstats --branch develop --since "2024-01-01" --until "2024-06-30" -p
 
 ## Output Charts
 
-Generates a compact 11×7.2-inch, Seaborn-styled activity dashboard with Chinese
-chart labels:
+Generates a compact 11×7.2-inch, Seaborn-styled activity dashboard. Labels are
+Chinese when a font with the required CJK glyphs is available, and automatically
+fall back to English otherwise:
 
 1. **Commit trend** - Automatically aggregates by day for spans up to 180 days,
    by week for spans up to three years, and by month for longer histories
@@ -127,9 +128,10 @@ chart labels:
 4. **Weekday × hour heatmap** - Activity matrix with labels every two hours
 
 The header includes the repository name, branch, timezone, date range, total commits,
-and active-day count. The busiest hour and weekday are highlighted. The chart uses
-automatic CJK font fallback on macOS, Windows, and Linux to prevent missing Chinese
-glyphs, and limits tick density to avoid overlapping labels.
+and active-day count. The busiest hour and weekday are highlighted. Font selection
+checks actual glyph coverage instead of relying only on family names, including
+Ubuntu families such as Noto Sans CJK JP and Droid Sans Fallback. Dates use numeric,
+locale-independent formatting, and tick density is limited to avoid overlap.
 
 ## Branch Selection Priority
 
@@ -149,5 +151,5 @@ glyphs, and limits tick density to avoid overlapping labels.
 - Large repositories with `--all` may take longer to process
 - Commit times are parsed in UTC, then converted to specified timezone
 - Saved charts use 160 DPI and a compact light Git-inspired dashboard theme
-- If Chinese still renders as boxes, install a common CJK font such as PingFang SC,
-  Microsoft YaHei, Noto Sans CJK SC, Source Han Sans SC, or SimHei
+- Without a CJK-capable font, labels automatically switch to English and a warning
+  suggests `sudo apt install fonts-noto-cjk` on Ubuntu
