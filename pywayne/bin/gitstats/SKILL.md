@@ -117,14 +117,19 @@ gitstats --branch develop --since "2024-01-01" --until "2024-06-30" -p
 
 ## Output Charts
 
-Generates a 3×2 subplot layout visualization:
+Generates a compact 11×7.2-inch, Seaborn-styled activity dashboard with Chinese
+chart labels:
 
-1. **Commits per Day** - Line chart showing daily commit counts
-2. **Commits by Hour** - Bar chart for hours 0-23
-3. **Commits by Weekday** - Bar chart for Mon-Sun
-4. **Heatmap: Weekday × Hour** - Color-coded activity matrix
+1. **Commit trend** - Automatically aggregates by day for spans up to 180 days,
+   by week for spans up to three years, and by month for longer histories
+2. **Commits by hour** - Bar chart for hours 0-23 with labels every three hours
+3. **Commits by weekday** - Bar chart for Monday-Sunday
+4. **Weekday × hour heatmap** - Activity matrix with labels every two hours
 
-Chart title includes: repository name, branch, and timezone.
+The header includes the repository name, branch, timezone, date range, total commits,
+and active-day count. The busiest hour and weekday are highlighted. The chart uses
+automatic CJK font fallback on macOS, Windows, and Linux to prevent missing Chinese
+glyphs, and limits tick density to avoid overlapping labels.
 
 ## Branch Selection Priority
 
@@ -135,7 +140,7 @@ Chart title includes: repository name, branch, and timezone.
 ## Requirements
 
 - Git must be installed
-- Python dependencies: pandas, matplotlib (installed with pywayne)
+- Python dependencies: pandas, matplotlib, seaborn (installed with pywayne)
 
 ## Notes
 
@@ -143,3 +148,6 @@ Chart title includes: repository name, branch, and timezone.
 - Output file is overwritten if it exists
 - Large repositories with `--all` may take longer to process
 - Commit times are parsed in UTC, then converted to specified timezone
+- Saved charts use 160 DPI and a compact light Git-inspired dashboard theme
+- If Chinese still renders as boxes, install a common CJK font such as PingFang SC,
+  Microsoft YaHei, Noto Sans CJK SC, Source Han Sans SC, or SimHei
