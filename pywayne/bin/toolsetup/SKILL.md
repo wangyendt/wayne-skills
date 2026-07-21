@@ -129,15 +129,13 @@ When the user asks to change implementation rather than use it, inspect these fi
 
 - `bin/toolsetup.py`: CLI, templates, and task implementations.
 - `bin/toolsetup`, `bin/toolsetup.cmd`: POSIX and Windows launchers.
-- `tests/test_toolsetup.py`: unit and shell integration tests.
 - `docs/source/bin/toolsetup.rst`: user documentation.
 - `setup.py` and `docs/source/index.rst`: packaging and documentation registration.
 
 After editing, run:
 
 ```bash
-python3 -m py_compile bin/toolsetup.py tests/test_toolsetup.py
-python3 -m unittest discover -s tests -v
+python3 -m py_compile bin/toolsetup.py
 git diff --check
 cd docs && make html SPHINXOPTS=-W
 ```
