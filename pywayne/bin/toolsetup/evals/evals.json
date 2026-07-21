@@ -1,0 +1,38 @@
+{
+  "skill_name": "pywayne-bin-toolsetup",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我准备在一台 Ubuntu 24.04 新机器上配置 shell 快捷命令、Node/npm、Tailscale、MongoDB 和 PyMongo。先别安装，只告诉我怎样用 pywayne 的 toolsetup 完整预览，预览确认后实际执行又该怎么做，并说明会包含哪些任务和权限风险。",
+      "expected_output": "给出 Linux all 任务的 dry-run 与 --yes 命令，准确说明四项任务、远程脚本、sudo、MongoDB 服务和独立 PyMongo venv。",
+      "files": [],
+      "expectations": [
+        "Contains the exact preview command 'toolsetup --task all --platform linux --dry-run'.",
+        "Uses '--yes' for the actual installation command and warns that installers download software and may use sudo.",
+        "States that Linux all includes shortcuts, npm, tailscale, and mongodb, with PyMongo in an isolated virtual environment."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "我的 Mac 用 zsh，想把代理设为 127.0.0.1:7890，加一个 goto 快捷路径 code=$HOME/Documents/work/code，然后安装 MongoDB 8.0 和 PyMongo。给我最简命令，并告诉我重复运行会不会把 .zshrc 越写越长。",
+      "expected_output": "分别给出 shortcuts 和 mongodb 命令，正确引用 goto 参数，说明配置块幂等、force 替换会备份，并说明 MongoDB/PyMongo 的服务与 venv 行为。",
+      "files": [],
+      "expectations": [
+        "Provides a macOS zsh shortcuts command containing '--goto code=' and the requested proxy settings.",
+        "Provides 'toolsetup --task mongodb --platform macos --yes' and identifies MongoDB 8.0 plus the default PyMongo venv.",
+        "Explains that an existing managed block is skipped and '--force' replaces it after creating a backup."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Windows PowerShell 上怎么用 toolsetup 配置 proxy_on 和 goto？顺便也把 gpu、npm、Tailscale、MongoDB 一起配了吧。",
+      "expected_output": "给出 Windows launcher 和 shortcuts 命令，说明 PowerShell reload，同时准确拒绝 Windows 上不支持的 gpu/npm/Tailscale/MongoDB 任务。",
+      "files": [],
+      "expectations": [
+        "Uses the Windows launcher with 'toolsetup.cmd --task shortcuts --platform windows'.",
+        "States that Windows toolsetup supports shortcuts only and does not provide gpu, npm, tailscale, or mongodb tasks.",
+        "Includes the PowerShell reload command '. $PROFILE'."
+      ]
+    }
+  ]
+}
