@@ -38,7 +38,7 @@ Convert SE(3) transformation matrices to pose representation.
 
 **Input:** `SE3_mat` - Single 4x4 SE(3) matrix or array of N SE(3) matrices shape (N, 4, 4)
 
-**Output:** `pose` - Array shape (7,) or (N, 7) containing [tx, ty, tz, qw, qx, qy, qz]
+**Output:** `pose` - Array shape (1, 7) or (N, 7) containing [tx, ty, tz, qw, qx, qy, qz]. A single input preserves the historical length-1 batch dimension.
 
 **Dependencies:** `qmt.quatFromRotMat()` for quaternion extraction
 
@@ -48,7 +48,7 @@ Convert pose representation back to SE(3) transformation matrices.
 
 **Input:** `pose_mat` - Single pose shape (7,) or array of N poses shape (N, 7) with [tx, ty, tz, qw, qx, qy, qz]
 
-**Output:** `SE3_mat` - Array of SE(3) matrices shape (4, 4) or (N, 4, 4)
+**Output:** `SE3_mat` - Array of SE(3) matrices shape (1, 4, 4) or (N, 4, 4). A single input preserves the historical length-1 batch dimension.
 
 **Dependencies:** `qmt.quatToRotMat()`, `ahrs.Quaternion`
 

@@ -64,4 +64,5 @@ Temporal calibration module exists but is reserved for future expansion. Current
 - **Dependencies**: Requires `vqf` (VQF quaternion filter) and `qmt` (quaternion math) modules
 - **Method**: Currently only supports `close_form` method
 - **Orientation**: Uses VQF for sensor fusion and orientation estimation during calibration
+- **Performance**: `process()` uses VQF/qmt batch operations and solves the final accumulated calibration matrix once
 - **Output**: Prints calibration parameters during processing

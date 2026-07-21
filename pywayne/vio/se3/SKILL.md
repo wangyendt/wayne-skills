@@ -33,7 +33,7 @@ xi_recovered = SE3_Log(T_from_xi)  # SE(3) -> se(3) vector
 
 **Combine/invert transformations:**
 - `SE3_mul(T1, T2)` - Matrix multiplication (compose transforms)
-- `SE3_inv(T)` - Matrix inverse
+- `SE3_inv(T)` - Vectorized matrix inverse for `(4,4)` or `(N,4,4)` input
 - `SE3_diff(T1, T2, from_1_to_2=True)` - Compute relative transform
 
 ### Lie Group/Lie Algebra Mappings

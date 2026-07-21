@@ -112,7 +112,7 @@ gettool --reset-url
 |----------|-------------|
 | `<name>` or `-n <name>` | Tool name from name_to_path_map.yaml |
 | `-t <path>` | Target output directory (default: based on mapping) |
-| `-b` / `--build` | Build using CMake + make (if buildable) |
+| `-b` / `--build` | Build using `cmake --build --parallel` (if buildable) |
 | `-c` / `--clean` | Copy only src/include directories |
 | `-v <version>` | Checkout specific version (submodules only) |
 | `-i` / `--install` | Run installation script (if installable) |

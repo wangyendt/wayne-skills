@@ -57,12 +57,14 @@ filtered = butter_bandpass_filter(
 
 ### ButterworthFilter
 
-纯 numpy 实现的巴特沃斯滤波器类，支持完整的 IIR 滤波功能。
+基于 NumPy 的巴特沃斯滤波器类，同时支持传递函数 `ba` 和数值更稳定的二阶节级联 `sos`。
+BA/SOS 执行核心均为 Direct Form II Transposed，对齐 SciPy 的 `lfilter`/`sosfilt` 和
+`filtfilt`/`sosfiltfilt`。
 
 ```python
 from pywayne.dsp import ButterworthFilter
 
-# 方式 1：通过参数设计
+# 方式 1：通过参数设计 BA
 bf = ButterworthFilter.from_params(order=4, fs=200, btype='bandpass', cutoff=(1, 50))
 y, zf = bf.lfilter(signal)
 
@@ -70,8 +72,27 @@ y, zf = bf.lfilter(signal)
 bf2 = ButterworthFilter.from_ba(b, a)
 y, zf = bf2.lfilter(signal)
 
+# 方式 3：SOS（高阶、窄带或接近 0/Nyquist 时推荐）
+bf_sos = ButterworthFilter.from_params(
+    order=8,
+    fs=200,
+    btype='bandpass',
+    cutoff=(0.1, 10),
+    output='sos',
+)
+
+# 也可直接使用 scipy.signal.butter(..., output='sos') 的系数
+bf_sos2 = ButterworthFilter.from_sos(sos)
+
 # 零相位滤波（前向-后向）
-y, zf = bf.filtfilt(signal)
+y = bf.filtfilt(signal)
+
+# 流式处理：首段稳态初始化，后续传递 zf
+state = bf_sos.zi() * chunks[0][0]
+outputs = []
+for chunk in chunks:
+    y, state = bf_sos.lfilter(chunk, zi=state)
+    outputs.append(y)
 
 # 去趋势
 detrended = ButterworthFilter.detrend(signal, method='linear')
@@ -80,8 +101,11 @@ detrended = ButterworthFilter.detrend(signal, method='linear')
 **参数设计方法**：
 
 ```python
-ButterworthFilter.from_params(order, fs, btype, cutoff, cache_zi=True)
+ButterworthFilter.from_params(order, fs, btype, cutoff, cache_zi=True, output='ba')
 ButterworthFilter.from_ba(b, a, cache_zi=True)
+ButterworthFilter.from_sos(sos, cache_zi=True)
+ButterworthFilter.lfilter_zi(b, a)
+ButterworthFilter.sosfilt_zi(sos)
 ```
 
 **参数说明**：
@@ -93,14 +117,19 @@ ButterworthFilter.from_ba(b, a, cache_zi=True)
 | `btype` | str | 'lowpass', 'highpass', 'bandpass', 'bandstop' |
 | `cutoff` | float/Tuple | 截止频率 (Hz)，带通为 (low, high) 元组 |
 | `cache_zi` | bool | 是否预计算稳态初始条件 |
+| `output` | str | `'ba'` 或 `'sos'`；高阶滤波推荐 `'sos'` |
 
 **实例方法**：
 
 | 方法 | 说明 |
 |------|------|
-| `zi(self)` | 返回稳态初始条件数组 |
-| `lfilter(self, x, zi=None)` | 零相位滤波，返回 (y, zf) |
+| `zi(self)` | 返回稳态初始条件；SOS 形状为 `(n_sections, 2)` |
+| `lfilter(self, x, zi=None)` | 单向因果滤波，返回 (y, zf) |
 | `filtfilt(self, x, padtype='odd')` | 零相位滤波，可指定填充方式 |
+
+SOS 模式的 `lfilter` 接受 SciPy 形状 `(n_sections, 2)` 或等价扁平 `zi`，返回的
+`zf` 始终是 `(n_sections, 2)`。在线滤波首段建议使用 `zi() * x[0]`，后续必须持续传递
+前一段的 `zf`。`filtfilt` 不可用于实时流式处理，且有限长度信号仍需检查边界效应。
 
 ## Peak Detection - 峰值检测
 
@@ -219,14 +248,21 @@ from pywayne.dsp import CurveSimilarity
 
 cs = CurveSimilarity()
 distance = cs.dtw(curve1, curve2, mode='global')
+
+# 可选后端：auto（默认）、python、numba
+fast_distance = cs.dtw(curve1, curve2, backend='numba')
 ```
 
 **方法**：
 
 | 方法 | 说明 |
 |------|------|
-| `dtw(x, y, mode='global', *params)` | 计算两条曲线的 DTW 距离 |
+| `dtw(x, y, mode='global', *params, backend='auto')` | 计算两条曲线的 DTW 距离 |
 | `mode` | str | 'global'（全局）或 'local'（局部） |
+| `backend` | str | 'auto'、'python' 或 'numba'；auto 在 Numba 不可用时回退 Python |
+
+Numba 是可选性能依赖，可通过 `pip install "pywayne[performance]"` 安装。首次调用会进行 JIT 编译，
+重复调用或较长曲线收益更明显。Python 和 Numba 后端保持相同的评分语义。
 
 ## Other Tools - 其他工具
 
