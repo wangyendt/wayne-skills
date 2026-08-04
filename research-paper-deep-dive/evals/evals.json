@@ -1,0 +1,61 @@
+{
+  "skill_name": "research-paper-deep-dive",
+  "evals": [
+    {
+      "id": 1,
+      "name": "freihand-dataset-full-dive",
+      "prompt": "我对 3D 手部建模完全陌生。请帮我吃透附件中的 FreiHAND 论文。先用 30 秒结论和五分钟白话故事，让我真正理解问题、关键思路、数据怎么造出来、为什么实验值得相信；然后解释作者与实验室的哪些积累促成了这篇工作，列出最相关的前后论文和官方 GitHub；再把精确方法、指标、复现和来源放进可选附录。优先使用原论文图表，也可以补充一张明确标注的 AI 教学示意图。不要让审稿术语、证据编号或夸张表达挡住理解。",
+      "expected_output": "A three-layer deep dive for an unfamiliar reader: a 30-second mental model, a self-contained plain-language walkthrough, and an optional evidence-backed technical appendix.",
+      "files": [
+        "/Users/wayne/Downloads/FreiHAND- A Dataset for Markerless Capture of Hand Pose and Shape from Single RGB Images.pdf"
+      ],
+      "expectations": [
+        "Identifies the exact paper/version and uses full-paper evidence for method, figure, and experiment claims.",
+        "The first screen states the difficulty, key move, and bounded consequence in language an unfamiliar reader can repeat.",
+        "Publishes a self-contained five-minute walkthrough followed by an optional technical appendix; understanding does not depend on reading the appendix.",
+        "Uses one concrete running sample, introduces terms only after explaining them, and avoids invented author motives or theatrical/adversarial wording.",
+        "Keeps Claim IDs, evidence-class labels, commit hashes, reviewer jargon, and source-line details out of the teaching layer.",
+        "Explains decisive metrics in plain language; records exact AUC/PCK/F-score/alignment protocol in the appendix and marks the Table 1 AUC interval unknown if unverified.",
+        "Separates acquisition, annotation/fitting, training, inference, and evaluation; the table says whether a stage runs at deployment rather than whether its artifact is later used.",
+        "Analyzes and embeds legible crops for load-bearing visuals, including Table 1's missing HO-3D cell and training-split substitution from its caption.",
+        "Uses inspected paper figures for factual apparatus/results and, if a generated conceptual image is included, labels it as an AI teaching illustration rather than a paper figure or experimental result.",
+        "Reports the paper's 15-minute full-keypoint, 12-second mask-correction, 2-second keypoint, and 5-second validation timings without converting them into an unsupported total-cost claim.",
+        "Provides three concise reusable principles and a two-sentence retelling before the appendix.",
+        "Explains the Freiburg and Adobe capability lines after the method is understood, using first-party author/lab sources without inferring individual module ownership.",
+        "Links the official lab organization, FreiHAND repository, direct predecessor/follow-up repositories, and states what each contains versus which production components remain unreleased.",
+        "Uses a branching technical tree with an older root and work near the analysis-year cutoff, separates two reproduction targets, and places commit-pinned code facts in the appendix only."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "reviewer-experiment-audit",
+      "prompt": "请对附件中的 FreiHAND 使用 reviewer mode。重点审查数据集泛化、迭代标注和形状标签三类主张是否被实验支撑，baseline 和 ablation 是否公平，有没有隐藏假设、替代解释和最该补的实验。不要复述 abstract。",
+      "expected_output": "A claim-to-evidence audit that distinguishes author claims from the analyst's judgment and proposes concrete missing experiments.",
+      "files": [
+        "/Users/wayne/Downloads/FreiHAND- A Dataset for Markerless Capture of Hand Pose and Shape from Single RGB Images.pdf"
+      ],
+      "expectations": [
+        "Builds an explicit claim-to-evidence mapping rather than summarizing the abstract.",
+        "May use globally unique Claim IDs because reviewer mode was explicitly requested, and examines baseline fairness, the HO-3D split exception, ablation isolation, metric semantics, confounders, and failure cases.",
+        "Separates actual public reviews, if available, from independent reviewer analysis and labels inaccessible evidence.",
+        "Proposes at least one discriminating missing experiment tied to a specific alternative explanation."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "implementation-focused-reproduction",
+      "prompt": "我想使用并尽可能复现附件中的 FreiHAND。请分开说明怎样使用已发布数据/评测，以及怎样复现八相机采集与标注生产线；从论文、supplement 和官方代码还原数据流、关键配置、成本、最小里程碑和工程诊断。论文没说的地方不要猜成事实。",
+      "expected_output": "An evidence-aware reproduction blueprint separating paper specification, official-code behavior, estimates, and recommended engineering practice.",
+      "files": [
+        "/Users/wayne/Downloads/FreiHAND- A Dataset for Markerless Capture of Hand Pose and Shape from Single RGB Images.pdf"
+      ],
+      "expectations": [
+        "Separates paper-stated behavior, official-code behavior, analyst estimates, and recommendations.",
+        "Covers data, coordinate frames, fitting weights, iteration schedule, acceptance rules, human timings, component interfaces, training/optimization, inference, dependencies, license, and access constraints.",
+        "Pins official repository behavior to a commit and explicitly lists unreleased or unspecified production-pipeline fields.",
+        "Provides a staged minimal reproduction with sanity checks and failure diagnostics.",
+        "Any runtime, GPU, memory, or storage estimate includes a source or explicit assumptions and uncertainty."
+      ]
+    }
+  ]
+}

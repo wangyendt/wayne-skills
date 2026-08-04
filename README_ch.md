@@ -18,9 +18,9 @@
 
 | 指标 | 数值 |
 | --- | --- |
-| 技能总数 | `42` |
-| `pywayne` 技能 | `34` |
-| 通用技能 | `8`（`alapi`、`deep-think`、`send-email`、`shell-shortcuts`、`tutor-general`、`tutor-math-geometry`、`proactive-agent`、`week-report-system`） |
+| 技能总数 | `45` |
+| `pywayne` 技能 | `35` |
+| 通用技能 | `10`（`alapi`、`awesome-docs`、`deep-think`、`research-paper-deep-dive`、`send-email`、`shell-shortcuts`、`tutor-general`、`tutor-math-geometry`、`proactive-agent`、`week-report-system`） |
 | 规范主文档 | `CLAUDE.md` |
 | Agent 入口文档 | `AGENTS.md` |
 
@@ -28,8 +28,10 @@
 
 - `pywayne/` - 与 `pywayne` 源码模块对齐的技能目录
 - `alapi/` - ALAPI 全量 OpenAPI 技能，含接口路由与请求辅助脚本
+- `awesome-docs/` - 高质量 README、技术书籍与可视化文档工作流
 - `send-email/` - SMTP 邮件发送技能（模板+附件）
 - `deep-think/` - 深度分析与问题拆解流程
+- `research-paper-deep-dive/` - 研究级论文精读与陌生领域快速建图
 - `shell-shortcuts/` - 跨平台终端快捷指令（`proxy_on`、`goto`、`gpu`）
 - `tutor-general/` - 通用辅导技能（生成 Manim 教学视频）
 - `tutor-math-geometry/` - 数学几何辅导技能（交互式动画）
@@ -53,7 +55,9 @@
 ### 通用技能
 
 - `alapi`：ALAPI 全量 OpenAPI 技能，提供接口路由、鉴权说明与请求辅助
+- `awesome-docs`：创建高质量 README、技术书籍与可视化文档
 - `deep-think`：结构化深度思考流程
+- `research-paper-deep-dive`：从背景、方法和证据延伸到可迁移 know-how、工程复现与研究机会的论文精读
 - `send-email`：支持 HTML 模板与附件的 SMTP 邮件发送
 - `shell-shortcuts`：配置 `proxy_on/proxy_off/goto/gpu` 与可选 Conda 自动激活
 - `tutor-general`：通用辅导技能（Manim 视频生成）

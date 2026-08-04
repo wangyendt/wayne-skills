@@ -18,9 +18,9 @@ It converts practical modules into reusable `SKILL.md` playbooks so agents can p
 
 | Metric | Value |
 | --- | --- |
-| Total skills | `42` |
-| `pywayne` skills | `34` |
-| General skills | `8` (`alapi`, `deep-think`, `send-email`, `shell-shortcuts`, `tutor-general`, `tutor-math-geometry`, `proactive-agent`, `week-report-system`) |
+| Total skills | `45` |
+| `pywayne` skills | `35` |
+| General skills | `10` (`alapi`, `awesome-docs`, `deep-think`, `research-paper-deep-dive`, `send-email`, `shell-shortcuts`, `tutor-general`, `tutor-math-geometry`, `proactive-agent`, `week-report-system`) |
 | Canonical rules | `CLAUDE.md` |
 | Agent handoff doc | `AGENTS.md` |
 
@@ -28,8 +28,10 @@ It converts practical modules into reusable `SKILL.md` playbooks so agents can p
 
 - `pywayne/` - skills aligned with `pywayne` source modules
 - `alapi/` - full ALAPI OpenAPI skill with endpoint routing and request helpers
+- `awesome-docs/` - polished README, technical book, and documentation workflow
 - `send-email/` - SMTP email skill with templates and attachments
 - `deep-think/` - deep analysis and decomposition workflow
+- `research-paper-deep-dive/` - researcher-grade paper understanding and unfamiliar-field mapping
 - `shell-shortcuts/` - cross-platform terminal shortcut commands (`proxy_on`, `goto`, `gpu`)
 - `tutor-general/` - general tutoring skill for generating educational videos with Manim
 - `tutor-math-geometry/` - math geometry tutoring skill with interactive animations
@@ -53,7 +55,9 @@ Examples:
 ### General
 
 - `alapi`: full ALAPI OpenAPI skill with endpoint routing, auth guidance, and request helpers
+- `awesome-docs`: create polished README files, technical books, and visual documentation
 - `deep-think`: structured deep reasoning workflow
+- `research-paper-deep-dive`: deep paper reading from context and method to evidence, reusable know-how, implementation, and research opportunities
 - `send-email`: SMTP sending with HTML templates and attachments
 - `shell-shortcuts`: set up `proxy_on/proxy_off/goto/gpu` and optional Conda autostart
 - `tutor-general`: general tutoring skill with Manim video generation
