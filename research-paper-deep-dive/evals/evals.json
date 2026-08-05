@@ -23,7 +23,8 @@
         "Provides three concise reusable principles and a two-sentence retelling before the appendix.",
         "Explains the Freiburg and Adobe capability lines after the method is understood, using first-party author/lab sources without inferring individual module ownership.",
         "Links the official lab organization, FreiHAND repository, direct predecessor/follow-up repositories, and states what each contains versus which production components remain unreleased.",
-        "Uses a branching technical tree with an older root and work near the analysis-year cutoff, separates two reproduction targets, and places commit-pinned code facts in the appendix only."
+        "Uses a branching technical tree with an older root and work near the analysis-year cutoff, separates two reproduction targets, and places commit-pinned code facts in the appendix only.",
+        "Runs a separate plain-language polish after the evidence draft is complete; the teaching story loses narrator/template phrasing while formulas, numbers, links, image paths, source locations, and uncertainty remain unchanged."
       ]
     },
     {

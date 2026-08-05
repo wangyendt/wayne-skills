@@ -1,6 +1,6 @@
 ---
 name: awesome-docs
-description: Use this skill whenever the user asks to record, save, organize, update, or maintain project documentation, including plan documents, todo documents, temporary ideas, project risks, next actions, experiment notes, know-how, roadmap items, decision records, summaries, story-telling documentation polish, technical book chapters, thesis-style derivations, or common command registries. Also use it when the user asks to save a generated shell command, append to 常用命令, or create a reusable AI/human project documentation interface. Defaults to <project-root>/docs unless the user specifies another documentation path.
+description: Use this skill whenever the user asks to record, save, organize, update, or maintain project documentation, including plan documents, todo documents, temporary ideas, project risks, next actions, experiment notes, know-how, roadmap items, decision records, summaries, story-telling documentation polish, technical book chapters, thesis-style derivations, or common command registries. Also use it when the user asks to save a generated shell command, append to 常用命令, or create a reusable AI/human project documentation interface. Defaults to the project's docs directory unless the user specifies another path, and applies an opt-out final plain-language polish to Markdown documents.
 ---
 
 # Awesome Docs
@@ -16,17 +16,12 @@ When the user asks to record project knowledge:
 3. Create or update the right document.
 4. Write in a concise, factual, readable style with a clear story line.
 5. Re-read the full document after writing and run the post-write checklist for readability, consistent structure, complete required modules, evidence, conclusions, and next steps.
-6. If the request is about reusable commands, update `常用命令.txt` with single-line commands.
+6. Unless the user opts out, run the separate plain-language pass after the content review, following [references/post-write-polish.md](references/post-write-polish.md).
+7. If the request is about reusable commands, update `常用命令.txt` with single-line commands and skip prose polishing for command lines.
 
 ## Documentation Root
 
 Use the user-specified documentation path if provided.
-
-Examples of explicit paths:
-
-- `记录到 docs/xiaolei-xiaolei`
-- `文档路径用 project_notes`
-- `写到 /path/to/repo/docs_product`
 
 If the user does not specify a documentation path, use:
 
@@ -134,15 +129,7 @@ YYYYMMDD_简短标题.md
 
 Use underscores to connect the date and title. Keep the title short and descriptive.
 
-Examples:
-
-```text
-20260429_端侧内存优化方案.md
-20260429_量化评测结果.md
-20260429_导出链路踩坑记录.md
-20260429_Q2功能路线图.md
-20260429_模型导出待办.md
-```
+For example: `20260429_端侧内存优化方案.md`.
 
 Use the current date from the environment. If the user gives an explicit date, use that date.
 
@@ -320,6 +307,14 @@ Check:
 - actionability: the final section gives a concrete next step, decision, or remaining question
 
 If any checklist item fails, edit the document again and re-read the affected section in context. If the document feels like disconnected notes, reorganize it before finishing. Keep the final document polished enough that another engineer or AI agent can continue from it without asking what the story was.
+
+## Final Plain-Language Pass
+
+Run this after the post-write content review, not while collecting facts or building the document structure. Read [references/post-write-polish.md](references/post-write-polish.md) and route each document type to the appropriate `shuorenhua` level and scope.
+
+Skip this pass when the user says `不需要润色`, `不要润色`, `跳过润色`, `按原流程`, `保持原样`, or gives an equivalent instruction. In that case, finish with the existing Post-write Review above and do not invoke `shuorenhua`, install it, or apply a substitute style pass.
+
+The two passes are internal. Deliver only the final document unless the user explicitly asks to compare the pre-polish and polished versions.
 
 ## Document Templates
 

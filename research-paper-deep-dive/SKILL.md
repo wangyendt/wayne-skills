@@ -290,6 +290,29 @@ A default full report normally contains:
 
 Do not force six full biographies, reviewer audit, research opportunities, every equation, or every table into the default report. Include only the people and projects that explain the paper's origin or enable the reader's next step.
 
+## Run a separate plain-language polish
+
+Apply this workflow to every reader-facing mode. Finish the evidence-backed report before polishing its voice. Keep research and prose cleanup as two distinct passes so that a smoother story cannot quietly change a claim.
+
+### Pass 1 — Freeze the content
+
+Complete the paper analysis, source notes, figures, tables, equations, author/lab context, repository links, and evidence boundaries. Record the protected spans that must survive unchanged: entities, dates, numbers and their objects, formulas, technical terms, quoted text, links, image paths, source locations, claim strength, and who did what.
+
+### Pass 2 — Polish with `shuorenhua`
+
+If available, invoke `$shuorenhua:shuorenhua` on the completed report.
+
+- Treat the report as `docs`, not marketing copy.
+- For the 30-second layer, five-minute story, takeaways, and author/lab bridge, normally use `standard + structural`: remove narrator voice, fake insight, theatrical contrasts, repetitive conclusions, and overly uniform sentences while preserving the teaching sequence.
+- For equations, experiment tables, source notes, implementation details, and the rest of the technical appendix, use `minimal + in-place`: improve only local wording and do not delete, merge, or reorder factual statements.
+- For `reviewer` and `implementation` outputs without a teaching layer, default the whole document to `docs + minimal + in-place`; raise only obviously template-heavy prose to `standard`.
+- Keep evidence qualifiers such as “supports”, “is consistent with”, “cannot isolate”, and “unknown”. Do not make a sentence stronger merely because the stronger version reads better.
+- Do not force a rewrite when a section is already natural. Plain language is the goal; a visible style transformation is not.
+
+After polishing, compare the draft and polished report. Restore any protected span, relationship, scope condition, or uncertainty level that drifted. Confirm that all figure/table identifiers, captions, URLs, local asset paths, formulas, code blocks, and numeric claims still point to the same evidence. Then run the `shuorenhua` fidelity reread before its residual-style audit.
+
+If the skill is unavailable, use the current installation instructions from the official [`shuorenhua` repository](https://github.com/MrGeDiao/shuorenhua) when installing skills is authorized. Do not hard-code package-manager commands that may become stale. If installation is unavailable or not authorized, say so once and apply the same conservative fallback: protect the content ledger, remove only obvious narrator/template phrasing, and perform the two reread checks above.
+
 ## Quality gate
 
 Before delivery, verify:
@@ -311,3 +334,4 @@ Before delivery, verify:
 - The author/lab section explains capabilities and relationships, not merely credentials; official GitHub links state their scope and missing pieces.
 - The final sentence is memorable and no stronger than the evidence.
 - Repeated conclusions have one canonical home.
+- Research and style cleanup happened in separate passes; the final `shuorenhua` pass did not alter protected facts, relationships, sources, assets, or uncertainty.

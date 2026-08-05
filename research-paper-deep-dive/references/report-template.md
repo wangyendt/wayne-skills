@@ -194,6 +194,8 @@ Provide a compact source list or note table. Include exact page/figure/table loc
 
 ## Final editing test
 
+Finish and verify the evidence draft first. Then run the separate `shuorenhua` polish defined in `SKILL.md`; do not mix style rewriting into claim construction.
+
 Delete or rewrite any sentence that fails one of these tests:
 
 - Would an intelligent newcomer understand it on first reading?

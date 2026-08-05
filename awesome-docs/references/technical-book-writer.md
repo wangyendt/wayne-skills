@@ -14,6 +14,7 @@ Write rigorous technical material that teaches a reader the concept in dependenc
 4. Derive before presenting final formulas. Show why a term appears, what frame it lives in, and which convention fixes its sign or multiplication order.
 5. Separate theory, implementation, and experimental evidence. Code details should explain how the theory is realized, not replace the theory.
 6. Reconnect every section to the previous and next section after edits so the final chapter reads as one argument.
+7. Complete the technical review before the optional plain-language pass; never polish prose while the symbol ledger or derivation is still changing.
 
 ## Chapter Shape
 
@@ -52,3 +53,5 @@ Before finishing, re-read the chapter and check:
 - theory, implementation, and experimental evidence are clearly separated
 - implementation references support the explanation without becoming the structure
 - final conclusions answer the motivating problem and name remaining limitations
+- the plain-language pass, when enabled, preserves every formula, symbol definition, frame direction, sign convention, multiplication order, unit, code identifier, and evidence qualifier
+- no sentence merge causes a symbol or prerequisite to appear before its definition
