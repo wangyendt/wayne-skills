@@ -1,0 +1,15 @@
+{
+  "id": "learning-tutor",
+  "name": "Learning Tutor Capture",
+  "description": "Opt-in learning transcript capture and local outbox synchronization.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["python", "home"],
+    "properties": {
+      "python": {"type": "string", "minLength": 1},
+      "home": {"type": "string", "minLength": 1},
+      "profile": {"type": "string", "default": "personal"}
+    }
+  }
+}

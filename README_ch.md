@@ -1,117 +1,141 @@
 # wayne-skills
 
-[🇺🇸 English](README.md) | [🇨🇳 简体中文](README_ch.md)
+[English](README.md) | [简体中文](README_ch.md)
 
-> 让 AI 编程助手在真实工程中更稳、更准、更可复用。
+> 可复用的工作流、可追溯的过程、实用的配套工具。
 
-`wayne-skills` 是一个面向 Codex/Claude 类助手的技能仓库，围绕 `pywayne` 生态构建。  
-它把实际模块能力沉淀为可复用的 `SKILL.md` 工作流，让模型在更少提示下也能选择更合适的 API、约束与执行路径。
+## ✨ 项目目标
 
-## ✨ 这个仓库有什么不一样
-
-- 🧭 **强映射**：技能与源码模块一一对应
-- 🧱 **强规范**：命名和结构稳定一致
-- 🛡️ **低风险**：减少模型临场“拍脑袋”决策
-- 🚀 **覆盖广**：CV、VIO、DSP、LLM、统计、自动化、集成能力
+`wayne-skills` 为 Codex、Claude Code、OpenClaw 等 AI Agent 维护技能与配套脚本，包括通用工作流和映射到 `pywayne` 生态的技能；不维护 `pywayne` 库源码实现。安装 skill 不等于已安装依赖、开启宿主 hooks 或验证所有运行环境。
 
 ## 📌 快速概览
 
 | 指标 | 数值 |
 | --- | --- |
-| 技能总数 | `45` |
+| 技能总数 | `46` |
 | `pywayne` 技能 | `35` |
-| 通用技能 | `10`（`alapi`、`awesome-docs`、`deep-think`、`research-paper-deep-dive`、`send-email`、`shell-shortcuts`、`tutor-general`、`tutor-math-geometry`、`proactive-agent`、`week-report-system`） |
-| 规范主文档 | `CLAUDE.md` |
-| Agent 入口文档 | `AGENTS.md` |
+| 通用技能 | `11` |
+| 规范主文档 | [CLAUDE.md](CLAUDE.md) |
+| Agent 入口 | [AGENTS.md](AGENTS.md) |
+
+统计源码中的 `**/SKILL.md`，排除 `.agents/`、`.claude/`、`.cursor/` 等被忽略的 Agent 安装镜像。
 
 ## 🗂️ 仓库结构
 
-- `pywayne/` - 与 `pywayne` 源码模块对齐的技能目录
-- `alapi/` - ALAPI 全量 OpenAPI 技能，含接口路由与请求辅助脚本
-- `awesome-docs/` - 高质量 README、技术书籍与可视化文档工作流
-- `send-email/` - SMTP 邮件发送技能（模板+附件）
-- `deep-think/` - 深度分析与问题拆解流程
-- `research-paper-deep-dive/` - 研究级论文精读与陌生领域快速建图
-- `shell-shortcuts/` - 跨平台终端快捷指令（`proxy_on`、`goto`、`gpu`）
-- `tutor-general/` - 通用辅导技能（生成 Manim 教学视频）
-- `tutor-math-geometry/` - 数学几何辅导技能（交互式动画）
-- `proactive-agent/` - 主动式 Agent 架构（WAL、Working Buffer 等）
-- `week-report-system/` - AI 智能周报系统，自动记录对话并生成周报
-- `CLAUDE.md` - 命名、结构、文档规则
-- `AGENTS.md` - 给其他模型/代理的简明协作说明
+- `pywayne/`：与库源码对应的技能，按下方领域分组。
+- 顶层技能目录：通用工作流，包含 `SKILL.md` 及按需提供的 scripts/references/assets。
+- `learning-tutor/`：交互教学、本地采集、待同步队列与同步辅助程序。
+- `CLAUDE.md` / `AGENTS.md`：仓库约定与 Agent 入口说明。
 
-## 🔗 映射规则
+## 🔗 命名与目录规范
 
-`源码模块路径 -> skill 目录路径 -> skill name`
+映射关系为 `源码模块路径 → skill 目录 → skill name`；新增技能名称和目录采用小写连字符形式。
 
-示例：
+- `pywayne/llm/chat_bot.py` → `pywayne/llm/chat-bot/` → `pywayne-llm-chat-bot`
+- `pywayne/vio/SE3.py` → `pywayne/vio/se3/` → `pywayne-vio-se3`
+- 通用技能位于独立顶层目录，不要求 pywayne 前缀。
 
-- `pywayne/llm/chat_bot.py` -> `pywayne/llm/chat-bot/` -> `pywayne-llm-chat-bot`
-- `pywayne/vio/SE3.py` -> `pywayne/vio/se3/` -> `pywayne-vio-se3`
-- `pywayne/cv/apriltag_detector.py` -> `pywayne/cv/apriltag-detector/` -> `pywayne-cv-apriltag-detector`
+清单链接指向真实路径，包括已有的 `pywayne/vio/SO3/`。本次未重命名历史目录。
 
-## 🧠 技能领域
+## 🧠 技能清单
 
 ### 通用技能
 
-- `alapi`：ALAPI 全量 OpenAPI 技能，提供接口路由、鉴权说明与请求辅助
-- `awesome-docs`：创建高质量 README、技术书籍与可视化文档
-- `deep-think`：结构化深度思考流程
-- `research-paper-deep-dive`：从背景、方法和证据延伸到可迁移 know-how、工程复现与研究机会的论文精读
-- `send-email`：支持 HTML 模板与附件的 SMTP 邮件发送
-- `shell-shortcuts`：配置 `proxy_on/proxy_off/goto/gpu` 与可选 Conda 自动激活
-- `tutor-general`：通用辅导技能（Manim 视频生成）
-- `tutor-math-geometry`：数学几何辅导技能（交互式动画）
-- `proactive-agent`：主动式 Agent 架构（WAL、Working Buffer 等）
-- `week-report-system`：AI 智能周报系统——自动将每次对话记录到 GitHub，按需生成结构化周报
+| Skill Name | 路径 | 作用 |
+| --- | --- | --- |
+| `alapi` | [alapi/](alapi/SKILL.md) | 依据内置 API 清单调用 ALAPI。 |
+| `awesome-docs` | [awesome-docs/](awesome-docs/SKILL.md) | 创建和维护项目文档。 |
+| `deep-think` | [deep-think/](deep-think/SKILL.md) | 组织深入分析与问题拆解。 |
+| `learning-tutor` | [learning-tutor/](learning-tutor/SKILL.md) | 逐题教学、证据评估、本地采集与跨会话续学。 |
+| `proactive-agent` | [proactive-agent/](proactive-agent/SKILL.md) | 设计带 WAL 和工作缓冲的主动式 Agent。 |
+| `research-paper-deep-dive` | [research-paper-deep-dive/](research-paper-deep-dive/SKILL.md) | 深入理解论文、证据、背景与可复现方法。 |
+| `send-email` | [send-email/](send-email/SKILL.md) | 通过 SMTP 发送带模板与附件的邮件。 |
+| `shell-shortcuts` | [shell-shortcuts/](shell-shortcuts/SKILL.md) | 配置跨平台终端快捷命令。 |
+| `tutor-general` | [tutor-general/](tutor-general/SKILL.md) | 使用 Motion Canvas 制作带配音的教学视频。 |
+| `tutor-math-geometry` | [tutor-math-geometry/](tutor-math-geometry/SKILL.md) | 用 HTML、几何动画与配音讲解数学。 |
+| `week-report-system` | [week-report-system/](week-report-system/SKILL.md) | 整理工作素材并生成周报。 |
 
-## ⭐ 重点推荐：Week Report System
+### 开发工具
 
-> 让日常 AI 对话自动沉淀为每周工作汇报。
+| Skill Name | 路径 | 作用 |
+| --- | --- | --- |
+| `pywayne-bin-cmdlogger` | [pywayne/bin/cmdlogger/](pywayne/bin/cmdlogger/SKILL.md) | 记录命令输入与输出。 |
+| `pywayne-bin-gettool` | [pywayne/bin/gettool/](pywayne/bin/gettool/SKILL.md) | 获取 C++ 工具与库。 |
+| `pywayne-bin-gitstats` | [pywayne/bin/gitstats/](pywayne/bin/gitstats/SKILL.md) | 分析 Git 提交活动。 |
+| `pywayne-bin-toolsetup` | [pywayne/bin/toolsetup/](pywayne/bin/toolsetup/SKILL.md) | 配置开发命令与工具环境。 |
+| `pywayne-crypto` | [pywayne/crypto/](pywayne/crypto/SKILL.md) | 使用字符串和字节加解密工具。 |
+| `pywayne-helper` | [pywayne/helper/](pywayne/helper/SKILL.md) | 管理共享项目配置。 |
+| `pywayne-tools` | [pywayne/tools/](pywayne/tools/SKILL.md) | 使用控制台、计时、配置与通用工具。 |
 
-`week-report-system` 在后台静默记录每次用户与 AI 的对话（压缩摘要版），按年份/周次存入私有 GitHub 仓库。需要写周报时，一句话触发——自动读取对话记录、按项目分类、提取关键数据，输出结构化 Markdown 周报。
+### 数据与数学
 
-**仓库结构：**
-```
-week-reports/
-├── 2026/
-│   └── week12/
-│       ├── 20260318-a1b2c3d4.txt      # 简略对话记录
-│       ├── 20260319-e5f6g7h8.txt
-│       └── report-20260320-143022.md  # 生成的详细周报
-```
+| Skill Name | 路径 | 作用 |
+| --- | --- | --- |
+| `pywayne-data-structure` | [pywayne/data-structure/](pywayne/data-structure/SKILL.md) | 使用逻辑树、并查集和 XML 工具。 |
+| `pywayne-dsp` | [pywayne/dsp/](pywayne/dsp/SKILL.md) | 滤波并分析采样信号。 |
+| `pywayne-maths` | [pywayne/maths/](pywayne/maths/SKILL.md) | 使用数论与算术工具。 |
+| `pywayne-plot` | [pywayne/plot/](pywayne/plot/SKILL.md) | 绘制频谱与时频数据。 |
+| `pywayne-statistics` | [pywayne/statistics/](pywayne/statistics/SKILL.md) | 执行统计检验与诊断。 |
 
-**使用方式：**
-- 正常聊天即可，对话在后台自动记录
-- 说 `写周报` / `生成本周周报` 即可生成完整报告
-- 说 `总结2026年第12周的工作` 可指定任意周
+### 视觉与传感器
 
-**一台电脑，所有 AI 智能体共享** — 通过 [Skill Manager](https://github.com/wangyendt/skillmanager) 安装：
-```bash
-npm -g install @wang121ye/skillmanager
-skillmanager install --global   # 从列表中勾选 week-report-system
-```
-安装一次，Claude、ChatGPT 等所有支持 skill 的 Agent 均可使用。
+| Skill Name | 路径 | 作用 |
+| --- | --- | --- |
+| `pywayne-ahrs-tools` | [pywayne/ahrs/ahrs-tools/](pywayne/ahrs/ahrs-tools/SKILL.md) | 分解姿态并补偿横滚与俯仰。 |
+| `pywayne-calibration-magnetometer-calibration` | [pywayne/calibration/magnetometer-calibration/](pywayne/calibration/magnetometer-calibration/SKILL.md) | 标定磁力计与传感器误差。 |
+| `pywayne-cv-apriltag-detector` | [pywayne/cv/apriltag-detector/](pywayne/cv/apriltag-detector/SKILL.md) | 检测 AprilTag，用于标定与位姿估计。 |
+| `pywayne-cv-camera-model` | [pywayne/cv/camera-model/](pywayne/cv/camera-model/SKILL.md) | 使用相机模型与标定文件。 |
+| `pywayne-cv-geometric-hull-calculator` | [pywayne/cv/geometric-hull-calculator/](pywayne/cv/geometric-hull-calculator/SKILL.md) | 计算凸包、凹包和包围矩形。 |
+| `pywayne-cv-stereo-tag-matcher` | [pywayne/cv/stereo-tag-matcher/](pywayne/cv/stereo-tag-matcher/SKILL.md) | 匹配双目相机中的 AprilTag。 |
+| `pywayne-cv-tools` | [pywayne/cv/tools/](pywayne/cv/tools/SKILL.md) | 读写 OpenCV YAML 数据。 |
 
-### pywayne 技能领域
+### VIO 与可视化
 
-- 🛠️ 开发工具：`tools`、`helper`、`bin/*`、`crypto`
-- 📊 数据与数学：`dsp`、`maths`、`statistics`、`data-structure`、`plot`
-- 🤖 视觉与机器人：`cv/*`、`vio/*`、`calibration/*`、`ahrs/*`、`visualization/*`
-- 🔌 平台与集成：`adb/*`、`cross-comm`、`aliyun-oss`
-- 💬 产品交互：`llm/*`、`lark-*`、`tts`、`gui`
+| Skill Name | 路径 | 作用 |
+| --- | --- | --- |
+| `pywayne-vio-so3` | [pywayne/vio/SO3/](pywayne/vio/SO3/SKILL.md) | 计算 SO(3) 旋转与李群运算。 |
+| `pywayne-vio-se3` | [pywayne/vio/se3/](pywayne/vio/se3/SKILL.md) | 计算 SE(3) 刚体变换。 |
+| `pywayne-vio-tools` | [pywayne/vio/tools/](pywayne/vio/tools/SKILL.md) | 处理视觉惯性位姿与轨迹。 |
+| `pywayne-visualization-pangolin-utils` | [pywayne/visualization/pangolin-utils/](pywayne/visualization/pangolin-utils/SKILL.md) | 使用 Pangolin 显示几何与轨迹。 |
+| `pywayne-visualization-rerun-utils` | [pywayne/visualization/rerun-utils/](pywayne/visualization/rerun-utils/SKILL.md) | 使用 Rerun 显示几何与传感器数据。 |
 
-详细说明请直接查看各目录下 `SKILL.md`。
+### 平台集成
 
-## ✅ 更新检查清单
+| Skill Name | 路径 | 作用 |
+| --- | --- | --- |
+| `pywayne-adb-logcat-reader` | [pywayne/adb/adb-logcat-reader/](pywayne/adb/adb-logcat-reader/SKILL.md) | 读取 Android logcat 日志流。 |
+| `pywayne-aliyun-oss` | [pywayne/aliyun-oss/](pywayne/aliyun-oss/SKILL.md) | 管理阿里云 OSS 文件。 |
+| `pywayne-cross-comm` | [pywayne/cross-comm/](pywayne/cross-comm/SKILL.md) | 通过跨语言 WebSocket 交换消息。 |
+| `pywayne-lark-bot` | [pywayne/lark-bot/](pywayne/lark-bot/SKILL.md) | 使用飞书机器人 API。 |
+| `pywayne-lark-bot-listener` | [pywayne/lark-bot-listener/](pywayne/lark-bot-listener/SKILL.md) | 接收飞书机器人实时事件。 |
+| `pywayne-lark-custom-bot` | [pywayne/lark-custom-bot/](pywayne/lark-custom-bot/SKILL.md) | 发送飞书 webhook 消息。 |
 
-新增或更新技能时：
+### 界面与语音
 
-1. 遵循 `CLAUDE.md` 命名规范
-2. 目录统一使用 hyphen-case
-3. 保持双语 README 链接有效（`README.md` <-> `README_ch.md`）
-4. 统计数字与领域描述和实际 `SKILL.md` 保持一致
+| Skill Name | 路径 | 作用 |
+| --- | --- | --- |
+| `pywayne-gui` | [pywayne/gui/](pywayne/gui/SKILL.md) | 自动化 Windows 窗口与快捷键。 |
+| `pywayne-llm-chat-bot` | [pywayne/llm/chat-bot/](pywayne/llm/chat-bot/SKILL.md) | 使用 OpenAI 兼容聊天 API。 |
+| `pywayne-llm-chat-ollama-gradio` | [pywayne/llm/chat-ollama-gradio/](pywayne/llm/chat-ollama-gradio/SKILL.md) | 为 Ollama 聊天构建 Gradio 界面。 |
+| `pywayne-llm-chat-window` | [pywayne/llm/chat-window/](pywayne/llm/chat-window/SKILL.md) | 使用流式 PyQt 聊天窗口。 |
+| `pywayne-tts` | [pywayne/tts/](pywayne/tts/SKILL.md) | 把文字转换为音频。 |
+
+## ⭐ Learning Tutor：本地优先
+
+`learning-tutor` 支持逐题教学、费曼解释、带证据的评估与中断后续学，配有显式开启的 transcript 适配器、本地 SQLite 待同步队列和 SSH／HTTPS 同步客户端。重复上传按事件身份去重；并行学习保留各分支证据。
+
+PostgreSQL [记录后端](learning-tutor/references/record-backend.md)及独立[图片服务](learning-tutor/references/assets.md)已在 hx470 部署，通过 SSH 使用。文字、证据评估和进度 checkpoint 按提交回执同步；私有 OSS 图片保留 PostgreSQL 元数据。本机 Codex 一次学习试用及全新状态恢复已核对；其他宿主／系统覆盖和公网 HTTPS 网关仍待分别验收。尚未启用 Embedding、个人记忆写入、计划复习或提醒。
+
+参见 skill 的[安装说明](learning-tutor/references/setup.md)与[验证状态](learning-tutor/references/validation.md)。真实学习记录和凭据不纳入本仓库。
+
+## ✅ 维护建议
+
+1. 修改前阅读 `CLAUDE.md`，按真实模块路径和 skill 名称维护。
+2. 根据源码 `**/SKILL.md` 生成／核对清单，排除被忽略的安装镜像。
+3. 中英文 README 的数量、路径与能力描述保持一致。
+4. 打包后清理生成的 `.skill` 文件和空资源目录。
+5. 执行变更脚本的测试，区分已验证行为与计划接入能力。
 
 ## 📄 许可证
 
-MIT，见 `LICENSE`。
+MIT，见 [LICENSE](LICENSE)。

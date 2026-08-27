@@ -1,0 +1,4 @@
+interface:
+  display_name: "Learning Tutor"
+  short_description: "Evidence-based tutoring with resumable learning records"
+  default_prompt: "Use $learning-tutor to help me learn one concept at a time and resume my learning records."

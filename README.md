@@ -1,117 +1,141 @@
 # wayne-skills
 
-[🇺🇸 English](README.md) | [🇨🇳 简体中文](README_ch.md)
+[English](README.md) | [简体中文](README_ch.md)
 
-> Build better AI coding behavior with production-oriented skills.
+> Reusable playbooks, traceable workflows, practical helpers.
 
-`wayne-skills` is a curated skill pack for AI coding agents (Codex/Claude style), centered on the `pywayne` ecosystem.  
-It converts practical modules into reusable `SKILL.md` playbooks so agents can pick better APIs, workflows, and constraints with less prompting.
+## ✨ Project Goal
 
-## ✨ Why It Stands Out
+`wayne-skills` maintains skills and their supporting scripts for AI agents such as Codex, Claude Code, and OpenClaw. It includes general workflows and skills mapped to the `pywayne` ecosystem; it does not maintain the `pywayne` library implementation. Installing a skill does not automatically install dependencies, enable host hooks, or verify every runtime.
 
-- 🧭 **Source-aligned**: skills map directly to real module paths
-- 🧱 **Stable conventions**: naming and structure stay predictable
-- 🛡️ **Lower-risk outputs**: fewer ad-hoc decisions in code generation
-- 🚀 **Broad coverage**: CV, VIO, DSP, LLM, statistics, automation, integrations
-
-## 📌 At A Glance
+## 📌 At a Glance
 
 | Metric | Value |
 | --- | --- |
-| Total skills | `45` |
+| Total skills | `46` |
 | `pywayne` skills | `35` |
-| General skills | `10` (`alapi`, `awesome-docs`, `deep-think`, `research-paper-deep-dive`, `send-email`, `shell-shortcuts`, `tutor-general`, `tutor-math-geometry`, `proactive-agent`, `week-report-system`) |
-| Canonical rules | `CLAUDE.md` |
-| Agent handoff doc | `AGENTS.md` |
+| General skills | `11` |
+| Canonical rules | [CLAUDE.md](CLAUDE.md) |
+| Agent entry point | [AGENTS.md](AGENTS.md) |
+
+Counts cover source `**/SKILL.md` files, excluding ignored agent-installation mirrors such as `.agents/`, `.claude/`, and `.cursor/`.
 
 ## 🗂️ Repository Layout
 
-- `pywayne/` - skills aligned with `pywayne` source modules
-- `alapi/` - full ALAPI OpenAPI skill with endpoint routing and request helpers
-- `awesome-docs/` - polished README, technical book, and documentation workflow
-- `send-email/` - SMTP email skill with templates and attachments
-- `deep-think/` - deep analysis and decomposition workflow
-- `research-paper-deep-dive/` - researcher-grade paper understanding and unfamiliar-field mapping
-- `shell-shortcuts/` - cross-platform terminal shortcut commands (`proxy_on`, `goto`, `gpu`)
-- `tutor-general/` - general tutoring skill for generating educational videos with Manim
-- `tutor-math-geometry/` - math geometry tutoring skill with interactive animations
-- `proactive-agent/` - proactive agent architecture (WAL, Working Buffer, etc.)
-- `week-report-system/` - AI-powered weekly work report system with Git-based conversation logging
-- `CLAUDE.md` - naming, structure, and documentation rules
-- `AGENTS.md` - concise instructions for external models/agents
+- `pywayne/`: source-aligned library skills, grouped by domain below.
+- Top-level skill folders: general workflows, each with `SKILL.md` and optional scripts/references/assets.
+- `learning-tutor/`: interactive teaching plus local capture, outbox, and synchronization helpers.
+- `CLAUDE.md` / `AGENTS.md`: repository conventions and agent entry instructions.
 
-## 🔗 Mapping Rule
+## 🔗 Naming and Directory Rules
 
-`source module path -> skill directory -> skill name`
+Map `source module path → skill directory → skill name`; use lowercase hyphen-case for new skill names and directories.
 
-Examples:
+- `pywayne/llm/chat_bot.py` → `pywayne/llm/chat-bot/` → `pywayne-llm-chat-bot`
+- `pywayne/vio/SE3.py` → `pywayne/vio/se3/` → `pywayne-vio-se3`
+- General skills live in their own top-level folders; they do not require a pywayne prefix.
 
-- `pywayne/llm/chat_bot.py` -> `pywayne/llm/chat-bot/` -> `pywayne-llm-chat-bot`
-- `pywayne/vio/SE3.py` -> `pywayne/vio/se3/` -> `pywayne-vio-se3`
-- `pywayne/cv/apriltag_detector.py` -> `pywayne/cv/apriltag-detector/` -> `pywayne-cv-apriltag-detector`
+The catalog links to actual paths, including the existing `pywayne/vio/SO3/` path. No legacy directory was renamed in this update.
 
-## 🧠 Skill Domains
+## 🧠 Skill Catalog
 
 ### General
 
-- `alapi`: full ALAPI OpenAPI skill with endpoint routing, auth guidance, and request helpers
-- `awesome-docs`: create polished README files, technical books, and visual documentation
-- `deep-think`: structured deep reasoning workflow
-- `research-paper-deep-dive`: deep paper reading from context and method to evidence, reusable know-how, implementation, and research opportunities
-- `send-email`: SMTP sending with HTML templates and attachments
-- `shell-shortcuts`: set up `proxy_on/proxy_off/goto/gpu` and optional Conda autostart
-- `tutor-general`: general tutoring skill with Manim video generation
-- `tutor-math-geometry`: math geometry tutoring skill with interactive animations
-- `proactive-agent`: proactive agent architecture (WAL, Working Buffer, etc.)
-- `week-report-system`: AI weekly work report system — auto-records every conversation to GitHub and generates structured weekly reports on demand
+| Skill Name | Path | Purpose |
+| --- | --- | --- |
+| `alapi` | [alapi/](alapi/SKILL.md) | Route ALAPI requests using the bundled API catalog. |
+| `awesome-docs` | [awesome-docs/](awesome-docs/SKILL.md) | Create and maintain project documentation. |
+| `deep-think` | [deep-think/](deep-think/SKILL.md) | Structure deep analysis and problem decomposition. |
+| `learning-tutor` | [learning-tutor/](learning-tutor/SKILL.md) | Teach interactively with evidence, local capture, and resumable records. |
+| `proactive-agent` | [proactive-agent/](proactive-agent/SKILL.md) | Design proactive agents with WAL and working buffers. |
+| `research-paper-deep-dive` | [research-paper-deep-dive/](research-paper-deep-dive/SKILL.md) | Explain papers, evidence, context, and reproducible methods. |
+| `send-email` | [send-email/](send-email/SKILL.md) | Send SMTP email with templates and attachments. |
+| `shell-shortcuts` | [shell-shortcuts/](shell-shortcuts/SKILL.md) | Configure cross-platform terminal shortcuts. |
+| `tutor-general` | [tutor-general/](tutor-general/SKILL.md) | Produce narrated educational videos with Motion Canvas. |
+| `tutor-math-geometry` | [tutor-math-geometry/](tutor-math-geometry/SKILL.md) | Explain math with HTML, geometry animation, and narration. |
+| `week-report-system` | [week-report-system/](week-report-system/SKILL.md) | Organize work materials and produce weekly reports. |
 
-## ⭐ Featured: Week Report System
+### Developer tools
 
-> Automatically turn your daily AI conversations into polished weekly reports.
+| Skill Name | Path | Purpose |
+| --- | --- | --- |
+| `pywayne-bin-cmdlogger` | [pywayne/bin/cmdlogger/](pywayne/bin/cmdlogger/SKILL.md) | Record a command’s input and output. |
+| `pywayne-bin-gettool` | [pywayne/bin/gettool/](pywayne/bin/gettool/SKILL.md) | Fetch C++ tools and libraries. |
+| `pywayne-bin-gitstats` | [pywayne/bin/gitstats/](pywayne/bin/gitstats/SKILL.md) | Analyze Git commit activity. |
+| `pywayne-bin-toolsetup` | [pywayne/bin/toolsetup/](pywayne/bin/toolsetup/SKILL.md) | Configure development commands and tool environments. |
+| `pywayne-crypto` | [pywayne/crypto/](pywayne/crypto/SKILL.md) | Use string and byte encryption helpers. |
+| `pywayne-helper` | [pywayne/helper/](pywayne/helper/SKILL.md) | Manage shared project configuration. |
+| `pywayne-tools` | [pywayne/tools/](pywayne/tools/SKILL.md) | Use console, timing, configuration, and utility helpers. |
 
-`week-report-system` silently logs every user–AI exchange (compressed + summarized) to a private GitHub repository, organized by year and week. At any point, ask it to generate a full weekly report — it reads the conversation logs, categorizes work by project, extracts key metrics, and outputs a structured markdown report.
+### Data and mathematics
 
-**Repository structure:**
-```
-week-reports/
-├── 2026/
-│   └── week12/
-│       ├── 20260318-a1b2c3d4.txt      # brief conversation log
-│       ├── 20260319-e5f6g7h8.txt
-│       └── report-20260320-143022.md  # generated weekly report
-```
+| Skill Name | Path | Purpose |
+| --- | --- | --- |
+| `pywayne-data-structure` | [pywayne/data-structure/](pywayne/data-structure/SKILL.md) | Use logical trees, union-find, and XML helpers. |
+| `pywayne-dsp` | [pywayne/dsp/](pywayne/dsp/SKILL.md) | Filter and analyze sampled signals. |
+| `pywayne-maths` | [pywayne/maths/](pywayne/maths/SKILL.md) | Use number-theory and arithmetic helpers. |
+| `pywayne-plot` | [pywayne/plot/](pywayne/plot/SKILL.md) | Visualize spectrograms and time-frequency data. |
+| `pywayne-statistics` | [pywayne/statistics/](pywayne/statistics/SKILL.md) | Run statistical tests and diagnostics. |
 
-**How to use:**
-- Just chat normally — conversations are recorded in the background
-- Say `写周报` / `generate week report` to get a full report
-- Say `总结2026年第12周的工作` to report on a specific week
+### Vision and sensors
 
-**Install across all AI agents on your machine** with [Skill Manager](https://github.com/wangyendt/skillmanager):
-```bash
-npm -g install @wang121ye/skillmanager
-skillmanager install --global   # select week-report-system from the list
-```
-One install, works for Claude, ChatGPT, and any other agent that supports skills.
+| Skill Name | Path | Purpose |
+| --- | --- | --- |
+| `pywayne-ahrs-tools` | [pywayne/ahrs/ahrs-tools/](pywayne/ahrs/ahrs-tools/SKILL.md) | Decompose attitude and compensate roll/pitch. |
+| `pywayne-calibration-magnetometer-calibration` | [pywayne/calibration/magnetometer-calibration/](pywayne/calibration/magnetometer-calibration/SKILL.md) | Calibrate magnetometers and sensor errors. |
+| `pywayne-cv-apriltag-detector` | [pywayne/cv/apriltag-detector/](pywayne/cv/apriltag-detector/SKILL.md) | Detect AprilTags for calibration and pose estimation. |
+| `pywayne-cv-camera-model` | [pywayne/cv/camera-model/](pywayne/cv/camera-model/SKILL.md) | Work with camera models and calibration files. |
+| `pywayne-cv-geometric-hull-calculator` | [pywayne/cv/geometric-hull-calculator/](pywayne/cv/geometric-hull-calculator/SKILL.md) | Compute convex/concave hulls and bounding rectangles. |
+| `pywayne-cv-stereo-tag-matcher` | [pywayne/cv/stereo-tag-matcher/](pywayne/cv/stereo-tag-matcher/SKILL.md) | Match AprilTags across stereo camera views. |
+| `pywayne-cv-tools` | [pywayne/cv/tools/](pywayne/cv/tools/SKILL.md) | Read and write OpenCV YAML data. |
 
-### pywayne Domains
+### VIO and visualization
 
-- 🛠️ Developer Tools: `tools`, `helper`, `bin/*`, `crypto`
-- 📊 Data & Math: `dsp`, `maths`, `statistics`, `data-structure`, `plot`
-- 🤖 Vision & Robotics: `cv/*`, `vio/*`, `calibration/*`, `ahrs/*`, `visualization/*`
-- 🔌 Platform & Integration: `adb/*`, `cross-comm`, `aliyun-oss`
-- 💬 Product Interfaces: `llm/*`, `lark-*`, `tts`, `gui`
+| Skill Name | Path | Purpose |
+| --- | --- | --- |
+| `pywayne-vio-so3` | [pywayne/vio/SO3/](pywayne/vio/SO3/SKILL.md) | Compute SO(3) rotations and Lie operations. |
+| `pywayne-vio-se3` | [pywayne/vio/se3/](pywayne/vio/se3/SKILL.md) | Compute SE(3) rigid transformations. |
+| `pywayne-vio-tools` | [pywayne/vio/tools/](pywayne/vio/tools/SKILL.md) | Process visual-inertial poses and trajectories. |
+| `pywayne-visualization-pangolin-utils` | [pywayne/visualization/pangolin-utils/](pywayne/visualization/pangolin-utils/SKILL.md) | Visualize geometry and trajectories with Pangolin. |
+| `pywayne-visualization-rerun-utils` | [pywayne/visualization/rerun-utils/](pywayne/visualization/rerun-utils/SKILL.md) | Visualize geometry and sensor data with Rerun. |
 
-For full details, browse all `**/SKILL.md` files.
+### Platform integrations
 
-## ✅ Update Checklist
+| Skill Name | Path | Purpose |
+| --- | --- | --- |
+| `pywayne-adb-logcat-reader` | [pywayne/adb/adb-logcat-reader/](pywayne/adb/adb-logcat-reader/SKILL.md) | Read Android logcat streams. |
+| `pywayne-aliyun-oss` | [pywayne/aliyun-oss/](pywayne/aliyun-oss/SKILL.md) | Manage files in Aliyun OSS. |
+| `pywayne-cross-comm` | [pywayne/cross-comm/](pywayne/cross-comm/SKILL.md) | Exchange messages over cross-language WebSockets. |
+| `pywayne-lark-bot` | [pywayne/lark-bot/](pywayne/lark-bot/SKILL.md) | Use the Feishu bot API. |
+| `pywayne-lark-bot-listener` | [pywayne/lark-bot-listener/](pywayne/lark-bot-listener/SKILL.md) | Receive real-time Feishu bot events. |
+| `pywayne-lark-custom-bot` | [pywayne/lark-custom-bot/](pywayne/lark-custom-bot/SKILL.md) | Send Feishu webhook messages. |
 
-When adding/updating skills:
+### Interfaces and speech
 
-1. Follow naming rules in `CLAUDE.md`
-2. Keep directory names in hyphen-case
-3. Keep language links valid (`README.md` <-> `README_ch.md`)
-4. Sync counts and domain text with actual `SKILL.md` files
+| Skill Name | Path | Purpose |
+| --- | --- | --- |
+| `pywayne-gui` | [pywayne/gui/](pywayne/gui/SKILL.md) | Automate Windows windows and hotkeys. |
+| `pywayne-llm-chat-bot` | [pywayne/llm/chat-bot/](pywayne/llm/chat-bot/SKILL.md) | Use OpenAI-compatible chat APIs. |
+| `pywayne-llm-chat-ollama-gradio` | [pywayne/llm/chat-ollama-gradio/](pywayne/llm/chat-ollama-gradio/SKILL.md) | Build a Gradio interface for Ollama chat. |
+| `pywayne-llm-chat-window` | [pywayne/llm/chat-window/](pywayne/llm/chat-window/SKILL.md) | Use a streaming PyQt chat window. |
+| `pywayne-tts` | [pywayne/tts/](pywayne/tts/SKILL.md) | Convert text to audio. |
+
+## ⭐ Learning Tutor: Local First
+
+Use `learning-tutor` for one-question-at-a-time teaching, Feynman explanations, evidence-linked assessments, and resumable learning. It includes opt-in transcript adapters, a local SQLite outbox, and an SSH/HTTPS sync client. Repeated uploads are deduplicated by event identity; parallel learning branches retain their evidence.
+
+A PostgreSQL [record backend](learning-tutor/references/record-backend.md) and separate [image-storage service](learning-tutor/references/assets.md) are deployed on hx470 over SSH. Records, evidence-linked assessments, and checkpoints sync with commit receipts; private OSS images retain PostgreSQL metadata. One local Codex learning trial and fresh-state restoration have been checked. Other host/OS coverage and a public HTTPS gateway remain separate work. Embeddings, personal-memory writes, scheduled review, and reminders are not enabled.
+
+See the skill's [setup guide](learning-tutor/references/setup.md) and [validation status](learning-tutor/references/validation.md). No real learning records or credentials belong in this repository.
+
+## ✅ Maintenance
+
+1. Read `CLAUDE.md` before editing; follow actual module paths and skill names.
+2. Regenerate/check the catalog against source `**/SKILL.md`, excluding ignored installation mirrors.
+3. Keep both READMEs aligned in counts, paths, and capabilities.
+4. Remove generated `.skill` archives and empty resource directories after packaging.
+5. Run changed helper tests; distinguish tested behavior from planned integrations.
 
 ## 📄 License
 
-MIT. See `LICENSE`.
+MIT. See [LICENSE](LICENSE).
