@@ -44,7 +44,7 @@ The catalog links to actual paths, including the existing `pywayne/vio/SO3/` pat
 | Skill Name | Path | Purpose |
 | --- | --- | --- |
 | `alapi` | [alapi/](alapi/SKILL.md) | Route ALAPI requests using the bundled API catalog. |
-| `awesome-docs` | [awesome-docs/](awesome-docs/SKILL.md) | Create and maintain project documentation. |
+| `awesome-docs` | [awesome-docs/](awesome-docs/SKILL.md) | Organize architecture, books, references, plans, roadmaps, todos, and technical records. |
 | `deep-think` | [deep-think/](deep-think/SKILL.md) | Structure deep analysis and problem decomposition. |
 | `learning-tutor` | [learning-tutor/](learning-tutor/SKILL.md) | Teach interactively with evidence, local capture, and resumable records. |
 | `proactive-agent` | [proactive-agent/](proactive-agent/SKILL.md) | Design proactive agents with WAL and working buffers. |

@@ -1,0 +1,44 @@
+{
+  "skill_name": "awesome-docs",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "仅依据下面的教学虚构系统，写一份架构说明，给负责改代码的工程师看：只解释 report 进程内部的读入、计算、写出协作，不展开类或函数实现。来源 notes/runtime.md：浏览器把 CSV 路径发给 report 进程；report 中 reader 解析并校验 CSV，返回已校验的行；evaluator 从这些行算指标，不写文件；writer 把结果写成文件，report 返回输出文件路径。reader 出错时 report 返回校验错误，不运行 evaluator/writer。源码说明只提供逻辑关系，实际部署在哪台机器未知。下一版本想把 writer 拆成独立服务，尚未决定。输出工作目录由测试执行者指定。写 docs/architecture/report/README.md，保持中文、简洁，图可用 Mermaid。不要联网、提交或发布。",
+      "expected_output": "以 L3 单进程组件为主体，写清边界、职责/状态/输入输出、正常与错误流程，区分未来提案和当前逻辑；不猜部署、不下钻类或函数。",
+      "files": [],
+      "expectations": [
+        "Uses a report-process boundary with reader/evaluator/writer inside; no unwarranted lower-level classes.",
+        "Links or names notes/runtime.md as supplied evidence, without inventing inspected commits.",
+        "Shows reader validation failure preventing evaluation and writing.",
+        "Separates the undecided writer-service idea from current implementation and leaves host placement unknown."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "把下面两张教学卡整理为给高中数学基础读者的两章短书，放 docs/books/travel-time。只写 README、全局导读与符号表和两章，不添空章节。第一章解释行程时间，第二章解释输入小误差怎样影响时间。卡A：d 表示路程(米)，v 表示匀速(米/秒)，t=d/v，d>0,v>0。卡B：L 表示同一个路程，d 表示小的时间变化量；要比较改变 L 和改变 v 时的时间变化。统一两卡的符号，保留来源别名映射。教学算例 L=100米，v=5米/秒；速度改为5.1时，比较精确时间变化与一阶预测。只需推导两个偏导和一阶变化，不需要概率或噪声分布。用LaTeX，所有必需的新概念先解释；每章结束自然引出下一问题，公式附近说清符号和假设。来源就是卡A和卡B，示例不是实测数据。不要联网、提交或发布。",
+      "expected_output": "两章具有依赖与故事线、单一canonical符号/缩略语表、消解d冲突；从代数和差商教偏导，展开中间步骤，近似与精确数值/单位对照，公式ID和引用可追溯。",
+      "files": [],
+      "expectations": [
+        "Creates a single book entry, one canonical notation table, and exactly two content chapters.",
+        "Maps both meanings of source symbol d to distinct canonical symbols without silent reuse.",
+        "Explains derivative/partial derivative before using the compact first-order formula, with intermediate difference-quotient algebra.",
+        "Derives dt/dL=1/v and dt/dv=-L/v^2 with domain, held-fixed variable, and units.",
+        "Checks exact change 100/5.1-20 ≈ -0.392157 seconds against first-order -0.4 seconds and labels approximation.",
+        "Defines symbols near formulas using LaTeX, consistent equation references, and chapter-to-chapter dependencies."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "把已有历史测试写一个简短 experiment，再写一个复用的 knowhow 排查说明，默认 docs 分类，不要重新跑实验。下面全是教学模拟数据，不是真实产线。时间单位毫秒，按样机SN比较，先在SN内部对有效重复会话求均值，再比较两种方法。数据来源 fixture.csv：SN A会话1 before10 after8；A会话2 before12 after9；B会话1 before20 after18；C会话1 before100 after缺失，日志只说“导出失败”，不知道原因。只比较 before/after都存在的SN，用这次改动可以作出什么结论？不要求显著性检验。knowhow回答“after缺失该怎么查”：只知道文件存在性、CSV表头、日志可检查，还没有确认根因或修复。给出检查观察和下一分支，不编造实际命令路径或已修复状态。没有已知负责人/截止日期。最后在 docs/todo/待办.md 只加一条后续核查C的待办，不生成roadmap/plan。日期采用执行环境日期。不要联网、提交或发布。",
+      "expected_output": "冻结SN分析单位、重复聚合/排除顺序和计数，计算A 11→8.5、B20→18、跨SN15.5→13.25；排除C却保留失败说明，拒绝总体良率或根因过推；knowhow有分支和停止条件，仅一条todo。",
+      "files": [],
+      "expectations": [
+        "Uses SN as analysis unit and reports A 11 to 8.5, B 20 to 18, and equal-SN means 15.5 to 13.25 ms.",
+        "Reports four source session rows, three paired rows, two paired SN, and excluded C with missing after; no failure erased.",
+        "Limits the improvement claim to the observed paired samples, not population yield or established causation.",
+        "Knowhow branches on inspectable file/header/log evidence and does not claim a proven cause or verified repair.",
+        "Adds one unresolved todo without inventing owner/deadline or creating roadmap/plan."
+      ]
+    }
+  ]
+}

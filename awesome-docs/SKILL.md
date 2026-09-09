@@ -1,183 +1,144 @@
 ---
 name: awesome-docs
-description: Use this skill whenever the user asks to record, save, organize, update, or maintain project documentation, including plan documents, todo documents, temporary ideas, project risks, next actions, experiment notes, know-how, roadmap items, decision records, summaries, story-telling documentation polish, technical book chapters, thesis-style derivations, or common command registries. Also use it when the user asks to save a generated shell command, append to 常用命令, or create a reusable AI/human project documentation interface. Defaults to the project's docs directory unless the user specifies another path, and applies an opt-out final plain-language polish to Markdown documents.
+description: Use this skill whenever the user asks to record, organize, update, or maintain project documentation, including architecture overviews and decisions, technical books and derivations, API/protocol/configuration references, implementation plans, roadmaps, todos, risks, experiments, know-how, or common commands. Choose paths and naming by document purpose, preserve existing canonical locations, and check links when reorganizing. Defaults to the target project’s docs directory unless the user specifies another location. Applies an opt-out final plain-language polish to Markdown prose.
 ---
 
 # Awesome Docs
 
-This skill treats project documentation as an interface between human understanding and automated AI execution. The goal is not to produce verbose reports; the goal is to preserve project state in a form that a human can read quickly and a future AI agent can act on without guessing.
+Keep project knowledge easy to find, check, and update. Choose the document type and path by what the reader needs, and preserve enough context for another person or agent to continue the work without guessing.
 
-## Core Contract
+## Execute the Documentation Task
 
-When the user asks to record project knowledge:
+Use the steps below in order. Keep the working notes in memory or a temporary workspace; do not add a planning dossier to the user's repository for a small edit.
 
-1. Resolve the documentation root.
-2. Classify the content.
-3. Create or update the right document.
-4. Write in a concise, factual, readable style with a clear story line.
-5. Re-read the full document after writing and run the post-write checklist for readability, consistent structure, complete required modules, evidence, conclusions, and next steps.
-6. Unless the user opts out, run the separate plain-language pass after the content review, following [references/post-write-polish.md](references/post-write-polish.md).
-7. If the request is about reusable commands, update `常用命令.txt` with single-line commands and skip prose polishing for command lines.
+| Step | Action | Output before continuing | If the check fails |
+|---|---|---|---|
+| 1. Locate | Resolve the user's target, read its instructions, inspect existing docs and relevant changes. | Canonical file/root and edit scope; identify content to preserve. | Resolve a missing project path; do not write into an unrelated checkout. |
+| 2. Route | State the reader's question, audience, document type, depth, and whether this is a new document or an update. Load the matching execution guide below. | One sentence such as “Explain this subsystem's internal responsibilities at L3 using verified code.” | Split genuinely different purposes with links, not duplicate content. |
+| 3. Gather | Read the relevant code, configuration, source notes, results, or user decisions. Separate observations, assumptions, proposals, and missing evidence. | A small source-to-claim map; enough evidence for the requested scope. | Label the gap and narrow the claim. Ask only when missing input changes the destination or essential task. |
+| 4. Design | Follow the guide to order the sections, choose tables/figures, and identify each section's input and output. For books, build the chapter dependencies and symbol ledger first. | An outline in which every section answers a reader question. | Drop empty template headings; add a prerequisite where a section uses an unexplained idea. |
+| 5. Write | Draft from evidence in the guide's prescribed order. Explain the reasoning between facts, not just the desired conclusion. | The requested document/chapters, with working links and source references. | Repair the specific missing explanation, unsupported claim, or unusable instruction. |
+| 6. Verify | Apply the guide's depth/stop checks, then run the final review below. Recalculate worked examples and validate available local links/examples. | Checks actually performed, corrections, and explicitly unverified items. | Return to the step that produced the error; do not turn an unrun check into a success. |
+| 7. Deliver | Apply the opt-out plain-language pass to settled prose, inspect the diff, and report paths and meaningful checks. | One maintained source and a short completion note. | Restore altered facts, formulas, statuses, or unrelated edits before delivery. |
 
-## Documentation Root
+For a one-line todo, these steps can mean reading the existing queue, finding the item, adding the line, and re-reading it. They do not require seven visible sections.
 
-Use the user-specified documentation path if provided.
+## Execution Guide Routing
 
-If the user does not specify a documentation path, use:
+Read the chosen guide before drafting, not only when the first attempt fails. Read only relevant sections.
+
+| Task | Guide to execute | First decision and stopping boundary |
+|---|---|---|
+| Architecture or ADR | [architecture-writer.md](references/architecture-writer.md) | Choose a depth from the reader's question; stop before unrequested implementation detail. Deployment and sequence/state views are separate from depth. |
+| Any book or chapter | [technical-book-writer.md](references/technical-book-writer.md) | Order chapters by prerequisites; settle global notation before formulas. Write connected chapters, not a pasted collection of notes. |
+| Experiment, knowhow, reference, plan, roadmap, todo | Matching section of [record-workflows.md](references/record-workflows.md) | Execute its input → extraction → writing → verification steps; a small record stays small. |
+| Substantial derivation inside another type | Symbol and derivation sections of [technical-book-writer.md](references/technical-book-writer.md) | Reuse the mathematical procedure without creating an unsolicited book. |
+| Reusable command | Common Command Registry below | Preserve the command exactly; record its use without executing side effects merely to document it. |
+| Placement or output shape is unclear | [document-types.md](references/document-types.md), [templates.md](references/templates.md), or [examples.md](references/examples.md) | Use these to choose an outline; they supplement, not replace, the execution guide. |
+
+## Documentation Root and Scope
+
+Use the user-specified location first. A path can identify different things:
+
+- Project root: use its existing documentation layout, defaulting to `<project-root>/docs`.
+- Documentation root, such as `docs/team-a`: put the requested category beneath it.
+- Category or book directory, such as `docs/reference` or `docs/books/camera-geometry`: use it directly; do not append the category again.
+- Exact file: update that file rather than inventing a parallel document.
+
+For a path outside the active checkout, resolve that target repository and its instructions before editing. If the user names another project without giving its path, resolve that project from known context or ask for its location; do not silently write into the active checkout. Only when neither a target project nor a path is specified, use the current repository root; outside a repository, use the current working directory. Ask one concise question only if the destination remains materially ambiguous.
+
+Respect existing locations such as `doc/`, `design/`, or an established book directory. The layout below is the default for new content, not a request to migrate old files. Move or rename existing documents only when the user asks to reorganize them.
+
+## Default Directory Layout
 
 ```text
-<project-root>/docs
+<docs-root>/
+├── README.md              # navigation, when a collection needs an index
+├── architecture/          # system structure and architectural decisions
+│   └── adr/               # decision records, when needed
+├── books/                 # sustained, chapter-based teaching
+│   └── <topic>/
+│       ├── README.md      # the book’s single reading entry
+│       ├── 00_导读与符号.md  # canonical symbols, abbreviations, and conventions
+│       ├── 01_基础模型.md
+│       └── figures/
+├── reference/             # lookup by API, command, field, or version
+│   ├── apis/
+│   ├── protocols/
+│   ├── schemas/
+│   └── configuration/
+├── plan/                  # execution design for a defined change
+├── roadmap/               # outcomes, milestones, and dependencies
+├── todo/                  # living actions, ideas, questions, and risks
+├── experiment/            # dated evidence and reproducible results
+├── knowhow/               # reusable explanations and operating lessons
+└── 常用命令.txt            # only when command capture is requested
 ```
 
-Resolve `<project-root>` as the current repository root when possible. If no repository root is available, use the current working directory.
-
-## Required Directory Layout
-
-Ensure the documentation root contains at least these directories:
-
-```text
-docs/
-├── plan/
-├── todo/
-├── experiment/
-├── knowhow/
-├── roadmap/
-└── 常用命令.txt
-```
-
-Create missing directories or the command file when needed. Do not rename existing directories unless the user explicitly asks.
+Create directories and indexes on demand. A one-line todo does not require eight empty directories, a book scaffold, or a command registry. Add topic subdirectories only when they make a growing collection easier to navigate.
 
 ## Classification Rules
 
-Classify before writing. If a note fits several categories, choose the category that best matches how the content will be reused.
+Classify by the reader’s question and how the content will be maintained, not by keywords alone.
 
-### `plan/`
+| Reader’s question | Category | What belongs here |
+|---|---|---|
+| How is the system arranged, and why? | `architecture/` | Boundaries, responsibilities, interfaces, data/deployment flows, constraints, decisions |
+| How can I learn this topic from the beginning? | `books/<topic>/` | Connected chapters, notation, derivations, teaching figures, source links |
+| What exactly does this command, field, or interface mean? | `reference/` | Versioned facts, API/protocol contracts, schemas, defaults, units, error codes |
+| How will we implement this specific change? | `plan/` | Scope, steps, dependencies, migration, validation, rollback |
+| Which outcomes come first, and how will we judge progress? | `roadmap/` | Milestones, acceptance evidence, sequencing, priorities, confirmed time horizons |
+| What should we investigate or do next? | `todo/` | Small actions, ideas, open questions, risks, blockers |
+| What happened in this particular test? | `experiment/` | Setup, data, versions, results, limits, reproduction commands |
+| How do I diagnose or handle this recurring situation? | `knowhow/` | Explanations, troubleshooting, procedures, lessons, reuse conditions |
 
-Use for future-oriented planning and execution design:
+Keep one canonical home for each piece of content. Link related documents rather than copying their tables and conclusions. For example, record a storage decision in an ADR, its rollout steps in a plan, and measured effects in an experiment. A protocol field table belongs in reference; a guide to diagnosing that protocol belongs in knowhow.
 
-- implementation plans
-- task breakdowns
-- technical proposals
-- migration plans
-- risk analysis before execution
-- design decisions that guide upcoming work
-
-### `todo/`
-
-Use for lightweight, living work queues and unresolved project state:
-
-- temporary ideas that are not ready for a full plan
-- project risks that need follow-up, monitoring, or mitigation
-- next actions discovered during implementation, review, or debugging
-- open questions, blockers, and assumptions to revisit
-- small task lists that are too tactical for `roadmap/`
-
-Choose `todo/` instead of `plan/` when the content is a loose backlog, risk watchlist, or next-action list rather than an execution design. Promote a todo item into `plan/`, `roadmap/`, `experiment/`, or `knowhow/` only after it becomes substantial enough to deserve its own document.
-
-### `experiment/`
-
-Use for evidence and results:
-
-- experiment setup
-- evaluation metrics
-- benchmark results
-- ablation comparisons
-- regression records
-- data tables
-- conclusions tied to a specific run
-
-### `knowhow/`
-
-Use for reusable knowledge:
-
-- debugging recipes
-- pitfalls and root causes
-- operational procedures
-- environment conventions
-- export/deploy lessons
-- recurring decision heuristics
-
-### `roadmap/`
-
-Use for longer-horizon direction:
-
-- product or project milestones
-- phase plans
-- long-term priorities
-- version strategy
-- open problems that should guide future planning
-
-### `常用命令.txt`
-
-Use when the user asks to save, generate, append, replace, or organize a command, such as:
-
-- `存到常用命令`
-- `把这条命令记录下来`
-- `生成一个常用评测命令`
-- `补充到命令列表`
-- `整理常用命令`
-
-Commands must be stored as single-line commands, no matter how long they are.
+After classification, follow the execution guide routing above. The output shapes in [references/document-types.md](references/document-types.md) are examples, not a requirement to fill every heading.
 
 ## File Naming
 
-Markdown documents must use a date prefix:
+Use names according to the document’s lifecycle. A date prefix is not required on every Markdown file.
 
-```text
-YYYYMMDD_简短标题.md
-```
+| Kind | Default pattern / example | Maintenance rule |
+|---|---|---|
+| Experiment or dated technical note | `experiment/YYYYMMDD_主题.md`, `knowhow/YYYYMMDD_主题.md` | Preserve the original run or observation date; new experiments get new records |
+| Change-specific implementation plan | `plan/YYYYMMDD_迁移方案.md` | Keep the same file while the plan develops; record revision dates inside |
+| Current architecture description | `architecture/system-overview.md` or `<subsystem>/README.md` | Stable path; state the implementation version and review date |
+| Architectural decision record | `architecture/adr/YYYYMMDD_决策.md` | Follow an existing sequence such as `0007_决策.md` if present; link superseding decisions |
+| Book | `books/<topic>/README.md`, `00_导读与符号.md`, `01_主题.md` | Stable directory and chapter names; dates belong in revision notes, not each new filename |
+| API / protocol / schema reference | `reference/protocols/tcp_commands.csv`, `reference/apis/device-api.md` | Stable searchable names; preserve native CSV/JSON/YAML formats |
+| Roadmap | `roadmap/product-roadmap.md` | Update the same document; use a named period only when the scope is actually period-bound |
+| Todo | `todo/<topic>.md` or `todo/backlog.md` | Update stable items; an existing dated todo keeps its original filename |
+| Directory index | `README.md` | Navigation and scope, not a second copy of every document |
 
-Use underscores to connect the date and title. Keep the title short and descriptive.
-
-For example: `20260429_端侧内存优化方案.md`.
-
-Use the current date from the environment. If the user gives an explicit date, use that date.
+Use the user’s date when supplied; otherwise use the environment date for new dated records. Preserve existing naming conventions unless a rename is requested. Write titles in the project’s language; directory names above are defaults, not a reason to translate established paths.
 
 ## New Document vs Existing Document
 
-Prefer a new dated document for new content.
+Search for an existing same-topic document before creating one. Update an explicit target or a living architecture page, reference, chapter, roadmap, plan, or todo in place. Keep changes local unless the user asks for a broader rewrite.
 
-Update an existing document only when:
+Create a new file for a new topic, independently reproducible experiment, or superseding decision. A decision change gets a new ADR and a link from the old one; the current-state architecture overview changes when implementation or deployment is verified. Until then, label the accepted but unimplemented design as a target state. Do not silently rewrite historical results or present proposed architecture as deployed.
 
-- the user explicitly says to update a specific existing document
-- the content is clearly a continuation of an existing living document
-- the new content corrects or extends a previous record from the same topic and same date
+For a new incompatible interface version, document the versions side by side if both remain relevant. Avoid date-stamped copies of a reference page that leave readers guessing which one applies.
 
-When updating an old document, preserve its structure and add the minimum necessary changes. Do not rewrite the whole file unless the user asks for a cleanup.
+## Todo and Roadmap Maintenance
 
-## Todo Documents
+A roadmap describes outcomes; a plan describes execution; a todo holds the next concrete action. A long list of tasks does not become a roadmap merely because it has dates.
 
-Todo documents are living documents. Prefer updating an existing same-topic todo document instead of creating a new dated file for every small item.
-
-Create a new `todo/` document when:
-
-- the user asks to record loose future work, a temporary idea, or a next-action list
-- a project has several risks or unresolved questions that need tracking
-- the content is actionable but not mature enough for a plan or roadmap
-- no existing same-topic todo document exists
-
-Update an existing `todo/` document when:
-
-- a new idea, risk, blocker, or next action belongs to the same topic
-- an item is completed, invalidated, deferred, or promoted into another document
-- new evidence changes the priority, risk level, owner, trigger, mitigation, or next step
-- a plan, experiment, or review creates follow-up work that should not be lost
-
-Recommended item fields:
-
-- `状态`: `open`, `doing`, `blocked`, `done`, `dropped`, or `promoted`
-- `来源`: date, conversation, command, file, PR, issue, experiment, or decision that created the item
-- `内容`: one concrete idea, risk, question, or action
-- `下一步`: the smallest useful action that moves the item forward
-- `风险处理`: for risks, include impact, trigger, and mitigation when known
-
-Keep open items near the top. Do not delete completed items unless the user asks for cleanup; move them to a short `已处理` section with the completion date. If an item is promoted into another document, mark it as `promoted` and link or name the destination document.
+- Use stable item IDs when items will be linked, such as `T-014` or an existing issue ID.
+- For todos, record type, status, source, content, and next action. Add priority, owner, deadline, or blocker only when known; mark unknowns explicitly rather than inventing assignments or commitments.
+- Suggested statuses are `open`, `doing`, `blocked`, `done`, `dropped`, and `promoted`; respect an existing project vocabulary. A blocked item names the blocker and the condition that would unblock it.
+- For risks, record impact, trigger or evidence, mitigation, and the next observation. A suspected risk stays a suspicion until evidence supports it.
+- For roadmap milestones, record the outcome, acceptance evidence, dependencies, status, and any confirmed target window. Distinguish a target from a promise.
+- Keep active items near the top. Preserve completed or dropped items with dates and reasons; do not delete their history as cleanup.
+- On promotion, link the todo to its destination plan, roadmap, experiment, architecture decision, or knowhow page, and link back when useful. `promoted` means moved into another document, not implemented or verified.
 
 ## Writing Style
 
 Remove AI flavor. Write like an engineer preserving project state for another engineer.
 
-Use story-telling as the organizing principle: context -> tension or question -> action -> evidence -> conclusion -> next move. The document should feel like a clear engineering narrative, not a pile of notes.
+For explanatory prose, connect the question, reasoning, evidence, and conclusion. Reference pages should lead with exact definitions and lookup tables; todos should lead with the action and status. Do not force either into a narrative template.
 
 Prefer:
 
@@ -200,7 +161,7 @@ Avoid:
 - orphaned details that are not tied back to the main question
 - dumping raw logs without explaining what they prove
 
-Good documentation answers:
+For explanations and work records, answer the relevant questions:
 
 - What happened?
 - Why does it matter?
@@ -208,105 +169,38 @@ Good documentation answers:
 - What should be done next?
 - Where are the commands, data, or files?
 
-## Quality Bar By Document Type
+## Convert Writing Goals into Operations
 
-### Experiments
+When a request says “clear,” “rigorous,” or “beginner-friendly,” translate it into work before drafting:
 
-Experiment documents must be organized, self-contained, and comparable. A future reader should understand the question before the numbers and should be able to compare scenarios without decoding different table shapes.
+| Requested quality | Operation | Observable check |
+|---|---|---|
+| Appropriate architecture depth | Pick the scope and level; inspect evidence at that boundary; show one representative flow. | A reader can identify responsibilities and interfaces without digging into lower-level functions. |
+| A coherent book | Draw a chapter dependency list; give each chapter an incoming question and an output used by the next. | No required concept first appears after its use; chapter transitions say what remains unresolved. |
+| Consistent math | Build one global symbol/abbreviation ledger; register notation before writing LaTeX; check each equation against it. | No symbol silently changes meaning, units, frame, index, or shape across chapters. |
+| High-school accessibility | Start from a hand-computable example; teach each unfamiliar operation; show the rule for each algebraic transition. | The worked example can be reproduced without knowing the final answer or skipping a required advanced concept. |
+| An argued conclusion | Pair a claim with its source, explain why the evidence supports it, and state the remaining competing explanation. | An observed association is not labeled causal; assumptions and missing measurements remain visible. |
+| Reusable knowhow | Turn advice into checks with expected observations and next branches; distinguish symptom from confirmed cause. | A reader knows what to inspect, when to stop, and how to verify or undo an action. |
+| Reproducible experiment | Define the comparison unit, filters, denominator, metric, and data/code version before computing summaries; mark retrospective choices in historical analysis. | Another reader can recover the numerator/denominator and distinguish paired samples from unmatched populations. |
+| An actionable plan | Specify each step's precondition, operation, output, pass criterion, and failure response. | “Test it” is replaced by an actual test and an observable expected result. |
 
-Always make clear:
-
-- the project context, regression, or decision that triggered the experiment
-- the experiment question, hypothesis, and compared systems or configurations
-- the dataset, generated data, model, environment, commands, commit, and key parameters
-- what changed and what stayed fixed
-- metric definitions, units, which direction is better, and known metric limitations
-- result tables with consistent columns, scenario order, and units across comparable runs
-- a short reading conclusion after each table or scenario explaining what the numbers mean
-- what the results prove, what they do not prove, and the next experiment if any
-
-For Ceres/Kalibr-style calibration comparisons or any multi-scenario benchmark, prefer this shape:
-
-1. Background and comparison intent.
-2. Comparison scope: tools, datasets, sensor setup, parameters, and outputs being compared.
-3. Metric glossary: time, extrinsic error, rotation error, translation error, timeshift error, residuals, success/failure conditions.
-4. Result overview table with the same columns for every scenario.
-5. Per-scenario sections with the same structure: scenario meaning -> configuration -> result table -> interpretation.
-6. Cross-scenario analysis explaining trends, failure modes, and when a number is not directly comparable.
-7. Limitations, reproducibility notes, and concrete next actions.
-
-If a document contains historical diagnostic records, add a reading map near the top. Preserve the evidence, but label stale or superseded conclusions so they cannot be mistaken for the current conclusion.
-
-### Know-how
-
-Know-how documents should be easy to reuse under pressure. Start with the practical situation, then explain the symptom, root cause, procedure, verification method, and boundary conditions.
-
-The reader should leave knowing when to apply the recipe, when not to apply it, and which command or file confirms the fix.
-
-Use this structure unless a shorter one is clearly enough:
-
-- scenario and trigger
-- symptom or failure signal
-- root cause or current best explanation
-- procedure or decision rule
-- verification command, expected output, or file to inspect
-- boundary conditions, traps, and rollback or alternative path
-
-### Plans
-
-Plan documents should turn ambiguity into an executable path. Start from the background and constraint story, then explain the goal, scope, proposed approach, sequence of work, risks, decision points, and checkpoints.
-
-Prefer readable section flow over exhaustive task dumps. If the plan contains many tasks, group them by phase and explain the reason for each phase.
-
-### Roadmaps
-
-Roadmap documents should explain direction, not just list milestones. Start with the current state and why the direction matters, then describe the target state, sequencing logic, milestones, priorities, dependencies, risks, and unresolved questions.
-
-Make each milestone testable: a future reader should know what evidence proves the milestone is done.
-
-### Todos
-
-Todo documents should be fast to update and easy to triage. They must preserve loose ideas without pretending they are plans.
-
-Each open item should make clear:
-
-- what the idea, risk, question, or next action is
-- why it matters now
-- what evidence or trigger created it
-- what the smallest useful next step is
-- whether it should stay in todo, be dropped, or be promoted into another document type
-
-Risk items must include at least a concrete impact and the next mitigation or observation step when that information is available.
-
-## Technical Book Mode
-
-For book-like technical writing, keep `SKILL.md` lightweight and load the reference only when needed.
-
-Read `references/technical-book-writer.md` before writing or rewriting:
-
-- thesis-style chapters, textbook sections, or long-form technical explanations
-- derivation-heavy calibration, robotics, state-estimation, optimization, or code-derived math
-- formula, Jacobian, residual, coordinate-frame, or implementation-theory bridge explanations
-- requests to turn scattered notes into a coherent chapter rather than an experiment record
-
-Do not load that reference for ordinary plan, todo, experiment, roadmap, command, or short know-how updates.
+Use the detailed guide for the actual writing sequence. Do not paste this table into every deliverable.
 
 ## Post-write Review
 
 After creating or updating any Markdown document, re-read the whole file once as an editor. This is required for all document types, including small updates to an existing file.
 
-Check:
+Run these checks, correcting failures rather than merely saying the document is clear:
 
-- readability: the opening explains why the document exists, the conclusion answers the opening question, and no paragraph is an orphaned note
-- structural consistency: repeated result blocks, scenarios, tools, or datasets use the same headings, table columns, units, and order
-- module completeness: the document contains the required background, scope, evidence, interpretation, limitations, and next action for its type
-- evidence: claims have data, commands, file paths, logs, references, or explicit assumptions
-- metric clarity: tables define units, comparison baseline, success direction, and conditions where values are not comparable
-- currentness: stale, superseded, or historical conclusions are marked instead of silently conflicting with the current conclusion
-- scanability: long documents have a reading map, result overview, or table of key findings near the top
-- actionability: the final section gives a concrete next step, decision, or remaining question
+1. **Follow the reader path.** Re-read the opening and then each section in order. Move a definition or add a prerequisite bridge wherever a section needs an unexplained term. For lookup pages and todos, test finding a field or next action rather than imposing a narrative ending.
+2. **Trace claims backwards.** For each consequential conclusion, locate its evidence, version, and assumptions. Mark unsupported portions as unknown or proposed, and separate historical results from current behavior.
+3. **Check technical consistency.** Recalculate worked examples; compare symbols/units against the ledger; inspect signs, frames, domains, formula references, and approximations. For tables, recompute key counts or totals and verify common comparison units. Report checks not run.
+4. **Walk an action forwards.** On procedural pages, follow a representative success and failure branch on paper. Add an expected observation, stop condition, or rollback where the reader would have to guess. Actually run commands only within the user's task authorization.
+5. **Check the chosen depth.** Use the guide's stop criteria. Remove irrelevant lower-level detail by linking its canonical source; add missing boundaries or section outputs. Preserve relevant evidence rather than trimming to an arbitrary word count.
+6. **Validate artifacts.** Resolve local links and images from the containing file; inspect native-format examples with an available parser; render math/figures in the project's existing preview/export path when available. If no renderer exists, inspect source and report that rendering was not verified.
+7. **Review the diff.** Confirm status/versions and navigation changed together, historical evidence remains intact, and no unrequested move, deletion, publication, or application-code edit slipped in.
 
-If any checklist item fails, edit the document again and re-read the affected section in context. If the document feels like disconnected notes, reorganize it before finishing. Keep the final document polished enough that another engineer or AI agent can continue from it without asking what the story was.
+Re-read the corrected section with its preceding and following sections. Finish only when applicable checks pass or the remaining uncertainty is explicitly documented.
 
 ## Final Plain-Language Pass
 
@@ -316,156 +210,21 @@ Skip this pass when the user says `不需要润色`, `不要润色`, `跳过润�
 
 The two passes are internal. Deliver only the final document unless the user explicitly asks to compare the pre-polish and polished versions.
 
+## Paths, Assets, and Moves
+
+When the user requests a move, preserve content and evidence while updating the paths around it. If the user already moved the files, inspect the actual new location and repair references there; do not repeat the move:
+
+1. Record the old-to-new directory mapping. Check for destination collisions before moving files.
+2. Update links inside moved documents, links pointing to them, README indexes, image paths, and references in scripts, build defaults, export commands, and deployment configuration where applicable.
+3. Check paths from each document’s directory, not only from the repository root. A rename can change both inbound and outbound relative paths.
+4. Run available link/build checks and regenerate only the affected derived outputs. Check embedded images are real files rather than unresolved LFS pointers.
+5. Keep one editable source. Put combined-book exports, rendered previews, caches, and large intermediate datasets in the project’s existing generated/ignored location, not beside the book as a second maintained manuscript.
+
+Follow repository asset rules, including existing LFS policies. Keep small provenance manifests where useful; a hash identifies a file but does not back it up. Do not delete raw data or historical evidence just because it is not committed. Documentation maintenance alone does not authorize committing, pushing, deploying, installing tools, or publishing data.
+
 ## Document Templates
 
-Use templates flexibly. Keep only sections that add value.
-
-### Plan Template
-
-```markdown
-# 标题
-
-## 背景
-
-## 核心问题
-
-## 目标
-
-## 范围
-
-## 方案
-
-## 执行路径
-
-| 阶段 | 目标 | 产出 | 判断标准 |
-|---|---|---|---|
-
-## 风险
-
-## 检查点
-
-## 下一步
-```
-
-### Todo Template
-
-```markdown
-# 标题
-
-## 背景
-
-## 当前待办
-
-| 状态 | 类型 | 优先级 | 内容 | 来源 | 下一步 |
-|---|---|---|---|---|---|
-| open | action | P1 |  |  |  |
-
-## 风险与观察点
-
-| 状态 | 风险 | 影响 | 触发条件 | 缓解措施 | 下一步 |
-|---|---|---|---|---|---|
-| open |  |  |  |  |  |
-
-## 已处理
-
-| 日期 | 原事项 | 结果 | 去向 |
-|---|---|---|---|
-```
-
-### Experiment Template
-
-```markdown
-# 标题
-
-## 结论先行
-
-## 背景
-
-## 对比目标 / 实验问题
-
-## 范围与配置
-
-| 项目 | 内容 | 说明 |
-|---|---|---|
-
-## 指标口径
-
-| 指标 | 单位 | 越大/越小越好 | 含义 | 注意事项 |
-|---|---|---|---|---|
-
-## 结果总览
-
-| 场景 | 配置 | 关键指标 | 结论 |
-|---|---|---|---|
-
-## 分场景结果
-
-### 场景 A
-
-#### 场景含义
-
-#### 结果
-
-| 指标 | 数值 | 对比基线 | 说明 |
-|---|---:|---:|---|
-
-#### 读数结论
-
-## 跨场景分析
-
-## 结论
-
-## 边界与未覆盖问题
-
-## 复现入口
-
-## 下一步
-```
-
-### Knowhow Template
-
-```markdown
-# 标题
-
-## 触发场景
-
-## 现象 / 信号
-
-## 原因 / 判断
-
-## 处理方法
-
-## 验证
-
-## 适用条件
-
-## 陷阱与边界
-
-## 相关命令 / 文件
-```
-
-### Roadmap Template
-
-```markdown
-# 标题
-
-## 当前状态
-
-## 背景与方向
-
-## 目标状态
-
-## 里程碑
-
-| 阶段 | 目标 | 关键工作 | 判断标准 |
-|---|---|---|---|
-
-## 优先级
-
-## 依赖与风险
-
-## 未决问题
-```
+Use templates only after executing the relevant guide. [references/templates.md](references/templates.md) contains plan, experiment, and knowhow output shapes; [references/document-types.md](references/document-types.md) covers the other categories. Fill them from actual evidence and decisions, not from plausible boilerplate. Omit unused headings.
 
 ## Common Command Registry
 
@@ -481,7 +240,7 @@ Rules:
 - Avoid duplicate commands unless the new command is a meaningful variant.
 - If replacing an existing command, keep the group and update only the relevant line.
 
-If a concrete command group or document-update pattern is needed, read `references/examples.md`. Do not load that reference for routine updates.
+If a concrete command group or document-update pattern is needed, read [references/examples.md](references/examples.md). Do not load that reference for routine updates.
 
 ## Final Response After Writing
 
