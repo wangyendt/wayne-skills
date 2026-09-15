@@ -12,9 +12,9 @@
 
 | Metric | Value |
 | --- | --- |
-| Total skills | `46` |
+| Total skills | `47` |
 | `pywayne` skills | `35` |
-| General skills | `11` |
+| General skills | `12` |
 | Canonical rules | [CLAUDE.md](CLAUDE.md) |
 | Agent entry point | [AGENTS.md](AGENTS.md) |
 
@@ -44,6 +44,7 @@ The catalog links to actual paths, including the existing `pywayne/vio/SO3/` pat
 | Skill Name | Path | Purpose |
 | --- | --- | --- |
 | `alapi` | [alapi/](alapi/SKILL.md) | Route ALAPI requests using the bundled API catalog. |
+| `android-app-publisher` | [android-app-publisher/](android-app-publisher/SKILL.md) | Lightweight client for APK publication, latest releases, and QR codes; the Docker API lives in a separate server repository. |
 | `awesome-docs` | [awesome-docs/](awesome-docs/SKILL.md) | Organize architecture, books, references, plans, roadmaps, todos, and technical records. |
 | `deep-think` | [deep-think/](deep-think/SKILL.md) | Structure deep analysis and problem decomposition. |
 | `learning-tutor` | [learning-tutor/](learning-tutor/SKILL.md) | Teach interactively with evidence, local capture, and resumable records. |

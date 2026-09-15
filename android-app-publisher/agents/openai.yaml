@@ -1,0 +1,4 @@
+interface:
+  display_name: "Android App Publisher"
+  short_description: "Publish APKs to OSS with stable download QR codes"
+  default_prompt: "Use $android-app-publisher to publish an Android APK, list apps, or generate a download QR code."
