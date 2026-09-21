@@ -12,9 +12,9 @@
 
 | Metric | Value |
 | --- | --- |
-| Total skills | `47` |
+| Total skills | `48` |
 | `pywayne` skills | `35` |
-| General skills | `12` |
+| General skills | `13` |
 | Canonical rules | [CLAUDE.md](CLAUDE.md) |
 | Agent entry point | [AGENTS.md](AGENTS.md) |
 
@@ -52,6 +52,7 @@ The catalog links to actual paths, including the existing `pywayne/vio/SO3/` pat
 | `research-paper-deep-dive` | [research-paper-deep-dive/](research-paper-deep-dive/SKILL.md) | Explain papers, evidence, context, and reproducible methods. |
 | `send-email` | [send-email/](send-email/SKILL.md) | Send SMTP email with templates and attachments. |
 | `shell-shortcuts` | [shell-shortcuts/](shell-shortcuts/SKILL.md) | Configure cross-platform terminal shortcuts. |
+| `technical-explainer-video` | [technical-explainer-video/](technical-explainer-video/SKILL.md) | Create reproducible technical videos with real 3D, LaTeX, narrated burned-in captions, and a runnable render/validation starter. |
 | `tutor-general` | [tutor-general/](tutor-general/SKILL.md) | Produce narrated educational videos with Motion Canvas. |
 | `tutor-math-geometry` | [tutor-math-geometry/](tutor-math-geometry/SKILL.md) | Explain math with HTML, geometry animation, and narration. |
 | `week-report-system` | [week-report-system/](week-report-system/SKILL.md) | Organize work materials and produce weekly reports. |

@@ -1,0 +1,17 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><link rel="icon" href="data:,"><title>动画渲染</title></head><body><script type="module">
+import project from '/src/project.ts?project';
+import {Renderer,Vector2} from '@motion-canvas/core';
+import timing from '/src/timing.json';
+import config from '/video.config.json';
+window.errors=[];
+project.logger.onLogged.subscribe(log=>{if(log.level==='error')window.errors.push(String(log.message??log.error??JSON.stringify(log)));});
+await document.fonts.ready;
+const renderer=new Renderer(project);document.body.append(renderer.stage.finalBuffer);
+const settings={name:'film',range:[0,timing.total_duration],fps:config.fps,size:new Vector2(config.width,config.height),resolutionScale:1,colorSpace:'srgb',background:config.background,exporter:{name:'@motion-canvas/ffmpeg',options:{includeAudio:true,fastStart:true}}};
+window.finished=false;window.result=null;window.progress=0;
+renderer.onFrameChanged.subscribe(frame=>window.progress=frame);
+renderer.onFinished.subscribe(result=>{window.result=result;window.finished=true;});
+window.previewAt=async t=>{await renderer.renderFrame(settings,t);return renderer.stage.finalBuffer.toDataURL('image/png');};
+window.renderFilm=()=>renderer.render(settings);
+window.ready=true;
+</script></body></html>

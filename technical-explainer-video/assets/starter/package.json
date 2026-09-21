@@ -1,0 +1,27 @@
+{
+  "name": "technical-explainer-starter",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "serve": "vite --host 127.0.0.1",
+    "check": "tsc --noEmit",
+    "stills": "node scripts/render.mjs --stills",
+    "render": "npm run check && node scripts/render.mjs",
+    "verify": "node scripts/verify.mjs"
+  },
+  "dependencies": {
+    "@motion-canvas/2d": "3.17.2",
+    "@motion-canvas/core": "3.17.2",
+    "@motion-canvas/ffmpeg": "3.17.2",
+    "@motion-canvas/ui": "3.17.2",
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "@motion-canvas/vite-plugin": "3.17.2",
+    "@types/three": "0.180.0",
+    "playwright": "1.55.1",
+    "typescript": "5.8.3",
+    "vite": "5.4.21"
+  }
+}

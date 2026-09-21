@@ -12,9 +12,9 @@
 
 | 指标 | 数值 |
 | --- | --- |
-| 技能总数 | `47` |
+| 技能总数 | `48` |
 | `pywayne` 技能 | `35` |
-| 通用技能 | `12` |
+| 通用技能 | `13` |
 | 规范主文档 | [CLAUDE.md](CLAUDE.md) |
 | Agent 入口 | [AGENTS.md](AGENTS.md) |
 
@@ -52,6 +52,7 @@
 | `research-paper-deep-dive` | [research-paper-deep-dive/](research-paper-deep-dive/SKILL.md) | 深入理解论文、证据、背景与可复现方法。 |
 | `send-email` | [send-email/](send-email/SKILL.md) | 通过 SMTP 发送带模板与附件的邮件。 |
 | `shell-shortcuts` | [shell-shortcuts/](shell-shortcuts/SKILL.md) | 配置跨平台终端快捷命令。 |
+| `technical-explainer-video` | [technical-explainer-video/](technical-explainer-video/SKILL.md) | 制作真实 3D、LaTeX 公式与画内同步字幕的技术教学视频，附可运行渲染及检查模板。 |
 | `tutor-general` | [tutor-general/](tutor-general/SKILL.md) | 使用 Motion Canvas 制作带配音的教学视频。 |
 | `tutor-math-geometry` | [tutor-math-geometry/](tutor-math-geometry/SKILL.md) | 用 HTML、几何动画与配音讲解数学。 |
 | `week-report-system` | [week-report-system/](week-report-system/SKILL.md) | 整理工作素材并生成周报。 |
