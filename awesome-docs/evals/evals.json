@@ -39,6 +39,95 @@
         "Knowhow branches on inspectable file/header/log evidence and does not claim a proven cause or verified repair.",
         "Adds one unresolved todo without inventing owner/deadline or creating roadmap/plan."
       ]
+    },
+    {
+      "id": 4,
+      "prompt": "在执行者指定的临时工作目录内，仅依据下面的冻结教学快照 fixture-v1 制作架构文档前后对照，供首次接手的工程师阅读。准备输入时，将两个代码块分别按 UTF-8、LF 换行、末尾保留 1 个换行写入 input/architecture.html 和 input/runtime.py；此后保留输入原样。所有输入已完整提供，无需另找项目，也没有真实 Git 提交号。\n\ninput/architecture.html：\n```html\n<!doctype html>\n<html lang=\"zh-CN\"><meta charset=\"utf-8\"><title>Report 架构</title><body><h1>Report 架构</h1><p>启动后接收命令；返回 OK 表示结果已归档。</p><p>工作线程计算指标并写会话文件。</p></body></html>\n```\n\ninput/runtime.py：\n```python\nfrom collections import deque\n\n\ndef boot():\n    return {\"queue\": deque(), \"files\": {}, \"archive\": {}}\n\n\ndef accept(state, rows):\n    state[\"queue\"].append(list(rows))\n    return \"OK\"\n\n\ndef worker_tick(state):\n    if not state[\"queue\"]:\n        return\n    rows = state[\"queue\"].popleft()\n    state[\"files\"][\"session.json\"] = {\n        \"status\": \"DONE\", \"count\": len(rows)\n    }\n\n\ndef archive_tick(state, export_requested):\n    result = state[\"files\"].get(\"session.json\")\n    if export_requested and result and result[\"status\"] == \"DONE\":\n        state[\"archive\"][\"result.json\"] = dict(result)\n```\n\n补充运行约定：以上是单个 report 进程内的教学模型。启动调用 boot；命令处理器调用 accept；工作线程定期调用 worker_tick；归档线程定期调用 archive_tick，export_requested 仅由用户主动请求导出时置真。files 和 archive 字典分别模拟会话文件与归档文件；不说明真实磁盘持久性、跨主机部署、并发安全或重试保证。源码和补充约定优先于旧 HTML 的结论。\n\n把原 HTML 按字节复制为 output/before.html，不重排或修正它；生成 output/after.html，解释启动、命令、执行、状态与归档，用有意义的 2D 图说明协作。记录 input 两文件及 before 的 SHA-256、快照名称和实际检查；分别说明结构/表达改动与事实修正。这是构造材料上的文档修订对照，不是独立的无 skill 对照实验。不要运行示例业务代码、联网、调用设备、修改输入、提交或发布。",
+      "expected_output": "从内嵌冻结快照准备输入，保留基线字节及SHA-256；修正OK即归档的旧说法，用2D解释单进程正常流程与导出触发，不虚构真实提交或测试。",
+      "files": [],
+      "expectations": [
+        "Baseline is byte-identical and clearly described as an existing artifact, not an independently generated no-skill run.",
+        "After explains task input, owner, trigger and result in prerequisite order.",
+        "Evidence-based corrections are separated from language/visual changes.",
+        "No production actions, invented runtime test results, external publishing or mandatory 3D.",
+        "Materializes both supplied input blocks exactly with UTF-8/LF and a final newline, records their hashes and fixture-v1 identity, and leaves inputs unchanged.",
+        "Explains boot initialization, accept queueing and OK acknowledgment, worker_tick writing session.json with DONE, and export_requested gating the archive copy; does not infer durability or concurrency guarantees.",
+        "Does not invent a real commit ID or claim that the frozen teaching snapshot is production source."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "为机械臂位置误差写一个离线交互讲解 HTML。原点在基座，工具末端有平移后的辅助轴；夹具参与定位但不是当前误差参考。数据均为教学构造：误差向量 (3,4,0) mm。解释长度与投影，旋转视角不改变数据，支持暂停/复位。",
+      "expected_output": "解释基座与工具辅助轴，保留淡化夹具；长度 5 mm，投影不丢失出处；图内外 LaTeX，静态可读，交互不变更数据。",
+      "files": [],
+      "expectations": [
+        "LaTeX is rendered in dynamic diagram labels and prose, with Arabic numerals and consistent mm units.",
+        "Original and translated frames are distinguished and background fixture is retained.",
+        "Scene orbit is separated from model parameters and highlights persist.",
+        "Offline assets and meaningful keyboard/reset behavior are checked; no measurements claimed."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "仅在执行者指定的临时工作目录操作。先将下方完整原文按 UTF-8、LF 换行、末尾保留 1 个换行写入 reference.md，再原位修改：只把 SET_OFFSET 行的步长从 1 改成 2，来源是用户确认的协议修正。其它字符、空格、换行、表格格式、数字和命令保持原样。不新增文档或图示，不联网、不发命令、不提交。原文：\n```markdown\n# 参数接口\n\n| 命令 | 范围 | 步长 | 默认值 | 返回值 |\n| --- | --- | --- | --- | --- |\n| SET_OFFSET | 0～16 | 1 | 0 | ACK |\n| READ_SN | — | — | — | 字符串 |\n\nACK 只表示受理，完成状态另行查询。\n```",
+      "expected_output": "局部更新并保留命令、其它数字和格式；不生成教程、网页、视频或额外文件。",
+      "files": [],
+      "expectations": [
+        "Changes only the requested step and necessary directly dependent text.",
+        "Does not add diagrams, restructure unrelated sections or force a full teaching workflow.",
+        "Materializes the supplied table and makes exactly the SET_OFFSET step-cell 1-to-2 replacement; all other bytes including the range 0–16, default 0, READ_SN row and final newline remain unchanged."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "当前 agent 只提供 awesome-docs，没有 shuorenhua 或 technical-explainer-video。根据已确认事实，写一段接口说明：收到 ACK 只表示已受理；完成后状态变为 DONE；超时要查询状态，不自动重发。写得直接自然，不安装任何技能，不生成视频。",
+      "expected_output": "独立写出准确说明并完成本地语言审稿；跳过缺失的可选技能，不询问安装、不扫描其它 agent 目录、不声称调用了它们。",
+      "files": [],
+      "expectations": [
+        "Preserves ACK vs DONE distinction and query-on-timeout behavior without inventing automatic retries.",
+        "Completes document and local review with only awesome-docs installed.",
+        "No cross-skill path dependency, installation prompt or unavailable-skill execution claim."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "把这些打乱顺序的教学材料整理成给首次接入工程师的短操作文档，写到执行者指定的临时目录 guide.md。仅依据材料，不联网、不操作设备、不提交。材料：固件 F2 使用 START 开始任务；操作前须在 Ubuntu 上位机建立连接；ACK 表示受理，STATUS 返回 DONE 才表示执行完成；等待时限没有给出；超时先 STATUS 查询，不自动重发 START。执行完成后允许发 SAVE；SAVE 会覆盖原保存结果，因此发送前须确认旧结果已另存；SAVED 表示保存完成，持久性还需断电测试，此处未测。正文不要讲操作系统安装过程。",
+      "expected_output": "前提、操作和检查按依赖排列；区分受理、执行及保存，覆盖警告先于 SAVE，保留未知等待时限与未测持久性，不凭空补命令。",
+      "files": [],
+      "expectations": [
+        "Places the Ubuntu host connection prerequisite before START, and scopes the instructions to F2 without expanding into OS installation.",
+        "Distinguishes ACK, DONE and SAVED and makes DONE a prerequisite for SAVE.",
+        "Places the overwrite warning and old-result backup confirmation before SAVE, without inventing an export command.",
+        "On timeout queries STATUS without automatically resending START; does not invent a timeout duration.",
+        "Does not claim SAVED proves power-cycle persistence, device testing or a completed backup."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "为接入工程师写一页新旧协议差异速查，回答需要改哪些调用，不写完整教程。仅有以下教学虚构协议：A版 SET_GAIN 接收整数0～8，单位dB，步长1，返回OK表示本次设置已完成；B版同名命令接收整数0～16，单位dB，步长2，返回ACK表示受理，GET_STATE返回DONE才表示完成。两版区间均含端点。B版未给出默认值、持久化行为和超时重试规则，A版持久化行为也未知。材料中的gain=4只是示例，两版均合法。输出到执行者指定临时目录 compare.md，不联网、不发命令、不提交。",
+      "expected_output": "按相同维度呈现版本差异，调用方能定位边界、步长和完成状态；指出迁移时参数合法性及等待方式变化，保留未知。",
+      "files": [],
+      "expectations": [
+        "Compares A and B using the same dimensions with inclusive ranges 0–8 and 0–16 dB and steps 1 and 2.",
+        "Explains that values such as 3 valid in A are invalid in B, without assuming arbitrary rounding or clamping.",
+        "Preserves SET_GAIN and GET_STATE tokens; distinguishes A OK completion from B ACK acceptance and DONE completion.",
+        "Makes relevant parameter and completion information directly findable rather than burying it in a tutorial.",
+        "Treats gain=4 as an example, not a default; leaves persistence and B retry behavior unknown rather than unsupported or automatic.",
+        "Does not infer superior accuracy, stability or measured performance from the expanded range."
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "只润色下面这一段中文，让它直接自然。保留信息，不扩写成教程，不增加图和章节，不联网、不提交：通过对数据的全面处理，实现了对误差的有效计算。实际上，在控制器返回ACK后，上位机只知道命令已受理；只有状态为DONE，才继续读取结果。教学样本的残差是-2mm和2mm，本文定义的指标是先取绝对值再平均，结果为2mm；验收条件是小于或等于2mm。这个构造样本满足条件，不代表量产结果。超时原因目前尚未确认。数量用阿拉伯数字，数学式用LaTeX；ACK和DONE保持原样。",
+      "expected_output": "局部删除空泛开头，保留主体、状态区别、绝对值运算顺序、包含等号的边界、构造样本属性及未知根因。",
+      "files": [],
+      "expectations": [
+        "Removes empty praise without replacing it with new capability or performance claims.",
+        "Keeps controller and host roles and the ACK versus DONE distinction intact.",
+        "Preserves mean-of-absolute-residuals equal to 2 mm, not absolute-of-mean equal to 0; formats any math in LaTeX.",
+        "Preserves the inclusive threshold of 2 mm and labels the example as constructed rather than production evidence.",
+        "Keeps timeout cause unconfirmed and makes only a local prose edit without adding a tutorial, diagrams or invented observations."
+      ]
     }
   ]
 }

@@ -1,5 +1,7 @@
 # Technical Book Writer: Execution Guide
 
+Shared reader/logic rules are in [technical-writing.md](technical-writing.md); diagram and interactive-delivery rules are in [interactive-illustrations.md](interactive-illustrations.md). Read the relevant shared guide for substantial work, then use the specialized workflow below.
+
 Read this guide for every book task, including a new book, chapter additions, and revisions. For a formula-heavy knowhow, experiment, or other document, reuse the notation, derivation, and checking sections only; keep its original category and path. Ordinary records do not need a book scaffold.
 
 Execute the steps below in order. For a small revision, inspect the existing outputs of earlier steps and change only what the revision affects. Do not regenerate the whole book merely to add one section.

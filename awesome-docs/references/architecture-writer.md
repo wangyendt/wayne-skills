@@ -1,5 +1,7 @@
 # Architecture Writer: Choose a Depth, Trace Evidence, Draw One View
 
+Shared reader/logic rules are in [technical-writing.md](technical-writing.md); diagram and interactive-delivery rules are in [interactive-illustrations.md](interactive-illustrations.md). Read the relevant shared guide for substantial work, then use the specialized workflow below.
+
 Load this guide for architecture descriptions and architectural decisions. Apply the destination and naming rules in [../SKILL.md](../SKILL.md) first. The L1–L4 labels below are this skill's writing depths, not an external standard or a maturity ranking.
 
 ## 1. Turn the Request into a Writing Contract

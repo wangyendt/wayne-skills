@@ -4,7 +4,7 @@ Use this pass after `awesome-docs` has finished the document and completed its n
 
 ## Activation
 
-Enable the pass by default for Markdown documents.
+Enable the pass by default for document prose, including Markdown and visible HTML text. For HTML, edit only prose text nodes; preserve tags, IDs, classes, attributes, embedded scripts/styles, math markup, control labels that code depends on, and asset paths.
 
 Skip it when the user says `不需要润色`, `不要润色`, `跳过润色`, `按原流程`, `保持原样`, or gives an equivalent instruction. Skipping means returning to the original `awesome-docs` workflow: generate or update the document, run the Post-write Review in `SKILL.md`, and deliver it. Do not invoke `shuorenhua`, attempt installation, or perform an imitation style pass.
 
@@ -12,20 +12,20 @@ Never send command lines in `常用命令.txt` through prose rewriting. A short 
 
 ## Workflow
 
-1. Finish the document structure, facts, evidence, conclusions, and next actions.
-2. Record protected spans: names and responsibility, dates, numbers and their objects, status and risk strength, metric direction and units, citations, URLs, image paths, commands, code, file paths, logs, table cells, formulas, symbols, coordinate frames, and assumptions.
-3. Invoke `$shuorenhua:shuorenhua` on the completed prose using the routing table below.
-4. Compare the polished version with the protected spans. Restore any changed fact, relationship, condition, uncertainty, command, formula, link, or asset path.
-5. Run the `shuorenhua` fidelity reread first and its residual-style audit second.
-6. Deliver one final document. Keep the pre-polish draft only when the user asks for a comparison.
+1. Finish structure, facts, evidence, conclusions and next actions before language editing.
+2. Protect names and responsibility, quantities, conditions, uncertainty, commands, code, paths, formulas, coordinate frames, citations and machine-readable fields. Preserve HTML structure and behavior as above.
+3. Perform a local plain-language pass: state actors and actions directly; remove empty previews, redundant wording and literal-translation phrasing only where meaning is preserved. Keep necessary transitions and established terms. Do not mechanically ban sentence patterns or invent missing reasoning.
+4. If `shuorenhua` is available in the current environment and a dedicated polish would help, read its actual skill path and use the document-type scope below. Skip this optional enhancement when absent; do not search other agents' directories or start an installation/update prompt or workflow.
+5. Compare edits with the protected facts and surrounding paragraphs. Restore changed conditions, responsibility, quantities or uncertainty; check residual awkwardness without forcing further edits. Follow `shuorenhua`'s fidelity review too when it was actually used.
+6. Deliver one final document. Keep the pre-polish draft only when the user requests a comparison. Mention an unavailable named skill only when the user explicitly requested it; ordinary optional skips need no installation notice.
 
-When `bounded` returns a deletion list, do not remove those sentences without user confirmation. Keep unconfirmed sentences in the document and do not append internal editor notes to the delivered Markdown.
-
-If `shuorenhua` is unavailable and installing skills is authorized, follow the current instructions in the official [`shuorenhua` repository](https://github.com/MrGeDiao/shuorenhua). Do not hard-code package-manager commands that may become stale. If installation is unavailable or not authorized, say so once and perform only the existing `awesome-docs` Post-write Review; do not pretend that the dedicated polish ran.
+When `bounded` produces a deletion list, keep unconfirmed sentences; do not append internal editor notes to the delivered document. Do not claim that a dedicated skill ran when only the local review was performed.
 
 ## Routing By Document Type
 
-Treat project documentation as `docs` unless the table names a mixed scene. Never use `aggressive` by default.
+Use this table to preserve editing scope in the local pass and, when available, to choose `shuorenhua` settings. External scene packs are optional and read only when that skill is available.
+
+For local review, `minimal + in-place` means sentence-level edits without changing structure; `bounded` preserves sentences and paragraph order; `structural` permits reorganization only within the authorized scope. These scopes need no external skill. Treat project documentation as `docs` when selecting optional `shuorenhua` settings; never use `aggressive` by default.
 
 | Document | Prose pass | Protected region |
 | --- | --- | --- |

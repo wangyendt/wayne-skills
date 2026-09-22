@@ -1,5 +1,7 @@
 # Execution Workflows for Project Records
 
+Shared reader/logic rules are in [technical-writing.md](technical-writing.md); diagram and interactive-delivery rules are in [interactive-illustrations.md](interactive-illustrations.md). Read the relevant shared guide for substantial work, then use the specialized workflow below.
+
 Read only the section for the current document. Paths, naming, existing-file precedence, and final polishing follow [SKILL.md](../SKILL.md). The examples are writing examples, not results from the current project. [templates.md](templates.md) supplies optional page shapes; perform the workflow before filling a template.
 
 ## Navigation

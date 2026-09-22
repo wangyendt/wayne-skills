@@ -45,7 +45,7 @@
 | --- | --- | --- |
 | `alapi` | [alapi/](alapi/SKILL.md) | 依据内置 API 清单调用 ALAPI。 |
 | `android-app-publisher` | [android-app-publisher/](android-app-publisher/SKILL.md) | 轻量客户端：发布 APK、管理最新版并生成二维码；Docker API 位于独立服务端仓库。 |
-| `awesome-docs` | [awesome-docs/](awesome-docs/SKILL.md) | 维护架构、技术书、参考资料、计划、路线图、待办和技术记录。 |
+| `awesome-docs` | [awesome-docs/](awesome-docs/SKILL.md) | 维护技术文档；强调读者需求、逻辑顺序、准确表达及交互图解。 |
 | `deep-think` | [deep-think/](deep-think/SKILL.md) | 组织深入分析与问题拆解。 |
 | `learning-tutor` | [learning-tutor/](learning-tutor/SKILL.md) | 逐题教学、证据评估、本地采集与跨会话续学。 |
 | `proactive-agent` | [proactive-agent/](proactive-agent/SKILL.md) | 设计带 WAL 和工作缓冲的主动式 Agent。 |

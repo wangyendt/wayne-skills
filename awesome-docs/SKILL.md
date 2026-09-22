@@ -1,11 +1,23 @@
 ---
 name: awesome-docs
-description: Use this skill whenever the user asks to record, organize, update, or maintain project documentation, including architecture overviews and decisions, technical books and derivations, API/protocol/configuration references, implementation plans, roadmaps, todos, risks, experiments, know-how, or common commands. Choose paths and naming by document purpose, preserve existing canonical locations, and check links when reorganizing. Defaults to the target project’s docs directory unless the user specifies another location. Applies an opt-out final plain-language polish to Markdown prose.
+description: Use this skill whenever the user asks to record, organize, update, or maintain project documentation, including architecture overviews and decisions, technical books and derivations, API/protocol/configuration references, implementation plans, roadmaps, todos, risks, experiments, know-how, or common commands. Choose paths and naming by document purpose, preserve existing canonical locations, and check links when reorganizing. Defaults to the target project’s docs directory unless the user specifies another location. Covers reader-first technical explanations and interactive HTML documents as well as Markdown, with an opt-out final plain-language polish.
 ---
 
 # Awesome Docs
 
 Keep project knowledge easy to find, check, and update. Choose the document type and path by what the reader needs, and preserve enough context for another person or agent to continue the work without guessing.
+
+## Standalone Use and Optional Skills
+
+This skill supplies its own writing, illustration and review workflow. Use another skill only when it is listed as available in the current environment and adds value to the task; read its actual provided path, not an assumed sibling directory. If it or its relevant reference is missing, skip that enhancement and continue locally. Do not scan other agents' installations, install/update skills or prompt for installation as part of documentation work. If the user explicitly requested a missing skill, briefly disclose that it was not loaded rather than claiming to have used it.
+
+## Shared Writing and Illustration Guides
+
+For substantial writing or explanation rewrites, read [technical-writing.md](references/technical-writing.md): executable passes for reader questions, evidence and terminology, prerequisite order, findable headings, paragraph reasoning, actionable procedures, comparable reference tables, reproducible calculations and defect-based review. Each pass specifies what to inspect and how to repair a failed check. These rules apply to Markdown, HTML prose and teaching scripts. Small edits use only relevant checks.
+
+When figures or interactive documents are needed, also read [interactive-illustrations.md](references/interactive-illustrations.md): LaTeX in all formulas, retained context with focused highlights, meaningful 3D/2D views, and interaction/delivery checks. Resolve the explanation before choosing effects. Architecture flows normally need 2D; spatial relationships often benefit from 3D. Do not force either on a small text task.
+
+Document type still determines the writing order and depth below. Keep facts, logic, notation and audience fit ahead of presentation polish. The shared guides own these rules; specialized guides add only their domain-specific execution steps.
 
 ## Execute the Documentation Task
 
@@ -17,7 +29,7 @@ Use the steps below in order. Keep the working notes in memory or a temporary wo
 | 2. Route | State the reader's question, audience, document type, depth, and whether this is a new document or an update. Load the matching execution guide below. | One sentence such as “Explain this subsystem's internal responsibilities at L3 using verified code.” | Split genuinely different purposes with links, not duplicate content. |
 | 3. Gather | Read the relevant code, configuration, source notes, results, or user decisions. Separate observations, assumptions, proposals, and missing evidence. | A small source-to-claim map; enough evidence for the requested scope. | Label the gap and narrow the claim. Ask only when missing input changes the destination or essential task. |
 | 4. Design | Follow the guide to order the sections, choose tables/figures, and identify each section's input and output. For books, build the chapter dependencies and symbol ledger first. | An outline in which every section answers a reader question. | Drop empty template headings; add a prerequisite where a section uses an unexplained idea. |
-| 5. Write | Draft from evidence in the guide's prescribed order. Explain the reasoning between facts, not just the desired conclusion. | The requested document/chapters, with working links and source references. | Repair the specific missing explanation, unsupported claim, or unusable instruction. |
+| 5. Write | Draft from evidence in the guide's prescribed order. Apply the relevant shared-writing passes to headings, paragraphs and procedures; explain the reasoning between facts. | The requested document/chapters, with working links and source references. | Repair the specific missing explanation, unsupported claim, or unusable instruction. |
 | 6. Verify | Apply the guide's depth/stop checks, then run the final review below. Recalculate worked examples and validate available local links/examples. | Checks actually performed, corrections, and explicitly unverified items. | Return to the step that produced the error; do not turn an unrun check into a success. |
 | 7. Deliver | Apply the opt-out plain-language pass to settled prose, inspect the diff, and report paths and meaningful checks. | One maintained source and a short completion note. | Restore altered facts, formulas, statuses, or unrelated edits before delivery. |
 
@@ -136,38 +148,7 @@ A roadmap describes outcomes; a plan describes execution; a todo holds the next 
 
 ## Writing Style
 
-Remove AI flavor. Write like an engineer preserving project state for another engineer.
-
-For explanatory prose, connect the question, reasoning, evidence, and conclusion. Reference pages should lead with exact definitions and lookup tables; todos should lead with the action and status. Do not force either into a narrative template.
-
-Prefer:
-
-- direct titles
-- short sections
-- factual conclusions
-- commands and file paths in code formatting
-- tables for metrics and comparisons
-- bullets for decisions and next steps
-- one idea per paragraph
-- explicit transitions between background, evidence, and conclusion
-
-Avoid:
-
-- filler openings like "本文旨在"
-- inflated summaries like "综上所述"
-- generic praise
-- vague claims without data
-- long paragraphs that mix setup, result, and conclusion
-- orphaned details that are not tied back to the main question
-- dumping raw logs without explaining what they prove
-
-For explanations and work records, answer the relevant questions:
-
-- What happened?
-- Why does it matter?
-- What evidence supports it?
-- What should be done next?
-- Where are the commands, data, or files?
+Use the shared [technical-writing guide](references/technical-writing.md) rather than a phrase blacklist. Explain objects, actions, conditions and outcomes directly; protect established terminology, exact commands, quantities and uncertainty. Keep reasoning in connected prose, execution in ordered steps, and lookup facts in tables as appropriate. Natural wording must not hide missing premises or replace evidence.
 
 ## Convert Writing Goals into Operations
 
@@ -188,7 +169,7 @@ Use the detailed guide for the actual writing sequence. Do not paste this table 
 
 ## Post-write Review
 
-After creating or updating any Markdown document, re-read the whole file once as an editor. This is required for all document types, including small updates to an existing file.
+After creating or updating a document (including HTML prose), re-read the whole file once as an editor. This is required for all document types, including small updates to an existing file.
 
 Run these checks, correcting failures rather than merely saying the document is clear:
 
@@ -204,7 +185,7 @@ Re-read the corrected section with its preceding and following sections. Finish 
 
 ## Final Plain-Language Pass
 
-Run this after the post-write content review, not while collecting facts or building the document structure. Read [references/post-write-polish.md](references/post-write-polish.md) and route each document type to the appropriate `shuorenhua` level and scope.
+Run this after the post-write content review, not while collecting facts or building the document structure. Read [references/post-write-polish.md](references/post-write-polish.md) for the local plain-language review. Use `shuorenhua` as an optional enhancement when available and useful; its absence does not skip the local review.
 
 Skip this pass when the user says `不需要润色`, `不要润色`, `跳过润色`, `按原流程`, `保持原样`, or gives an equivalent instruction. In that case, finish with the existing Post-write Review above and do not invoke `shuorenhua`, install it, or apply a substitute style pass.
 
