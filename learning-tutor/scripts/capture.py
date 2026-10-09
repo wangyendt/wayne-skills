@@ -56,7 +56,7 @@ def parse_record(host, record):
                 raise LedgerError("Codex item.completed item is not an object")
             if item.get("type") == "agent_message":
                 message = {"role": "assistant", "content": item.get("text")}
-        elif kind not in {"session_meta", "turn_context", "event_msg", "compacted", "thread.started", "turn.started", "turn.completed", "turn.failed", "item.started", "item.updated", "error"}:
+        elif kind not in {"session_meta", "turn_context", "event_msg", "compacted", "world_state", "token_usage_record", "thread.started", "turn.started", "turn.completed", "turn.failed", "item.started", "item.updated", "error"}:
             raise LedgerError("Unknown Codex transcript record; inspect adapter compatibility")
     elif host == "claude":
         if kind in {"user", "assistant"}:
@@ -195,7 +195,7 @@ def hook(store, host, payload, phase="all"):
         parts = prompt.strip().split(maxsplit=2)
         if len(parts) != 3 or not payload.get("transcript_path"):
             raise LedgerError("Use /learn-start TOPIC_KEY Title in a host with a transcript path")
-        state = store.start(parts[1], parts[2], host, external, payload["transcript_path"])
+        state = store.start(parts[1], parts[2], host, external, payload["transcript_path"], allow_missing=True)
         return {"systemMessage": "学习记录已开启：完整轮次结束后自动同步；没有常驻 worker。",
                 "hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": "Use learning-tutor. Learning session: " + state["session"] + "; topic: " + state["topic"]}}
     if isinstance(prompt, str) and prompt.strip() == "/learn-stop":

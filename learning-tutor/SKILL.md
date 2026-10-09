@@ -12,7 +12,7 @@ description: Teach a field, concept, or paper through one-question-at-a-time dia
 1. 定位本 skill 的绝对路径，运行 `scripts/learn.py doctor`。运行状态写入系统用户数据目录，不写入 skill/Git 仓库。客户端 Python 3.9+，只用标准库；服务端依赖单独安装。
 2. 查询已有主题；有网络配置时先执行一次 `sync --pull-only`（只取历史、不补传已停止会话）。失败时明确说明本地缓存范围和待同步状态，不无限阻塞教学。
 3. 区分请求：**查询**不自动开启录制；**开始／继续／重新学习**即开启本聊天的学习录制，不再要求用户另说“记录”；查询、单纯讨论 skill 配置不触发录制。建立稳定主题 key（例如 `optics/vergence`），跨设备复用同一个 key，不用相似标题擅自合并不同领域。
-4. Codex/Claude hooks 安装后，可由用户发送 `/learn-start TOPIC_KEY 主题名称`。其他入口按[安装与宿主适配](references/setup.md)显式绑定宿主会话和 transcript。首次 hooks 安装仍需确认。普通学习请求使用 `start --include-last-user` 绑定已核验的当前 transcript，只包含发起学习的那条用户输入、不导入更早历史；已有同主题活动绑定直接复用。仅安装 SKILL.md 不等于 hooks 已生效。
+4. Codex/Claude hooks 安装后，可由用户发送 `/learn-start TOPIC_KEY 主题名称`。其他入口按[安装与宿主适配](references/setup.md)显式绑定宿主会话和 transcript。首次 hooks 安装仍需确认；Claude 同时用 `--commands-dir` 注册控制命令，Codex 按宿主要求在 `/hooks` 审核信任新 hooks。普通学习请求使用 `start --include-last-user` 绑定已核验的当前 transcript，只包含发起学习的那条用户输入、不导入更早历史；已有同主题活动绑定直接复用。仅安装 SKILL.md 不等于 hooks 已生效。
 5. 检查 `status` 中 capture 最近检查时间、错误和 `delivery.turns`。没有常驻 worker；Codex／Claude 用各自 hook 入口，OpenClaw 用插件事件入口。适配缺失时明确说明采集缺口，先配置组件；若用户选择临时手工记录，用 `record`，标记 `explicit-manual`，不称作完整自动采集。
 6. `/learn-stop` 停止当前聊天采集和新上传，未确认的完整轮次／图片保留本地并冻结；下次明确开启同一聊天时自动补传。已发出的请求可能仍完成。普通宿主退出不等于结束学习，保留绑定用于重启补账。用户表达“不记录这段”时，先停止记录再继续，重新开启需明确确认。已捕获内容若需移除，使用相应删除流程，勿声称停止会抹除历史。
 

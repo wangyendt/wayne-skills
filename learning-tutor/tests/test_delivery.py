@@ -287,3 +287,39 @@ class EventDeliveryTests(Base):
         with patch("capture.time.sleep", side_effect=parallel_capture), patch("delivery.deliver", side_effect=upload) as send:
             hook(a, "claude", payload, phase="upload")
             send.assert_called_once()
+
+    def test_native_start_binds_before_transcript_exists(self):
+        a = self.store()
+        path = self.root / "not-created-yet.jsonl"
+        result = hook(a, "claude", {"session_id": "chat", "hook_event_name": "UserPromptSubmit", "prompt": "/learn-start optics/vergence Optics", "transcript_path": str(path)}, phase="capture")
+        self.assertIn("已开启", result["systemMessage"])
+        self.assertFalse(path.exists())
+        self.append(path, "claude", "question")
+        self.append(path, "claude", "answer", "assistant")
+        hook(a, "claude", {"session_id": "chat", "hook_event_name": "Stop", "last_assistant_message": "answer"}, phase="capture")
+        self.assertEqual(a.status()["delivery"]["turns"], {"complete": 1})
+
+    def test_codex_current_nonvisible_metadata_is_skipped(self):
+        a, path, b = self.bound("codex")
+        with path.open("a") as f:
+            for kind in ("world_state", "token_usage_record"):
+                f.write(json.dumps({"type": kind, "payload": {"private": "not a visible message"}}) + "\n")
+        self.round(a, path, host="codex")
+        self.assertEqual(sum(e["kind"] == "message" for e in a.pending()), 2)
+        self.assertNotIn("not a visible message", json.dumps(a.events()))
+
+    def test_claude_command_install_is_explicit_and_preserves_custom_commands(self):
+        a = self.store()
+        directory = self.root / "commands"
+        config = self.root / "claude.json"
+        preview = install_hooks(a, "claude", config, commands_dir=directory)
+        self.assertFalse(directory.exists())
+        self.assertEqual(len(preview["command_files"]), 2)
+        install_hooks(a, "claude", config, True, directory)
+        self.assertIn("learning-tutor owned command", (directory / "learn-start.md").read_text())
+        (directory / "learn-stop.md").write_text("custom command")
+        previous = config.read_bytes()
+        with self.assertRaises(LedgerError):
+            install_hooks(a, "claude", config, True, directory)
+        self.assertEqual(config.read_bytes(), previous)
+        self.assertEqual((directory / "learn-stop.md").read_text(), "custom command")

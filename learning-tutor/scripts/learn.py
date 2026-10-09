@@ -94,10 +94,11 @@ def parser():
     a.add_argument("--host", choices=["codex", "claude"], required=True)
     a.add_argument("--config", required=True, help="Exact hooks.json / settings.json path")
     a.add_argument("--apply", action="store_true", help="Default is preview only; existing entries preserved")
+    a.add_argument("--commands-dir", help="Claude only: explicitly install /learn-start and /learn-stop aliases into this directory")
     return p
 
 
-def install_hooks(store, host, config_path, apply=False):
+def install_hooks(store, host, config_path, apply=False, commands_dir=None):
     import shlex
     import tempfile
     path = Path(config_path).expanduser().resolve()
@@ -105,6 +106,18 @@ def install_hooks(store, host, config_path, apply=False):
     config = json.loads(previous)
     if not isinstance(config, dict) or not isinstance(config.get("hooks", {}), dict):
         raise LedgerError("Hook configuration must be an object")
+    command_files = {}
+    if commands_dir:
+        if host != "claude":
+            raise LedgerError("Native command aliases apply only to Claude")
+        destination = Path(commands_dir).expanduser().resolve()
+        templates = Path(__file__).parent / "hooks" / "claude-commands"
+        for name in ("learn-start.md", "learn-stop.md"):
+            target = destination / name
+            content = (templates / name).read_text().replace("SKILL_ROOT", str(Path(__file__).resolve().parents[1]))
+            if target.exists() and "<!-- learning-tutor owned command -->" not in target.read_text():
+                raise LedgerError("Existing custom slash command preserved; choose another commands directory")
+            command_files[str(target)] = content
     legacy_args = [sys.executable, str(Path(__file__).resolve()), "--home", str(store.home), "--profile", store.profile, "hook", "--host", host]
     args = [sys.executable, str(Path(__file__).parent / "hooks" / (host + ".py")), "--home", str(store.home), "--profile", store.profile, "hook"]
     def command(phase):
@@ -128,6 +141,8 @@ def install_hooks(store, host, config_path, apply=False):
             entries.append({"hooks": handlers})
     result = {"mode": "preview", "path": str(path), "config": config,
               "note": "Host restart/reload and real-turn verification required. Synchronous local capture + bounded async upload; no worker. Async output visibility is host-dependent: status and the next synchronous hook relay failures."}
+    if command_files:
+        result["command_files"] = command_files
     if apply:
         path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists():
@@ -149,6 +164,13 @@ def install_hooks(store, host, config_path, apply=False):
             if os.path.exists(temp):
                 os.unlink(temp)
         result["mode"] = "applied; host verification pending"
+        for filename, content in command_files.items():
+            target = Path(filename)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if target.exists() and target.read_text() != content:
+                backup = target.with_name(target.name + ".learning-tutor-" + str(time.time_ns()) + ".bak")
+                shutil.copyfile(target, backup)
+            target.write_text(content)
     return result
 
 
@@ -247,7 +269,7 @@ def execute(args, store):
     if cmd == "hook":
         return hook(store, args.host, read_json("-"), args.phase)
     if cmd == "install-hooks":
-        return install_hooks(store, args.host, args.config, args.apply)
+        return install_hooks(store, args.host, args.config, args.apply, args.commands_dir)
     if cmd == "tick":
         if not store.binding(args.host, args.host_session):
             return {"state": "not recording; upload frozen"}

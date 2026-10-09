@@ -229,7 +229,7 @@ class Ledger:
             self.db.execute("BEGIN IMMEDIATE")
             return self._append(topic, session, kind, data, source)
 
-    def start(self, key, title, host="manual", external=None, path=None, include_last_user=False):
+    def start(self, key, title, host="manual", external=None, path=None, include_last_user=False, allow_missing=False):
         topic = self.topic_id(key)
         external = external or str(uuid.uuid4())
         if host not in {"manual", "codex", "claude", "openclaw"}:
@@ -237,6 +237,9 @@ class Ledger:
         offset, prefix, source_turn = 0, "", None
         if path:
             path = str(Path(path).expanduser().resolve())
+        # Native UserPromptSubmit can precede creation of the host's transcript.
+        # Bind that exact path, but never create or overwrite a host-owned file.
+        if path and (not allow_missing or Path(path).exists()):
             with open(path, "rb") as f:
                 h, tail = hashlib.sha256(), b""
                 while True:
@@ -269,6 +272,8 @@ class Ledger:
                     with open(path, "rb") as f:
                         h = hashlib.sha256(f.read(offset))
             prefix = h.hexdigest()
+        elif path:
+            prefix = hashlib.sha256(b"").hexdigest()
         with self.db:
             self.db.execute("BEGIN IMMEDIATE")
             old = self.db.execute("SELECT * FROM captures WHERE host=? AND external=? AND active=1", (host, external)).fetchone()

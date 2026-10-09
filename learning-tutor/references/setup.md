@@ -4,7 +4,7 @@
 
 本包实现本地 SQLite 账本、查询／续学、同步客户端、显式 transcript 采集、Codex/Claude hook 配置安装器，以及 OpenClaw 插件桥接。用户确认后已在 hx470 部署 PostgreSQL [记录后端](record-backend.md)和独立的 [OSS 图片服务](assets.md)，均通过 SSH 调用，不新增公网端口。`tests/fixture_api.py` 只是回环模拟服务；正式记录入口是 `scripts/server/record_service.py`。公网 HTTPS 网关与个人记忆集成仍未部署。
 
-三套 transcript parser 已通过合成数据测试；本机 Codex 的一次显式绑定学习试用已核对记录，其他真实 UI 的逐条覆盖、各宿主异常退出、Windows/Linux 客户端实机尚待验收。旧版 OpenClaw JSONL 与新版 SQLite 历史存储分开适配；当前 parser 仅处理 JSONL，遇到未知格式报错，不声称通用兼容。
+三套 transcript parser 已通过合成数据测试；Codex 0.154 的 `world_state` 与 `token_usage_record` 元数据只跳过不采集；本机 Codex 的一次显式绑定学习试用已核对记录，其他真实 UI 的逐条覆盖、各宿主异常退出、Windows/Linux 客户端实机尚待验收。旧版 OpenClaw JSONL 与新版 SQLite 历史存储分开适配；当前 parser 仅处理 JSONL，遇到未知格式报错，不声称通用兼容。
 
 ## 一次性准备
 
@@ -34,7 +34,7 @@ python3 "$SKILL_ROOT/scripts/learn.py" install-hooks --host codex --config "/abs
 # 确认后，将同一命令加 --apply
 
 # Claude Code：使用其实际读取的 settings.json 路径
-python3 "$SKILL_ROOT/scripts/learn.py" install-hooks --host claude --config "/absolute/path/to/.claude/settings.json"
+python3 "$SKILL_ROOT/scripts/learn.py" install-hooks --host claude --config "/absolute/path/to/.claude/settings.json" --commands-dir "/absolute/path/to/.claude/commands"
 ```
 
 原配置先备份再原子替换；卸载时删除新增的 learning-tutor command entries，保留后来新增的其他配置。备份适合在确认没有后续编辑时回滚。Skill 文件移动后，应重建配置并移除旧路径项。
@@ -45,7 +45,7 @@ python3 "$SKILL_ROOT/scripts/learn.py" install-hooks --host claude --config "/ab
 /learn-start optics/vergence 辐辏角与目标距离
 ```
 
-hook 根据宿主提供的 `session_id` 与 `transcript_path` 绑定；开始边界之前的历史不导入。首次命令可能被宿主当作普通文本而不是原生 slash command，实际分发必须验收。脚本自行识别该精确标记，不依赖模型记得调用工具。
+hook 根据宿主提供的 `session_id` 与 `transcript_path` 绑定；开始边界之前的历史不导入。Codex hook 识别该精确标记；Claude 需要同时注册原生 command aliases，否则 `/learn-start` 会在 hook 之前被判为未知命令。安装器只有显式传 `--commands-dir` 才生成两个别名，既有非本 skill 命令保持原样并报冲突。首次 UserPromptSubmit 可能早于 transcript 文件创建：只绑定宿主提供的精确路径，不创建或覆盖宿主文件，后续事件补采。
 
 hook 覆盖 SessionStart、UserPromptSubmit、PostToolUse、Stop、SessionEnd。记录来源只采用主 transcript，避免同时收 prompt、Stop 文本造成重复；完整性仍取决于该宿主是否把消息写进已绑定 transcript。`codex exec --json` 通常只输出助手事件，不包含完整用户输入，因此不是双向完整采集的替代品。
 
