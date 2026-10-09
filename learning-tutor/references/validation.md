@@ -1,14 +1,27 @@
-# 事件驱动版验证边界（2026-10-09）
+# 事件驱动版实机验收（2026-10-09）
 
-本次只修改源码工程，未同步安装目录、应用全局 hooks 或更新 hx470。常驻 worker CLI 和 OpenClaw registerService 已移除；共享短任务与 Codex／Claude／OpenClaw 事件入口已加入。
+本次源码已提交并推送，使用 skilltruck 更新本机 Codex／Claude 的全局 learning-tutor；逐文件 hash 与源码一致。已安装两套 hooks 与 Claude 的原生 `/learn-start`／`/learn-stop` 别名，保留其他 hooks 和默认 skilltruck 的 80 项选择集。全局 hook 配置写前备份；Codex 的新定义仍需按宿主 `/hooks` 流程审核信任，测试只在隔离环境使用单次信任参数，不伪造持久信任。
 
-本次 Python 共发现 103 项测试：94 项通过、9 项 PostgreSQL 环境测试跳过；Node 桥接 2 项通过；skill 验证与 diff 空白检查通过。
+## 自动化与真实链路
 
-新增离线验收覆盖：完整／不完整轮次上传资格、延迟最终文本、游标与门控事务回滚、停止冻结和同聊天恢复、跨聊天隔离、ACK 丢失幂等重试、故障提示去重和恢复、异步提示由同步 hook 转达、上传单实例锁、图片 bytes 与轮次资格绑定、原图删除后补传、Codex 原生完成标记、控制指令／停止后隐私内容排除、首次学习输入纳入、原生 turn 身份保留、旧队列保守迁移、只读拉取、分宿主入口、停止阻止后续请求、重复回答不合并、延迟／并发 Stop handler 不误判新轮次。
+- 本机 Python：103 项中 94 项通过，9 项 PostgreSQL 环境测试在本机跳过；随后在 hx470 独立测试 profile 上运行这 9 项，全部通过。Node 桥接 2 项通过；skill 验证与 diff 检查通过。
+- Codex CLI 0.154：真实原生 prompt／Stop／SessionEnd、跨进程 resume、完整轮次回执和 `/learn-stop` 已验证；最后一轮回复在 PostgreSQL 中恰有一条，重复投递不重复入库。使用隔离 CODEX_HOME 与 CLI 内置默认模型绕开本机原有模型配置的不兼容，未修改用户模型设置。桌面 UI 的加载／信任仍应单独确认。
+- 真实 SSH／PostgreSQL／OSS：合成图 bytes 在不完整轮次时不发送；故障注入提示去重；停止后冻结；重开同一聊天补传；图片 ready 回执、下载 bytes 的 SHA-256 一致；不完整测试输入在服务器中为 0 条。
+- Claude Code 2.1.233：注册后的原生启停确实修改绑定，真实 transcript 新格式能解析。OAuth 登录已过期，因此成功助手回复＋Stop 的完整实机路径仍待重新登录后验收；不把 API 错误或本地命令输出假定为完成的学习轮次。
+- OpenClaw 仅完成合成桥接测试，没有真实 Gateway／新版 SQLite 历史验收。Windows／Linux 客户端尚待验收。
 
-Python 测试和 Node 插件桥接测试用临时本地数据与回环模拟服务；真实 Codex／Claude hooks 的信任配置、版本差异、消息落盘时序及真实 OpenClaw Gateway 仍需安装后验收。9 项 PostgreSQL 环境测试需要独立测试数据库，本次未连接生产后端。旧版记录缺少完整性证明时保守留本地，不自动把原始事件假定为已完成轮次。
+## 实机发现与修正
 
-真实 CLI 验收发现并补修：Codex 0.154 新增非可见 metadata、Claude 首次 prompt 时 transcript 未创建、Claude 原生控制命令需注册。另确认 CLI 退出会取消异步投递，Stop 已改成预算内同步收尾。真实 SSH 单次启动约 3 秒，Stop 总预算改为 30 秒，避免多次 RPC 与图片校验误判断连；Claude 新增 metadata、API 错误和 sidechain 已排除。对应回归测试已补充。
+1. Codex 新增 `world_state`／`token_usage_record`，Claude 新增 `attachment`／`mode`：只跳过已识别非可见 metadata；Claude API 错误与 sidechain 排除。
+2. Claude 首次 prompt 可能早于 transcript 文件创建：绑定宿主给定的精确路径，不创建／覆盖宿主文件，后续补采。
+3. Claude 控制指令需注册原生别名；安装器显式 `--commands-dir` 才写入，保留非本 skill 的既有命令。
+4. CLI 退出会取消异步上传：Stop 改为有预算的同步收尾；其他事件异步补传。Stop 在同一个总预算内等待上传锁，不假定两个 handler 按配置顺序执行。真实 SSH 多次 RPC 与图片校验需要余量：Stop 总网络预算 30 秒、handler 35 秒；失败仍留本地。
+
+回归覆盖完整性门控、延迟最终文本、事务回滚、冻结／恢复、跨聊天隔离、ACK 丢失幂等、通知去重与恢复、图片源文件删除后补传、重复回答、并发 Stop、只读历史拉取、分宿主入口、旧队列保守迁移及原生初始化时序。
+
+## 测试数据清理
+
+所有写入均使用独立 `learning-tutor-test-*` profile，不混入 personal。测试结束后删除测试 OSS 对象并核验不存在；删除该 profile 的 events、topics、receipts、tombstones、assets、asset_tombstones、profiles，七张表的剩余数量全部为 0；删除远端私有测试配置与临时测试代码。本机隔离状态、测试会话／图片、日志及临时 skilltruck 配置／缓存清理。个人账本保留原 47 个事件、pending=0、录制 inactive。
 
 以下保留旧版历史验收，不代表 worker 仍是当前使用方式。
 
