@@ -264,7 +264,7 @@ def _deliver_locked(store, scope, deadline):
     from assets import flush
     errors, report = [], {}
     try:
-        report["text"] = synchronize(store, scope=scope, deadline=deadline, max_batches=4)
+        report["text"] = synchronize(store, timeout=min(10, max(0.01, deadline - time.monotonic())), scope=scope, deadline=deadline, max_batches=4)
     except LedgerError as e:
         errors.append(str(e))
     # Image failures must not roll back or suppress text receipts.

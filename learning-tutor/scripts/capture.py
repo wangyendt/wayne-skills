@@ -60,12 +60,12 @@ def parse_record(host, record):
             raise LedgerError("Unknown Codex transcript record; inspect adapter compatibility")
     elif host == "claude":
         if kind in {"user", "assistant"}:
-            if record.get("isMeta") or record.get("isCompactSummary"):
+            if record.get("isMeta") or record.get("isCompactSummary") or record.get("isApiErrorMessage") or record.get("isSidechain"):
                 return None
             message = record.get("message")
             if not isinstance(message, dict):
                 raise LedgerError("Claude message record has no message object")
-        elif kind not in {"system", "progress", "file-history-snapshot", "queue-operation", "summary", "last-prompt", "custom-title", "agent-name", "pr-link", "bridge-pointer", "saved_hook_context"}:
+        elif kind not in {"system", "progress", "attachment", "mode", "file-history-snapshot", "queue-operation", "summary", "last-prompt", "custom-title", "agent-name", "pr-link", "bridge-pointer", "saved_hook_context"}:
             raise LedgerError("Unknown Claude transcript record; inspect adapter compatibility")
     elif host == "openclaw":
         if kind == "message":
@@ -237,7 +237,7 @@ def hook(store, host, payload, phase="all"):
     capture_notice = notice(store, (host, external, "capture"), None)
     report = None
     if phase != "capture" and event not in {"SessionEnd", "Interrupt", "StopFailure"}:
-        report = deliver(store, host, external, wait_for_lock=event == "Stop")
+        report = deliver(store, host, external, budget=30 if event == "Stop" else 12, wait_for_lock=event == "Stop")
     delivery_notice = consume_notice(store, (host, external)) if phase != "upload" else (report.get("notice") if report else None)
     if phase == "upload" and event == "Stop" and delivery_notice:
         consume_notice(store, (host, external))  # Synchronous Stop already displays this notice.

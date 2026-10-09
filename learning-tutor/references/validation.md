@@ -2,13 +2,13 @@
 
 本次只修改源码工程，未同步安装目录、应用全局 hooks 或更新 hx470。常驻 worker CLI 和 OpenClaw registerService 已移除；共享短任务与 Codex／Claude／OpenClaw 事件入口已加入。
 
-本次 Python 共发现 102 项测试：93 项通过、9 项 PostgreSQL 环境测试跳过；Node 桥接 2 项通过；skill 验证与 diff 空白检查通过。
+本次 Python 共发现 103 项测试：94 项通过、9 项 PostgreSQL 环境测试跳过；Node 桥接 2 项通过；skill 验证与 diff 空白检查通过。
 
 新增离线验收覆盖：完整／不完整轮次上传资格、延迟最终文本、游标与门控事务回滚、停止冻结和同聊天恢复、跨聊天隔离、ACK 丢失幂等重试、故障提示去重和恢复、异步提示由同步 hook 转达、上传单实例锁、图片 bytes 与轮次资格绑定、原图删除后补传、Codex 原生完成标记、控制指令／停止后隐私内容排除、首次学习输入纳入、原生 turn 身份保留、旧队列保守迁移、只读拉取、分宿主入口、停止阻止后续请求、重复回答不合并、延迟／并发 Stop handler 不误判新轮次。
 
 Python 测试和 Node 插件桥接测试用临时本地数据与回环模拟服务；真实 Codex／Claude hooks 的信任配置、版本差异、消息落盘时序及真实 OpenClaw Gateway 仍需安装后验收。9 项 PostgreSQL 环境测试需要独立测试数据库，本次未连接生产后端。旧版记录缺少完整性证明时保守留本地，不自动把原始事件假定为已完成轮次。
 
-真实 CLI 验收发现并补修：Codex 0.154 新增非可见 metadata、Claude 首次 prompt 时 transcript 未创建、Claude 原生控制命令需注册。另确认 CLI 退出会取消异步投递，Stop 已改成预算内同步收尾。对应回归测试已补充。
+真实 CLI 验收发现并补修：Codex 0.154 新增非可见 metadata、Claude 首次 prompt 时 transcript 未创建、Claude 原生控制命令需注册。另确认 CLI 退出会取消异步投递，Stop 已改成预算内同步收尾。真实 SSH 单次启动约 3 秒，Stop 总预算改为 30 秒，避免多次 RPC 与图片校验误判断连；Claude 新增 metadata、API 错误和 sidechain 已排除。对应回归测试已补充。
 
 以下保留旧版历史验收，不代表 worker 仍是当前使用方式。
 

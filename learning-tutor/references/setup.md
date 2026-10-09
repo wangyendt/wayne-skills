@@ -4,7 +4,7 @@
 
 本包实现本地 SQLite 账本、查询／续学、同步客户端、显式 transcript 采集、Codex/Claude hook 配置安装器，以及 OpenClaw 插件桥接。用户确认后已在 hx470 部署 PostgreSQL [记录后端](record-backend.md)和独立的 [OSS 图片服务](assets.md)，均通过 SSH 调用，不新增公网端口。`tests/fixture_api.py` 只是回环模拟服务；正式记录入口是 `scripts/server/record_service.py`。公网 HTTPS 网关与个人记忆集成仍未部署。
 
-三套 transcript parser 已通过合成数据测试；Codex 0.154 的 `world_state` 与 `token_usage_record` 元数据只跳过不采集；本机 Codex 的一次显式绑定学习试用已核对记录，其他真实 UI 的逐条覆盖、各宿主异常退出、Windows/Linux 客户端实机尚待验收。旧版 OpenClaw JSONL 与新版 SQLite 历史存储分开适配；当前 parser 仅处理 JSONL，遇到未知格式报错，不声称通用兼容。
+三套 transcript parser 已通过合成数据测试；Codex 0.154 的 `world_state`／`token_usage_record` 和 Claude 2.1.233 的 `attachment`／`mode` 元数据只跳过不采集；Claude API 错误与 sidechain 不作为学习回答；本机 Codex 的一次显式绑定学习试用已核对记录，其他真实 UI 的逐条覆盖、各宿主异常退出、Windows/Linux 客户端实机尚待验收。旧版 OpenClaw JSONL 与新版 SQLite 历史存储分开适配；当前 parser 仅处理 JSONL，遇到未知格式报错，不声称通用兼容。
 
 ## 一次性准备
 
@@ -51,7 +51,7 @@ hook 覆盖 SessionStart、UserPromptSubmit、PostToolUse、Stop、SessionEnd。
 
 本版已删除常驻 `worker` 命令。安装器为 Codex 和 Claude 生成不同入口：`scripts/hooks/codex.py`、`scripts/hooks/claude.py`；两个入口复用公共采集、轮次门控、上传代码。
 
-- `SessionStart`、`UserPromptSubmit`、`PostToolUse`：同步 handler 保存本地，单次异步 handler 尝试补传。`Stop`：同步保存后，由有预算的同步上传收尾（网络预算 12 秒，handler 超时 15 秒），避免 CLI 退出取消最后一轮异步任务。文字与图片分别验证回执，失败保留本地。没有循环或跨退出存活进程。
+- `SessionStart`、`UserPromptSubmit`、`PostToolUse`：同步 handler 保存本地，单次异步 handler 尝试补传。`Stop`：同步保存后，由有预算的同步上传收尾（网络预算 30 秒，handler 超时 35 秒），避免 CLI 退出取消最后一轮异步任务。文字与图片分别验证回执，失败保留本地。没有循环或跨退出存活进程。
 - 宿主可能并行启动两个 handler；上传阶段的 Stop 最多等待 1 秒取得本地完成证明并补采，不靠配置数组顺序假定先后。超过预算仍保留本地，后续事件补传。
 - Codex 的 `Interrupt`、Claude 的 `StopFailure`：只采集并标记当前待完成轮次不完整。
 - `SessionEnd`：只补采本地，不执行网络请求、不取消活动绑定。

@@ -334,3 +334,13 @@ class EventDeliveryTests(Base):
             self.assertEqual(report["state"], "attempted")
             pause.assert_called_once()
             self.assertIsNotNone(sync.call_args.kwargs["deadline"])
+
+    def test_claude_hook_metadata_errors_and_sidechain_are_not_messages(self):
+        a, path, b = self.bound()
+        with path.open("a") as f:
+            for kind in ("attachment", "mode"):
+                f.write(json.dumps({"type": kind, "attachment": {"type": "hook_additional_context", "content": "private context"}}) + "\n")
+        self.append(path, "claude", "API error", "assistant", isApiErrorMessage=True)
+        self.append(path, "claude", "sidechain", "user", isSidechain=True)
+        self.round(a, path)
+        self.assertEqual(sum(e["kind"] == "message" for e in a.events()), 2)

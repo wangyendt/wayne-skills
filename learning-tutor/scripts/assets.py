@@ -116,7 +116,7 @@ def flush(store, limit=1, scope=None, deadline=None):
         try:
             if not asset_allowed(store, job["id"], scope) and request["action"] == "upload":
                 continue
-            receipt = remote(store, request, timeout=min(5, deadline - time.monotonic())) if deadline is not None else remote(store, request)
+            receipt = remote(store, request, timeout=min(10, deadline - time.monotonic())) if deadline is not None else remote(store, request)
             expected = "ready" if request["action"] == "upload" else "deleted"
             if not isinstance(receipt, dict) or receipt.get("asset_id") != job["id"] or receipt.get("state") != expected:
                 raise AssetError("Image receipt does not match this operation")

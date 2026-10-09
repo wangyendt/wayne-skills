@@ -138,7 +138,7 @@ def install_hooks(store, host, config_path, apply=False, commands_dir=None):
         if not any(any(h.get("command") == command("capture") for h in row.get("hooks", [])) for row in entries):
             handlers = [{"type": "command", "command": command("capture")}]
             if event not in {"SessionEnd", "Interrupt", "StopFailure"}:
-                handlers.append({"type": "command", "command": command("upload"), "async": event != "Stop", "timeout": 15})
+                handlers.append({"type": "command", "command": command("upload"), "async": event != "Stop", "timeout": 35 if event == "Stop" else 15})
             entries.append({"hooks": handlers})
     result = {"mode": "preview", "path": str(path), "config": config,
               "note": "Host restart/reload and real-turn verification required. Synchronous capture; bounded synchronous Stop upload before host teardown; other uploads async. No worker. Async notices are relayed by status/next synchronous hook."}
