@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from contextlib import nullcontext
 from unittest.mock import patch
 
 from test_learning import Base
@@ -282,7 +283,7 @@ class EventDeliveryTests(Base):
         payload = {"session_id": "chat", "hook_event_name": "Stop", "last_assistant_message": "answer"}
         def parallel_capture(_):
             hook(a, "claude", payload, phase="capture")
-        def upload(store, host, name):
+        def upload(store, host, name, **kwargs):
             self.assertEqual(store.status()["delivery"]["turns"], {"complete": 1})
             return {}
         with patch("capture.time.sleep", side_effect=parallel_capture), patch("delivery.deliver", side_effect=upload) as send:
@@ -324,3 +325,12 @@ class EventDeliveryTests(Base):
             install_hooks(a, "claude", config, True, directory)
         self.assertEqual(config.read_bytes(), previous)
         self.assertEqual((directory / "learn-stop.md").read_text(), "custom command")
+
+    def test_stop_awaits_inflight_lock_within_one_delivery_budget(self):
+        a, path, b = self.bound()
+        self.round(a, path)
+        with patch("delivery.upload_lock", side_effect=[nullcontext(False), nullcontext(True)]), patch("delivery.time.sleep") as pause, patch("sync.synchronize", return_value={"uploaded": 4}) as sync, patch("assets.flush", return_value={"results": []}):
+            report = deliver(a, "claude", "chat", wait_for_lock=True)
+            self.assertEqual(report["state"], "attempted")
+            pause.assert_called_once()
+            self.assertIsNotNone(sync.call_args.kwargs["deadline"])

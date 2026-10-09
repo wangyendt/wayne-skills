@@ -243,31 +243,40 @@ def notice(store, scope, error):
     return None
 
 
-def deliver(store, host, external, budget=12):
+def deliver(store, host, external, budget=12, wait_for_lock=False):
     scope = (host, external)
     if not store.binding(*scope):
         return {"state": "frozen", "notice": None}
+    deadline = time.monotonic() + budget
+    while time.monotonic() < deadline:
+        with upload_lock(store) as acquired:
+            if acquired:
+                return _deliver_locked(store, scope, deadline)
+        if not wait_for_lock:
+            return {"state": "another upload is in flight", "notice": None}
+        # Stop shares the same total budget while awaiting an earlier short task.
+        time.sleep(min(0.05, max(0, deadline - time.monotonic())))
+    return {"state": "delivery budget reached; pending data retained", "notice": None}
+
+
+def _deliver_locked(store, scope, deadline):
     from sync import synchronize
     from assets import flush
-    with upload_lock(store) as acquired:
-        if not acquired:
-            return {"state": "another upload is in flight", "notice": None}
-        deadline = time.monotonic() + budget
-        errors, report = [], {}
+    errors, report = [], {}
+    try:
+        report["text"] = synchronize(store, scope=scope, deadline=deadline, max_batches=4)
+    except LedgerError as e:
+        errors.append(str(e))
+    # Image failures must not roll back or suppress text receipts.
+    if time.monotonic() < deadline and store.binding(*scope):
         try:
-            report["text"] = synchronize(store, scope=scope, deadline=deadline, max_batches=4)
-        except LedgerError as e:
-            errors.append(str(e))
-        # Image failures must not roll back or suppress text receipts.
-        if time.monotonic() < deadline and store.binding(*scope):
-            try:
-                report["images"] = flush(store, 2, scope=scope, deadline=deadline)
-                errors.extend(r["error"] for r in report["images"]["results"] if r.get("error"))
-            except (LedgerError, ValueError, OSError) as e:
-                errors.append(str(e) if isinstance(e, LedgerError) else type(e).__name__)
-        error = "; ".join(errors)
-        report.update(state="failed" if error else "attempted", notice=notice(store, scope, error), delivery=summary(store))
-        return report
+            report["images"] = flush(store, 2, scope=scope, deadline=deadline)
+            errors.extend(r["error"] for r in report["images"]["results"] if r.get("error"))
+        except (LedgerError, ValueError, OSError) as e:
+            errors.append(str(e) if isinstance(e, LedgerError) else type(e).__name__)
+    error = "; ".join(errors)
+    report.update(state="failed" if error else "attempted", notice=notice(store, scope, error), delivery=summary(store))
+    return report
 
 
 def summary(store):

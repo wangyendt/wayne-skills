@@ -237,7 +237,7 @@ def hook(store, host, payload, phase="all"):
     capture_notice = notice(store, (host, external, "capture"), None)
     report = None
     if phase != "capture" and event not in {"SessionEnd", "Interrupt", "StopFailure"}:
-        report = deliver(store, host, external)
+        report = deliver(store, host, external, wait_for_lock=event == "Stop")
     delivery_notice = consume_notice(store, (host, external)) if phase != "upload" else (report.get("notice") if report else None)
     if phase == "upload" and event == "Stop" and delivery_notice:
         consume_notice(store, (host, external))  # Synchronous Stop already displays this notice.
