@@ -254,7 +254,8 @@ class EventDeliveryTests(Base):
             self.assertIn(failure, preview["config"]["hooks"])
             handlers = preview["config"]["hooks"]["Stop"][-1]["hooks"]
             self.assertIn(host + ".py", handlers[0]["command"])
-            self.assertTrue(handlers[1]["async"])
+            self.assertFalse(handlers[1]["async"])
+            self.assertTrue(preview["config"]["hooks"]["PostToolUse"][-1]["hooks"][1]["async"])
             self.assertEqual(preview["config"]["hooks"]["Stop"][0]["hooks"][0]["command"], "existing-handler")
             entry = Path(assets.__file__).parent / "hooks" / (host + ".py")
             result = subprocess.run([sys.executable, str(entry), "--home", str(a.home), "hook", "--phase", "capture"],

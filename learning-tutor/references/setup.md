@@ -51,8 +51,8 @@ hook 覆盖 SessionStart、UserPromptSubmit、PostToolUse、Stop、SessionEnd。
 
 本版已删除常驻 `worker` 命令。安装器为 Codex 和 Claude 生成不同入口：`scripts/hooks/codex.py`、`scripts/hooks/claude.py`；两个入口复用公共采集、轮次门控、上传代码。
 
-- `SessionStart`、`UserPromptSubmit`、`PostToolUse`、`Stop`：同步 handler 保存本地；单次异步 handler 尝试上传，文字与图片分别验证回执。异步任务不循环，不跨宿主退出保证存活。
-- 宿主可能并行启动两个 handler；异步 Stop 最多等待 1 秒取得本地完成证明并补采，不靠配置数组顺序假定先后。超过预算仍保留本地，后续事件补传。
+- `SessionStart`、`UserPromptSubmit`、`PostToolUse`：同步 handler 保存本地，单次异步 handler 尝试补传。`Stop`：同步保存后，由有预算的同步上传收尾（网络预算 12 秒，handler 超时 15 秒），避免 CLI 退出取消最后一轮异步任务。文字与图片分别验证回执，失败保留本地。没有循环或跨退出存活进程。
+- 宿主可能并行启动两个 handler；上传阶段的 Stop 最多等待 1 秒取得本地完成证明并补采，不靠配置数组顺序假定先后。超过预算仍保留本地，后续事件补传。
 - Codex 的 `Interrupt`、Claude 的 `StopFailure`：只采集并标记当前待完成轮次不完整。
 - `SessionEnd`：只补采本地，不执行网络请求、不取消活动绑定。
 - `Stop` 是助手结束本轮回复，不是 `/learn-stop`。只有来源中的最终回复匹配成功结束事件，轮次才变为 `complete`；结束事件先于 transcript 最终文本时，保留证明等下次补采，不上传中间说明。

@@ -130,17 +130,18 @@ def install_hooks(store, host, config_path, apply=False, commands_dir=None):
         entries = hooks.setdefault(event, [])
         if not isinstance(entries, list):
             raise LedgerError("Hook entries must be lists")
-        # Replace only this skill's exact old handler; preserve unrelated hooks.
+        # Reconcile only exact owned handlers, including timing changes on upgrade.
+        owned_commands = {legacy_command, command("capture"), command("upload")}
         for row in entries:
-            row["hooks"] = [h for h in row.get("hooks", []) if h.get("command") != legacy_command]
+            row["hooks"] = [h for h in row.get("hooks", []) if h.get("command") not in owned_commands]
         entries[:] = [row for row in entries if row.get("hooks")]
         if not any(any(h.get("command") == command("capture") for h in row.get("hooks", [])) for row in entries):
             handlers = [{"type": "command", "command": command("capture")}]
             if event not in {"SessionEnd", "Interrupt", "StopFailure"}:
-                handlers.append({"type": "command", "command": command("upload"), "async": True, "timeout": 15})
+                handlers.append({"type": "command", "command": command("upload"), "async": event != "Stop", "timeout": 15})
             entries.append({"hooks": handlers})
     result = {"mode": "preview", "path": str(path), "config": config,
-              "note": "Host restart/reload and real-turn verification required. Synchronous local capture + bounded async upload; no worker. Async output visibility is host-dependent: status and the next synchronous hook relay failures."}
+              "note": "Host restart/reload and real-turn verification required. Synchronous capture; bounded synchronous Stop upload before host teardown; other uploads async. No worker. Async notices are relayed by status/next synchronous hook."}
     if command_files:
         result["command_files"] = command_files
     if apply:

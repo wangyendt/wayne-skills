@@ -8,7 +8,7 @@
 
 Python 测试和 Node 插件桥接测试用临时本地数据与回环模拟服务；真实 Codex／Claude hooks 的信任配置、版本差异、消息落盘时序及真实 OpenClaw Gateway 仍需安装后验收。9 项 PostgreSQL 环境测试需要独立测试数据库，本次未连接生产后端。旧版记录缺少完整性证明时保守留本地，不自动把原始事件假定为已完成轮次。
 
-真实 CLI 验收发现并补修：Codex 0.154 新增非可见 metadata、Claude 首次 prompt 时 transcript 未创建、Claude 原生控制命令需注册。对应回归测试已补充。
+真实 CLI 验收发现并补修：Codex 0.154 新增非可见 metadata、Claude 首次 prompt 时 transcript 未创建、Claude 原生控制命令需注册。另确认 CLI 退出会取消异步投递，Stop 已改成预算内同步收尾。对应回归测试已补充。
 
 以下保留旧版历史验收，不代表 worker 仍是当前使用方式。
 

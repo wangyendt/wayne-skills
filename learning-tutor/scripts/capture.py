@@ -183,7 +183,7 @@ def await_stop_capture(store, host, external):
 
 
 def hook(store, host, payload, phase="all"):
-    """Capture is synchronous; optional upload invocation is asynchronous and cancellable."""
+    """Capture is synchronous; Stop uploads finish boundedly before host teardown."""
     if not isinstance(payload, dict):
         raise LedgerError("Hook input must be an object")
     external = payload.get("session_id")
@@ -239,6 +239,8 @@ def hook(store, host, payload, phase="all"):
     if phase != "capture" and event not in {"SessionEnd", "Interrupt", "StopFailure"}:
         report = deliver(store, host, external)
     delivery_notice = consume_notice(store, (host, external)) if phase != "upload" else (report.get("notice") if report else None)
+    if phase == "upload" and event == "Stop" and delivery_notice:
+        consume_notice(store, (host, external))  # Synchronous Stop already displays this notice.
     warnings = [v for v in (capture_notice, delivery_notice) if v]
     if warnings:
         return {"systemMessage": "\n".join(warnings)}
