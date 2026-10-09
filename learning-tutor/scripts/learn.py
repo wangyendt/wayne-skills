@@ -10,7 +10,7 @@ import sys
 import time
 
 from ledger import Ledger, LedgerError, canonical, now
-from capture import drain, drain_all, hook
+from capture import drain, hook
 from sync import configure, configure_ssh, hydrate, load_config, synchronize
 
 
@@ -39,6 +39,7 @@ def parser():
     a.add_argument("--host", choices=["manual", "codex", "claude", "openclaw"], default="manual")
     a.add_argument("--host-session")
     a.add_argument("--transcript")
+    a.add_argument("--include-last-user", action="store_true", help="Include only the initiating user message in the explicitly bound transcript")
     for name in ("stop", "capture"):
         a = sub.add_parser(name)
         a.add_argument("--host", required=True)
@@ -76,14 +77,19 @@ def parser():
     a.add_argument("--ssh", required=True)
     a.add_argument("--python", required=True)
     a.add_argument("--service", required=True)
-    sub.add_parser("sync")
-    a = sub.add_parser("worker", help="Foreground capture/sync worker; Ctrl-C to stop")
-    a.add_argument("--once", action="store_true")
-    a.add_argument("--interval", type=float, default=2)
+    a = sub.add_parser("sync")
+    a.add_argument("--pull-only", action="store_true", help="Read remote history without uploading local events")
+    a = sub.add_parser("tick", help="One bounded capture/delivery event; never loops")
+    a.add_argument("--host", required=True, choices=["codex", "claude", "openclaw"])
+    a.add_argument("--host-session", required=True)
+    a.add_argument("--complete", action="store_true", help="Only after a verified successful host turn")
+    a.add_argument("--last-assistant-message")
+    a.add_argument("--capture-only", action="store_true")
     a = sub.add_parser("prune")
     a.add_argument("--days", type=int, default=30)
     a = sub.add_parser("hook")
     a.add_argument("--host", required=True, choices=["codex", "claude"])
+    a.add_argument("--phase", choices=["all", "capture", "upload"], default="all")
     a = sub.add_parser("install-hooks")
     a.add_argument("--host", choices=["codex", "claude"], required=True)
     a.add_argument("--config", required=True, help="Exact hooks.json / settings.json path")
@@ -99,17 +105,29 @@ def install_hooks(store, host, config_path, apply=False):
     config = json.loads(previous)
     if not isinstance(config, dict) or not isinstance(config.get("hooks", {}), dict):
         raise LedgerError("Hook configuration must be an object")
-    args = [sys.executable, str(Path(__file__).resolve()), "--home", str(store.home), "--profile", store.profile, "hook", "--host", host]
-    command = subprocess.list2cmdline(args) if os.name == "nt" else " ".join(shlex.quote(x) for x in args)
+    legacy_args = [sys.executable, str(Path(__file__).resolve()), "--home", str(store.home), "--profile", store.profile, "hook", "--host", host]
+    args = [sys.executable, str(Path(__file__).parent / "hooks" / (host + ".py")), "--home", str(store.home), "--profile", store.profile, "hook"]
+    def command(phase):
+        parts = args + ["--phase", phase]
+        return subprocess.list2cmdline(parts) if os.name == "nt" else " ".join(shlex.quote(x) for x in parts)
+    legacy_command = subprocess.list2cmdline(legacy_args) if os.name == "nt" else " ".join(shlex.quote(x) for x in legacy_args)
     hooks = config.setdefault("hooks", {})
-    for event in ("SessionStart", "UserPromptSubmit", "PostToolUse", "Stop", "SessionEnd"):
+    events = ("SessionStart", "UserPromptSubmit", "PostToolUse", "Stop", "SessionEnd", "Interrupt" if host == "codex" else "StopFailure")
+    for event in events:
         entries = hooks.setdefault(event, [])
         if not isinstance(entries, list):
             raise LedgerError("Hook entries must be lists")
-        if not any(any(h.get("command") == command for h in row.get("hooks", [])) for row in entries):
-            entries.append({"hooks": [{"type": "command", "command": command}]})
+        # Replace only this skill's exact old handler; preserve unrelated hooks.
+        for row in entries:
+            row["hooks"] = [h for h in row.get("hooks", []) if h.get("command") != legacy_command]
+        entries[:] = [row for row in entries if row.get("hooks")]
+        if not any(any(h.get("command") == command("capture") for h in row.get("hooks", [])) for row in entries):
+            handlers = [{"type": "command", "command": command("capture")}]
+            if event not in {"SessionEnd", "Interrupt", "StopFailure"}:
+                handlers.append({"type": "command", "command": command("upload"), "async": True, "timeout": 15})
+            entries.append({"hooks": handlers})
     result = {"mode": "preview", "path": str(path), "config": config,
-              "note": "Host restart/reload and real-turn verification required. Run worker for tail recovery; no server upload inside hooks."}
+              "note": "Host restart/reload and real-turn verification required. Synchronous local capture + bounded async upload; no worker. Async output visibility is host-dependent: status and the next synchronous hook relay failures."}
     if apply:
         path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists():
@@ -158,7 +176,7 @@ def execute(args, store):
     cmd = args.command
     if cmd == "init":
         return {"home": str(store.home), "profile": store.profile, "device": store.device,
-                "state": "local-only until API is configured", "next": "Explicitly start a learning session; install adapters and run worker for automatic capture."}
+                "state": "local-only until API is configured", "next": "Start a learning session and install the matching host hooks; complete turns sync on events."}
     if cmd == "status":
         from assets import status as image_status
         return {**store.status(), "images": image_status(store)}
@@ -167,7 +185,10 @@ def execute(args, store):
     if cmd == "start":
         if args.host != "manual" and (not args.host_session or not args.transcript):
             raise LedgerError("Host capture requires an explicit host-session ID and transcript path")
-        return store.start(args.key, args.title, args.host, args.host_session, args.transcript)
+        result = store.start(args.key, args.title, args.host, args.host_session, args.transcript, args.include_last_user)
+        if args.include_last_user and args.host != "manual":
+            drain(store, args.host, args.host_session)
+        return result
     if cmd in {"stop", "capture"}:
         binding = store.binding(args.host, args.host_session)
         try:
@@ -220,49 +241,23 @@ def execute(args, store):
     if cmd == "configure-ssh":
         return configure_ssh(store, args.ssh, args.python, args.service)
     if cmd == "sync":
-        return synchronize(store)
+        return synchronize(store, pull_only=args.pull_only)
     if cmd == "prune":
         return store.prune(args.days)
     if cmd == "hook":
-        return hook(store, args.host, read_json("-"))
+        return hook(store, args.host, read_json("-"), args.phase)
     if cmd == "install-hooks":
         return install_hooks(store, args.host, args.config, args.apply)
-    if cmd == "worker":
-        from assets import flush as flush_images
-        if args.interval < 0.2:
-            raise LedgerError("Worker interval must be at least 0.2 seconds")
-        retry_after, failures, last_report = 0, 0, None
-        sync_report = {}
-        while True:
-            with store.db:
-                store.set_meta("worker_pid", os.getpid())
-                store.set_meta("worker_heartbeat", now())
-            report = {"capture": drain_all(store)}
-            if time.monotonic() >= retry_after:
-                if store.meta("asset_ssh"):
-                    # Independent image outbox. One image per pass.
-                    report["images"] = flush_images(store, 1)
-                try:
-                    sync_report = {"sync": synchronize(store)}
-                    failures = 0
-                    today = now()[:10]
-                    if store.meta("last_prune") != today:
-                        store.prune()
-                        with store.db:
-                            store.set_meta("last_prune", today)
-                except LedgerError as e:
-                    failures += 1
-                    sync_report = {"sync_error": str(e)}
-                retry_after = time.monotonic() + min(60, max(5, 2 ** min(failures, 6)))
-            report.update(sync_report)
-            signature = canonical(report)
-            if signature != last_report:
-                output(report)
-                sys.stdout.flush()
-                last_report = signature
-            if args.once:
-                return {"worker": "one pass completed", "status": store.status()}
-            time.sleep(args.interval)
+    if cmd == "tick":
+        if not store.binding(args.host, args.host_session):
+            return {"state": "not recording; upload frozen"}
+        result = drain(store, args.host, args.host_session)
+        from delivery import complete, deliver
+        if args.complete:
+            complete(store, args.host, args.host_session, last_text=args.last_assistant_message)
+        if not args.capture_only:
+            result["upload"] = deliver(store, args.host, args.host_session)
+        return result
     raise LedgerError("Unknown command")
 
 
@@ -283,7 +278,9 @@ def main():
         # Do not print local data, tokens, or HTTP response bodies in diagnostics.
         message = str(e) if isinstance(e, LedgerError) else type(e).__name__ + ": local operation failed; check input/storage"
         if args.command == "hook":
-            output({"decision": "block", "reason": "Learning capture failed: " + message})
+            # Capture failure is a diagnostic, not a request to restart the model's Stop loop.
+            output({"systemMessage": "Learning capture failed: " + message})
+            return 0
         print("learning-tutor: " + message, file=sys.stderr)
         return 2
     finally:

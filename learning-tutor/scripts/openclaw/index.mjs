@@ -11,10 +11,9 @@ export default {
     if (!cfg.python || !cfg.home) throw new Error('learning-tutor requires explicit python and private home paths');
     const script = fileURLToPath(new URL('../learn.py', import.meta.url));
     const base = [script, '--home', cfg.home, '--profile', cfg.profile ?? 'personal'];
-    let worker;
     function call(args) {
       const result = spawnSync(cfg.python, [...base, ...args], { encoding: 'utf8', timeout: 15000, maxBuffer: 2 * 1024 * 1024, windowsHide: true });
-      if (result.error || result.status !== 0) throw new Error('Learning capture command failed; inspect local worker diagnostics.');
+      if (result.error || result.status !== 0) throw new Error('Learning capture command failed; inspect local capture diagnostics.');
       return JSON.parse(result.stdout);
     }
     // JSON arguments make session identity explicit. No channel-to-session guesswork.
@@ -44,17 +43,49 @@ export default {
         }
       }
     });
-    api.registerService({
-      id: 'learning-tutor-sync',
-      start() {
-        worker = spawn(cfg.python, [...base, 'worker'], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
-        worker.stdout.on('data', data => api.logger.info(`learning-tutor: ${data.toString().trim()}`));
-        worker.stderr.on('data', data => api.logger.warn(`learning-tutor: ${data.toString().trim()}`));
-        worker.on('error', () => api.logger.error('learning-tutor worker failed to start; recording is degraded'));
-        worker.on('exit', () => api.logger.warn('learning-tutor worker stopped; check capture status'));
-      },
-      stop() { worker?.kill(); worker = undefined; }
-    });
-    // Worker tails only explicitly bound files. No raw agent_end snapshots or unrelated sessions.
+    // Native event adapters tail only the explicitly bound source; event.messages isn't imported.
+    function observe(event, ctx, captureOnly = false, completed = false) {
+      const session = event.sessionId ?? ctx?.sessionId;
+      if (typeof session !== 'string' || !session) {
+        api.logger.warn('learning-tutor: no verified session id; hook skipped');
+        return;
+      }
+      let lastText;
+      if (completed && event.success === true && Array.isArray(event.messages)) {
+        const last = [...event.messages].reverse().find(m => m?.role === 'assistant');
+        if (typeof last?.content === 'string') lastText = last.content;
+        else if (Array.isArray(last?.content)) {
+          lastText = last.content.filter(b => b.type === 'text' && typeof b.text === 'string').map(b => b.text).join('\n');
+        }
+      }
+      try {
+        const captureArgs = ['tick', '--host', 'openclaw', '--host-session', session, '--capture-only'];
+        if (completed && event.success === true && lastText) captureArgs.push('--complete', '--last-assistant-message', lastText);
+        call(captureArgs);
+      } catch {
+        api.logger.warn('learning-tutor: local capture failed; inspect status before claiming completeness');
+        return;
+      }
+      if (captureOnly) return;
+      const args = [...base, 'tick', '--host', 'openclaw', '--host-session', session];
+      return new Promise(resolve => {
+        const task = spawn(cfg.python, args, { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+        let output = '';
+        task.stdout.on('data', data => { if (output.length < 2 * 1024 * 1024) output += data.toString(); });
+        task.stderr.on('data', () => {});
+        task.on('error', () => { api.logger.warn('learning-tutor: delivery task failed to launch'); resolve(); });
+        task.on('close', () => {
+          try {
+            const result = JSON.parse(output);
+            if (result.upload?.notice) api.logger.warn(result.upload.notice);
+          } catch { api.logger.warn('learning-tutor: delivery task interrupted; pending data retained'); }
+          resolve();
+        });
+      });
+    }
+    api.on('session_start', (event, ctx) => observe(event, ctx));
+    api.on('before_agent_run', (event, ctx) => observe(event, ctx));
+    api.on('agent_end', (event, ctx) => observe(event, ctx, false, true));
+    api.on('session_end', (event, ctx) => observe(event, ctx, true));
   }
 };

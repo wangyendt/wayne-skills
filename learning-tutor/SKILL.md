@@ -1,6 +1,6 @@
 ---
 name: learning-tutor
-description: Teach a field, concept, or paper through one-question-at-a-time dialogue, Feynman explanations, and evidence-based assessment; query or resume persistent learning records across sessions. Use for 开始学习, 带我学, 学过没有, 学习进度, 继续学习, or 重新学 with learning intent. Includes opt-in capture and offline-sync helpers; distinct from generating a one-shot report or teaching video.
+description: Teach a field, concept, or paper through one-question-at-a-time dialogue, Feynman explanations, and evidence-based assessment; query or resume persistent learning records across sessions. Use for 开始学习, 带我学, 学过没有, 学习进度, 继续学习, or 重新学 with learning intent. Includes learning-session capture and event-driven synchronization; distinct from generating a one-shot report or teaching video.
 ---
 
 # Learning Tutor
@@ -10,13 +10,13 @@ description: Teach a field, concept, or paper through one-question-at-a-time dia
 ## 启动与记录边界
 
 1. 定位本 skill 的绝对路径，运行 `scripts/learn.py doctor`。运行状态写入系统用户数据目录，不写入 skill/Git 仓库。客户端 Python 3.9+，只用标准库；服务端依赖单独安装。
-2. 查询已有主题；有网络配置时先执行一次 `sync`。失败时明确说明本地缓存范围和待同步状态，不无限阻塞教学。
-3. 区分请求：**查询**不自动开启录制；**开始／继续／重新学习**先明确进入学习会话。建立稳定主题 key（例如 `optics/vergence`），跨设备复用同一个 key，不用相似标题擅自合并不同领域。
-4. Codex/Claude hooks 安装后，可由用户发送 `/learn-start TOPIC_KEY 主题名称`。其他入口按[安装与宿主适配](references/setup.md)显式绑定宿主会话和 transcript。仅安装 SKILL.md 不等于采集已启动。
-5. 检查 capture 最近检查时间、错误、worker 状态。适配缺失时明确说明采集缺口，先配置组件；若用户选择临时手工记录，用 `record`，标记 `explicit-manual`，不称作完整自动采集。
-6. `/learn-stop` 停止采集；普通宿主退出不等于结束学习，保留绑定用于重启补账。用户表达“不记录这段”时，先停止记录再继续，重新开启需明确确认。已捕获内容若需移除，使用相应删除流程，勿声称停止会抹除历史。
+2. 查询已有主题；有网络配置时先执行一次 `sync --pull-only`（只取历史、不补传已停止会话）。失败时明确说明本地缓存范围和待同步状态，不无限阻塞教学。
+3. 区分请求：**查询**不自动开启录制；**开始／继续／重新学习**即开启本聊天的学习录制，不再要求用户另说“记录”；查询、单纯讨论 skill 配置不触发录制。建立稳定主题 key（例如 `optics/vergence`），跨设备复用同一个 key，不用相似标题擅自合并不同领域。
+4. Codex/Claude hooks 安装后，可由用户发送 `/learn-start TOPIC_KEY 主题名称`。其他入口按[安装与宿主适配](references/setup.md)显式绑定宿主会话和 transcript。首次 hooks 安装仍需确认。普通学习请求使用 `start --include-last-user` 绑定已核验的当前 transcript，只包含发起学习的那条用户输入、不导入更早历史；已有同主题活动绑定直接复用。仅安装 SKILL.md 不等于 hooks 已生效。
+5. 检查 `status` 中 capture 最近检查时间、错误和 `delivery.turns`。没有常驻 worker；Codex／Claude 用各自 hook 入口，OpenClaw 用插件事件入口。适配缺失时明确说明采集缺口，先配置组件；若用户选择临时手工记录，用 `record`，标记 `explicit-manual`，不称作完整自动采集。
+6. `/learn-stop` 停止当前聊天采集和新上传，未确认的完整轮次／图片保留本地并冻结；下次明确开启同一聊天时自动补传。已发出的请求可能仍完成。普通宿主退出不等于结束学习，保留绑定用于重启补账。用户表达“不记录这段”时，先停止记录再继续，重新开启需明确确认。已捕获内容若需移除，使用相应删除流程，勿声称停止会抹除历史。
 
-记录分层：**本地已落盘 → 待同步 → 服务端已确认**；评估另标 **未评估／已评估**。采集由宿主适配器和 worker 执行，教学评估仍需 Agent 提交结构化事件。只靠提示词不构成逐条捕获保证。
+记录分层：**本地已落盘 → 待同步 → 服务端已确认**；评估另标 **未评估／已评估**。采集由宿主事件适配器执行；同步本地落盘后，短时上传任务尝试投递，退出即结束。完整轮次（用户输入＋已核验的助手最终回复）才有上传资格；过程可见消息归属于该轮。闲聊按录制区间同样保存，不自动语义删选。不完整轮次仅留本地、不上传也不作为掌握证据。教学图片先登记 bytes，等本轮完整后发送。教学评估仍需 Agent 提交结构化事件。只靠提示词不构成逐条捕获保证。
 
 ## 教学循环
 
@@ -32,20 +32,20 @@ description: Teach a field, concept, or paper through one-question-at-a-time dia
 
 ## 每轮保存与续学
 
-- 让 capture/worker 先落盘当前证据；用 `resume` 读取实际消息 ID。禁止捏造回答、事件 ID 或评分证据。
+- 让同步 capture hook 先落盘当前证据；仅基于已经完整的轮次提交评估，当前回答所在轮次尚未完成时留待下一轮补评；用 `resume` 读取实际消息 ID。禁止捏造回答、事件 ID 或评分证据。
 - 有可评估的回答时执行 `assess`，按[评估与状态格式](references/assessment.md)提交理由、提示次数、rubric 和评估者。对话已存但漏评估时保留未评估，之后可基于原始回答补评。
 - 普通指令、寒暄、学习目标不是考试答案；`unassessed_user_messages` 是待判读候选，不代表每条都必须打分。
 - 每次改变教学方向、结束单元或用户中断时更新 `checkpoint`：当前问题、误区、已给提示、资料位置、下一步。不要只写“第三章”。录制开关／待同步条数从 `status` 读取，不固化在 checkpoint 中，避免恢复时出现过期状态。
 - 并行 checkpoint 保留分支；兼容分支可生成新 checkpoint，并把所有被合并的 head ID 放入 `parents`。有真实目标冲突才问用户。保留各次评估，不平均、不只取最高分。
 - 纠正 AI 错评时提交新 assessment，`supersedes` 引用被纠正的记录；保留原始证据和修正原因。
-- 查询前先同步；档案显示 `archived=1` 时先 `hydrate`，失败则说明当前缺原始证据。“未搜到”仅代表当前查询范围没有匹配，不等于从未学过。
+- 查询前先 `sync --pull-only`；档案显示 `archived=1` 时先 `hydrate`，失败则说明当前缺原始证据。“未搜到”仅代表当前查询范围没有匹配，不等于从未学过。
 
 ## 故障、配置与数据
 
-- 服务断连：提示用户检查网络或服务；确认本地落盘后继续，显示待同步。只有完整入库回执才标记服务端确认。
-- 本地存储失败或采集协议未知：明确报错，暂停受记录教学；停止采集的用户指令优先生效。已发生缺口保留诊断。
+- 服务断连：首次失败提示实际已知原因，自动检查现有配置与既有连接、短时重试；原因变化或需要用户操作时再提示，同一故障不逐轮刷屏，恢复后提示一次。失败不阻断学习；后续录制开启的事件携带此前失败的完整轮次重试，没有网络恢复监听或后台定时重试。修改连接配置／适配器／服务前说明具体方案并确认。异步通知的可见性因宿主而异，下次同步 hook 和 Agent 读取 `status` 必须转达未显示的故障。只有完整入库回执才标记服务端确认。
+- 本地存储失败或采集协议未知：明确报错，不宣称已保存或采集完整；停止采集的用户指令优先生效。已发生缺口保留诊断。
 - 没有服务器：按[安装指南](references/setup.md)解释 local-only 模式，提供 SSH 后端或 HTTPS API 配置步骤。现有 Context API 和 PostgreSQL 端口不等于学习 API。
-- 服务器原文保留到主动删除；worker 在成功同步后按日清理超过 30 天的、已同步且不活跃的本地原文。最小主题目录和去重凭据保留，之后按需恢复。待同步记录不按年龄清除。
+- 服务器原文保留到主动删除；手动 `prune` 清理超过 30 天的、已同步且不活跃的本地原文。最小主题目录和去重凭据保留，之后按需恢复。待同步记录不按年龄清除。
 - 导出含私密学习证据；文件权限与磁盘加密交给设备环境。令牌只由运行环境提供，不写进 skill、示例或日志。
 - PostgreSQL 教学记录后端与 OSS 图片服务已在 hx470 部署，通过现有 SSH 使用；公网 HTTPS 网关未部署。文字和图片分别核验回执，不由图片成功推断文字／评分已同步。客户端不保存 OSS／数据库密钥。全局 hooks、新开端口、个人记忆和 embedding 仍需明确确认。数据库使用单个教学 schema，主题层级放在数据中。
 

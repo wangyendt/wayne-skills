@@ -112,12 +112,12 @@ class BoundaryRegressions(Base):
         self.assertEqual(a.events(), [])
         self.assertEqual(a.summary(aa["topic"])["topic"]["archived"], 1)
 
-    def test_worker_reports_heartbeat_without_server(self):
+    def test_worker_removed_and_tick_requires_explicit_binding(self):
         a = self.store()
-        run = subprocess.run([sys.executable, str(SCRIPTS / "learn.py"), "--home", str(a.home), "worker", "--once"], capture_output=True, text=True)
+        run = subprocess.run([sys.executable, str(SCRIPTS / "learn.py"), "--home", str(a.home), "tick", "--host", "codex", "--host-session", "unbound"], capture_output=True, text=True)
         self.assertEqual(run.returncode, 0, run.stderr)
-        self.assertTrue(a.status()["worker"]["heartbeat"])
-        self.assertIn("Server not configured", a.status()["sync_error"])
+        self.assertIn("frozen", json.loads(run.stdout)["state"])
+        self.assertNotIn("worker", a.status())
 
     def test_concurrent_source_replay(self):
         a = self.store()

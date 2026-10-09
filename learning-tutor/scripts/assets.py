@@ -11,6 +11,7 @@ import shlex
 import subprocess
 import sys
 import uuid
+import time
 
 from asset_common import AssetError, MAX_IMAGE, MAX_WIRE, canonical, decode_image, identity, metadata
 from ledger import Ledger, LedgerError, now
@@ -21,6 +22,8 @@ def initialize(store):
         id TEXT PRIMARY KEY,topic TEXT NOT NULL,request TEXT NOT NULL,image BLOB,
         state TEXT NOT NULL,receipt TEXT,error TEXT,created TEXT NOT NULL)""")
     store.db.commit()
+    from delivery import adopt_assets
+    adopt_assets(store)
 
 
 def status(store):
@@ -42,7 +45,7 @@ def configure(store, host, python, service):
     return {"configured": True, "transport": "SSH; existing authentication/known_hosts required", **config}
 
 
-def remote(store, request):
+def remote(store, request, timeout=90):
     config = store.meta("asset_ssh")
     if not config:
         raise AssetError("Image server is not configured; image remains queued locally")
@@ -52,7 +55,7 @@ def remote(store, request):
         p = subprocess.run(["ssh", "-T", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes",
                             "-o", "ConnectTimeout=8", c["host"], command],
                            input=canonical({**request, "profile": store.profile}).encode(),
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=90)
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
     except (OSError, subprocess.TimeoutExpired):
         raise AssetError("Image server connection failed; check SSH/network, then retry") from None
     if len(p.stdout) > MAX_WIRE:
@@ -82,15 +85,26 @@ def enqueue(store, key, path, caption, alt_text, provenance, session=None):
                   "topic_key": key, "session_id": session, "caption": caption, "alt_text": alt_text or caption,
                   "provenance": provenance, "sha256": hashlib.sha256(data).hexdigest()})
     with store.db:
+        from delivery import register_asset
+        bound = register_asset(store, m["asset_id"], topic, session)
+        if bound:
+            m["session_id"] = bound
         store.db.execute("INSERT INTO asset_jobs VALUES(?,?,?,?,?,NULL,NULL,?)",
                          (m["asset_id"], topic, canonical({"action": "upload", "metadata": m}), data, "pending", now()))
     return {"asset_id": m["asset_id"], "state": "local-pending", "sha256": m["sha256"]}
 
 
-def flush(store, limit=1):
+def flush(store, limit=1, scope=None, deadline=None):
     initialize(store)
     results = []
-    for job in store.db.execute("SELECT * FROM asset_jobs WHERE state IN ('pending','delete-pending') ORDER BY created,id LIMIT ?", (limit,)).fetchall():
+    for job in store.db.execute("SELECT * FROM asset_jobs WHERE state IN ('pending','delete-pending') ORDER BY created,id").fetchall():
+        if len(results) >= limit or (deadline is not None and time.monotonic() >= deadline):
+            break
+        from delivery import asset_allowed
+        if job["state"] != "delete-pending" and not asset_allowed(store, job["id"], scope):
+            continue
+        if job["state"] == "delete-pending" and scope is not None:
+            continue  # Explicit administrative deletion is separate from learning uploads.
         request = json.loads(job["request"])
         if request["action"] == "upload" and store.db.execute("SELECT 1 FROM tombstones WHERE topic=?", (job["topic"],)).fetchone():
             # Do not upload bytes after local topic deletion. If a prior ACK was lost,
@@ -100,7 +114,9 @@ def flush(store, limit=1):
         if request["action"] == "upload":
             request["bytes_b64"] = base64.b64encode(job["image"]).decode("ascii")
         try:
-            receipt = remote(store, request)
+            if not asset_allowed(store, job["id"], scope) and request["action"] == "upload":
+                continue
+            receipt = remote(store, request, timeout=min(5, deadline - time.monotonic())) if deadline is not None else remote(store, request)
             expected = "ready" if request["action"] == "upload" else "deleted"
             if not isinstance(receipt, dict) or receipt.get("asset_id") != job["id"] or receipt.get("state") != expected:
                 raise AssetError("Image receipt does not match this operation")

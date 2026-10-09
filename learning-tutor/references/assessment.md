@@ -12,6 +12,7 @@
 
 ```sh
 python3 "$SKILL_ROOT/scripts/learn.py" search "辐辏"
+python3 "$SKILL_ROOT/scripts/learn.py" sync --pull-only
 python3 "$SKILL_ROOT/scripts/learn.py" resume optics/vergence
 python3 "$SKILL_ROOT/scripts/learn.py" alias optics/vergence "双眼向内转"
 python3 "$SKILL_ROOT/scripts/learn.py" hydrate optics/vergence
@@ -21,7 +22,7 @@ python3 "$SKILL_ROOT/scripts/learn.py" hydrate optics/vergence
 
 ## 提交评估
 
-先执行 capture 或读取 worker 状态，再用 `resume`／`export` 获取实际消息 ID。下例中的 ID 要来自实际账本：
+先执行 capture 并检查 `delivery.turns` 的完整性状态，再用 `resume`／`export` 获取实际消息 ID。下例中的 ID 要来自实际账本：
 
 ```json
 {
@@ -45,6 +46,7 @@ python3 "$SKILL_ROOT/scripts/learn.py" assess --host codex --host-session SESSIO
 - dimension：`explanation`（解释概念）、`reasoning`（因果／假设）、`application`（应用）。不要求每次三个维度都测。
 - level：`not_yet`（有作答证据但尚未完成）、`assisted`、`independent`、`transfer`。**没测过是缺评估记录，不是 not_yet。**
 - 有提示时独立／迁移等级会被程序拒绝；transfer 需要显式 `novel: true`。这只是格式约束，不代表程序验证了“题目真的陌生”或“回答真的正确”。
+- 不完整轮次只留本地；提交 assessment 会拒绝这些证据。当前轮的教学评估在完成后下一轮补交，不提前把 AI 过程说明当完成证明。
 - 证据必须含用户回答，并属于同一主题的一次来源 session；允许在后续 session 基于原始记录补评，不把不同来源会话混成一次表现。
 - 修订评分时用 `supersedes` 引用旧 assessment；概念和维度须相同。旧事件保留，当前投影排除被替代记录。
 - 评价者、rubric 与理由应可追踪；AI 判断不是认知测量的精确概率。

@@ -131,6 +131,8 @@ class Ledger:
           prefix TEXT NOT NULL DEFAULT '', active INTEGER NOT NULL DEFAULT 1,
           error TEXT, checked TEXT, PRIMARY KEY(host, external));
         """)
+        from delivery import initialize
+        initialize(self)
         with self.db:
             self.db.execute("INSERT OR IGNORE INTO meta VALUES('version', ?)", (str(VERSION),))
             self.db.execute("INSERT OR IGNORE INTO meta VALUES('profile', ?)", (profile,))
@@ -171,6 +173,10 @@ class Ledger:
         def topic_exists(topic):
             return bool(self.db.execute("SELECT 1 FROM catalog WHERE topic=?", (topic,)).fetchone())
         check_references(e, get_event, topic_exists, LedgerError)
+        if e["kind"] == "assessment":
+            from delivery import event_complete
+            if any(not event_complete(self, eid) for eid in e["data"]["evidence"]):
+                raise LedgerError("Incomplete turns are not assessment evidence; defer assessment")
 
     def _insert(self, e, ack=None, check_refs=True):
         validate(e, self.profile)
@@ -214,6 +220,8 @@ class Ledger:
         if self._insert(e) == "deleted":
             raise LedgerError("Topic was deleted; start a new topic key")
         self.set_meta("seq", seq)
+        from delivery import register_event
+        register_event(self, e)
         return e
 
     def append(self, topic, session, kind, data, source=None):
@@ -221,12 +229,12 @@ class Ledger:
             self.db.execute("BEGIN IMMEDIATE")
             return self._append(topic, session, kind, data, source)
 
-    def start(self, key, title, host="manual", external=None, path=None):
+    def start(self, key, title, host="manual", external=None, path=None, include_last_user=False):
         topic = self.topic_id(key)
         external = external or str(uuid.uuid4())
         if host not in {"manual", "codex", "claude", "openclaw"}:
             raise LedgerError("Unknown host")
-        offset, prefix = 0, ""
+        offset, prefix, source_turn = 0, "", None
         if path:
             path = str(Path(path).expanduser().resolve())
             with open(path, "rb") as f:
@@ -240,6 +248,26 @@ class Ledger:
                     tail = chunk[-1:]
             if tail and tail != b"\n":
                 raise LedgerError("Transcript has an incomplete final line; retry start")
+            if include_last_user:
+                from capture import parse_record
+                # Only this explicitly supplied transcript is inspected.
+                position, selected, native = 0, None, None
+                with open(path, "rb") as f:
+                    for line in f:
+                        record = json.loads(line)
+                        if host == "codex" and isinstance(record, dict) and record.get("type") == "turn_context":
+                            payload = record.get("payload")
+                            if isinstance(payload, dict) and isinstance(payload.get("turn_id"), str):
+                                native = payload["turn_id"]
+                        message = parse_record(host, record)
+                        if message and message["role"] == "user":
+                            selected = position
+                            source_turn = native
+                        position += len(line)
+                if selected is not None:
+                    offset = selected
+                    with open(path, "rb") as f:
+                        h = hashlib.sha256(f.read(offset))
             prefix = h.hexdigest()
         with self.db:
             self.db.execute("BEGIN IMMEDIATE")
@@ -249,6 +277,10 @@ class Ledger:
                     raise LedgerError("This host session is already recording another topic; stop it first")
                 return dict(old)
             session = str(uuid.uuid4())
+            if host != "manual":
+                self.db.execute("INSERT INTO delivery_runs VALUES(?,?,?,NULL)", (session, host, external))
+            if source_turn:
+                self.set_meta("source_turn:" + session, source_turn)
             if not self.db.execute("SELECT 1 FROM catalog WHERE topic=?", (topic,)).fetchone():
                 self._append(topic, session, "topic", {"key": normalize(key), "title": title})
             if self.db.execute("SELECT archived FROM catalog WHERE topic=?", (topic,)).fetchone()[0]:
@@ -268,6 +300,7 @@ class Ledger:
             if not binding:
                 raise LedgerError("Learning session is not active")
             self._append(binding["topic"], binding["session"], "session", {"host": host, "state": "stopped", "capture_gap": binding["error"]})
+            self.db.execute("UPDATE delivery_turns SET state='incomplete' WHERE session=? AND state='pending'", (binding["session"],))
             self.db.execute("UPDATE captures SET active=0 WHERE host=? AND external=?", (host, external))
 
     def events(self, topic=None):
@@ -278,11 +311,15 @@ class Ledger:
             args = (topic,)
         return [json.loads(r[0]) for r in self.db.execute(query + " ORDER BY ordinal", args)]
 
-    def pending(self, limit=100, max_bytes=4 * 1024 * 1024 - 1024):
+    def pending(self, limit=100, max_bytes=4 * 1024 * 1024 - 1024, scope=None):
         result, used = [], 0
-        for row in self.db.execute("SELECT envelope FROM events WHERE ack IS NULL ORDER BY ordinal LIMIT ?", (limit,)):
+        for row in self.db.execute("SELECT envelope FROM events WHERE ack IS NULL ORDER BY ordinal"):
+            from delivery import event_allowed
+            event = json.loads(row[0])
+            if not event_allowed(self, event, scope):
+                continue
             size = len(row[0].encode()) + 1
-            if used + size > max_bytes:
+            if len(result) >= limit or used + size > max_bytes:
                 break
             result.append(json.loads(row[0]))
             used += size
@@ -321,15 +358,11 @@ class Ledger:
     def status(self):
         pending = self.db.execute("SELECT COUNT(*) FROM events WHERE ack IS NULL").fetchone()[0]
         captures = [dict(r) for r in self.db.execute("SELECT host,external,topic,session,active,error,checked FROM captures")]
-        heartbeat = self.meta("worker_heartbeat")
-        recent = bool(heartbeat and (datetime.now(timezone.utc) - datetime.fromisoformat(heartbeat)).total_seconds() < 30)
-        worker = {"pid": self.meta("worker_pid"), "heartbeat": heartbeat,
-                  "state": "recent activity (not proof of process liveness)" if recent else "no recent worker heartbeat"}
+        from delivery import summary
         return dict(profile=self.profile, device=self.device, pending=pending,
                     scope="local cache plus pending local events", captures=captures,
-                    worker=worker,
-                    last_sync=self.meta("last_sync"), sync_error=self.meta("sync_error"),
-                    recording="capture errors" if any(r["error"] for r in captures if r["active"]) else "local ledger ready; inspect capture freshness")
+                    delivery=summary(self), last_sync=self.meta("last_sync"), sync_error=self.meta("sync_error"),
+                    recording="capture errors" if any(r["error"] for r in captures if r["active"]) else "hook-driven; inspect active bindings and delivery state")
 
     def search(self, text):
         needle = normalize(text)

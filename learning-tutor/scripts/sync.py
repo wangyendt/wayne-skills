@@ -6,6 +6,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import tempfile
+import time
 
 from ledger import LedgerError, canonical, now
 
@@ -66,7 +67,8 @@ def load_config(store):
 
 
 class Client:
-    def __init__(self, store, timeout=5):
+    def __init__(self, store, timeout=5, deadline=None, scope=None):
+        self.deadline, self.scope, self.store = deadline, scope, store
         config = load_config(store)
         if not config:
             raise LedgerError("Server not configured; records stay on this device. Configure the learning SSH service or HTTPS API, not the PostgreSQL port or existing context API.")
@@ -75,7 +77,7 @@ class Client:
         if config.get("transport") == "ssh":
             from record_ssh import settings
             self.ssh = settings(config.get("host"), config.get("python"), config.get("service"))
-            self.timeout = max(60, timeout)
+            self.timeout = timeout if deadline else max(60, timeout)
             return
         self.url = check_url(config["url"], config.get("allow_loopback", False))
         self.token = os.environ.get(config["token_env"])
@@ -85,14 +87,21 @@ class Client:
         self.opener = urllib.request.build_opener(NoRedirect())
 
     def request(self, path, body=None):
+        timeout = self.timeout
+        if self.scope and not self.store.binding(*self.scope):
+            raise LedgerError("Recording stopped; no new network requests")
+        if self.deadline is not None:
+            timeout = min(timeout, self.deadline - time.monotonic())
+            if timeout <= 0:
+                raise LedgerError("Delivery time budget reached; remaining events stay local")
         if self.ssh:
             from record_ssh import request
-            return request(self.ssh, self.profile, path, body, self.timeout)
+            return request(self.ssh, self.profile, path, body, timeout)
         data = canonical(body).encode() if body is not None else None
         req = urllib.request.Request(self.url + path, data=data,
             headers={"Authorization": "Bearer " + self.token, "Content-Type": "application/json"})
         try:
-            with self.opener.open(req, timeout=self.timeout) as response:
+            with self.opener.open(req, timeout=timeout) as response:
                 raw = response.read(16 * 1024 * 1024 + 1)
                 if len(raw) > 16 * 1024 * 1024:
                     raise LedgerError("Oversized API response")
@@ -135,14 +144,18 @@ def pull(store, client, max_pages=100):
     raise LedgerError("Pull page limit reached; run sync again before uploading")
 
 
-def synchronize(store, timeout=5):
+def synchronize(store, timeout=5, scope=None, deadline=None, max_batches=100, pull_only=False):
     try:
-        client = Client(store, timeout)
+        client = Client(store, timeout, deadline, scope) if deadline is not None or scope else Client(store, timeout)
         identity(store, client)
         received = pull(store, client)  # Apply remote tombstones before sending old local work.
         sent_count = 0
-        for _ in range(100):
-            batch = store.pending()
+        for _ in range(0 if pull_only else max_batches):
+            batch = store.pending(scope=scope)
+            if not batch:
+                break
+            # Recheck stop/turn eligibility immediately before a new upload request.
+            batch = [e for e in batch if __import__("delivery").event_allowed(store, e, scope)]
             if not batch:
                 break
             reply = client.request("/v1/events", {"v": 1, "profile": store.profile, "events": batch})
@@ -154,7 +167,7 @@ def synchronize(store, timeout=5):
         with store.db:
             store.set_meta("last_sync", now())
             store.set_meta("sync_error", "")
-        return dict(uploaded=sent_count, downloaded=received, pending=store.status()["pending"], state="server confirmed")
+        return dict(uploaded=sent_count, downloaded=received, pending=store.status()["pending"], state="remote history refreshed; no uploads" if pull_only else ("server confirmed" if not store.pending(scope=scope) else "partial; more eligible batches remain"))
     except LedgerError as e:
         with store.db:
             store.set_meta("sync_error", str(e))

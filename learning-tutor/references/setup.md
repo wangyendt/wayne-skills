@@ -49,20 +49,26 @@ hook 根据宿主提供的 `session_id` 与 `transcript_path` 绑定；开始边
 
 hook 覆盖 SessionStart、UserPromptSubmit、PostToolUse、Stop、SessionEnd。记录来源只采用主 transcript，避免同时收 prompt、Stop 文本造成重复；完整性仍取决于该宿主是否把消息写进已绑定 transcript。`codex exec --json` 通常只输出助手事件，不包含完整用户输入，因此不是双向完整采集的替代品。
 
-在独立终端启动持续采集与补传：
+本版已删除常驻 `worker` 命令。安装器为 Codex 和 Claude 生成不同入口：`scripts/hooks/codex.py`、`scripts/hooks/claude.py`；两个入口复用公共采集、轮次门控、上传代码。
 
-```sh
-python3 "$SKILL_ROOT/scripts/learn.py" worker
-```
+- `SessionStart`、`UserPromptSubmit`、`PostToolUse`、`Stop`：同步 handler 保存本地；单次异步 handler 尝试上传，文字与图片分别验证回执。异步任务不循环，不跨宿主退出保证存活。
+- 宿主可能并行启动两个 handler；异步 Stop 最多等待 1 秒取得本地完成证明并补采，不靠配置数组顺序假定先后。超过预算仍保留本地，后续事件补传。
+- Codex 的 `Interrupt`、Claude 的 `StopFailure`：只采集并标记当前待完成轮次不完整。
+- `SessionEnd`：只补采本地，不执行网络请求、不取消活动绑定。
+- `Stop` 是助手结束本轮回复，不是 `/learn-stop`。只有来源中的最终回复匹配成功结束事件，轮次才变为 `complete`；结束事件先于 transcript 最终文本时，保留证明等下次补采，不上传中间说明。
+- 只有完整轮次及其已登记图片进入上传。半行／中断轮次保留本地，不上传、不评分。
+- `/learn-stop` 立即停止新采集和新上传请求；已有请求可能完成。失败队列冻结，下次明确开启同一聊天时重新有上传资格。停止其他聊天不影响本聊天。
+- 上传失败首次提示已知原因、原因变化再次提示、恢复提示一次。异步 hook 输出的用户可见性依赖宿主；消息也持久化，下次同步 hook 或 Agent 查看状态时转达。修改环境／服务器前确认。
+- 持久上传锁避免多个事件并发投递；网络请求和批次有时间预算，未完成数据留到下一事件。没有活动事件时不重试。
 
-status 输出 worker PID 与最近心跳，30 秒内的新鲜心跳只表示最近有活动，不保证进程此刻存活；长时间同步或扫描期间也可能显示过期。worker 为前台进程，Ctrl-C 停止；本版不注册操作系统自启动服务。hooks 提供阶段性落盘，worker 负责消息尾部及时采集和故障补传。SessionEnd 不执行网络请求，保留会话绑定以补齐最后一段输出。显式 `/learn-stop` 才关闭学习录制；终止 worker 并不撤销活动绑定。
+`status` 的 `delivery.notices` 提供待转达故障；`delivery.turns` 分开显示 `pending`、`complete`、`incomplete`；`pending` 总数包含冻结数据，不把“可上传队列为空”当作“全部采集完整”。初次升级时旧版未确认的 transcript 事件缺少轮次证明，保守标为不完整并留本地；旧版图片 bytes 无轮次证明时也保留本地；已有确认记录及其历史评估不改写。
 
 用户说“这段不记录”时，先执行 stop，再进行不记录的交流。重新开始同一宿主会话会创建新的学习 session，从新边界开始。即使 transcript 已损坏，stop 仍停止录制并保留缺口说明。
 
-可不用 hooks，显式绑定已有宿主会话：
+普通 skill 开始学习时显式绑定已核验的宿主会话；`--include-last-user` 只纳入发起学习的最新用户输入（含更早隐私历史的文件也从该输入开始）：
 
 ```sh
-python3 "$SKILL_ROOT/scripts/learn.py" start optics/vergence "辐辏角" --host codex --host-session SESSION_ID --transcript "/absolute/path/to/transcript.jsonl"
+python3 "$SKILL_ROOT/scripts/learn.py" start optics/vergence "辐辏角" --host codex --host-session SESSION_ID --transcript "/absolute/path/to/transcript.jsonl" --include-last-user
 python3 "$SKILL_ROOT/scripts/learn.py" capture --host codex --host-session SESSION_ID
 python3 "$SKILL_ROOT/scripts/learn.py" stop --host codex --host-session SESSION_ID
 ```
@@ -89,9 +95,9 @@ python3 "$SKILL_ROOT/scripts/learn.py" stop --host codex --host-session SESSION_
 }
 ```
 
-如果配置了 plugins allowlist，还需显式加入 learning-tutor；随后重载 Gateway 并检查 worker 心跳。不要改动其他插件的启停或访问范围。
+如果配置了 plugins allowlist，还需显式加入 learning-tutor；随后重载 Gateway 并验收事件触发与 `delivery` 状态。不要改动其他插件的启停或访问范围。
 
-插件使用实查版本 2026.2.26 的 `registerCommand` 与 `registerService`；service 管理上述 worker 子进程，不依赖异步 `agent_end` 充当持久队列。命令要求宿主已授权的发送者。
+插件保留显式 `/learn` 命令，改用 typed `api.on` 的 `session_start`、`before_agent_run`、`agent_end`、`session_end`。不注册 `registerService` 或常驻进程。用事件／上下文的真实 `sessionId` 查绑定；缺少该字段就跳过并报告，不把 channel 或 sessionKey 猜作 sessionId。`agent_end` 仅在 `success=true` 且可提取最终文本时核验完成，原文仍从已绑定 transcript 读，不导入事件消息快照。单次任务的中断由下次事件恢复。当前主线宿主可能要求显式 conversation-access 配置，配置前按其版本核验；本仓库只做合成桥接测试，不声称真实 Gateway 已验收。命令要求宿主已授权的发送者。
 
 ```text
 /learn {"action":"start","session":"SESSION_ID","key":"optics/vergence","title":"辐辏角","transcript":"/absolute/path/to/session.jsonl"}
@@ -121,7 +127,7 @@ python3 "$SKILL_ROOT/scripts/learn.py" resume optics/vergence
 
 文字配置保存在本机私有 `config.json`，仅含 SSH 主机和服务端程序路径。图片连接按 [assets.md](assets.md)单独配置，使用同一 SSH 登录。`configure-ssh` 只保存配置；`sync` 的服务端回执才确认记录已入库。
 
-新电脑仍需单独配置采集 hooks／worker，连接后端不自动开启录制。查询／续学前先 `sync`；本版 `search`／`resume` 命令自身只读本地缓存。录制保持停止时也能补传已有记录；`sync` 不扫描新的聊天。
+新电脑仍需单独配置各宿主采集 hooks，连接后端不自动开启录制。查询／续学前先 `sync --pull-only`；本版 `search`／`resume` 命令自身只读本地缓存。已停止的 hook 会话保持冻结；完整数据只在同一聊天重新开启后有补传资格；`sync` 不扫描新的聊天。
 
 ### 可选 HTTPS 接口（网关尚待部署）
 
@@ -134,16 +140,16 @@ python3 "$SKILL_ROOT/scripts/learn.py" configure --url "https://HOST/learning"
 python3 "$SKILL_ROOT/scripts/learn.py" sync
 ```
 
-Windows PowerShell 对应 `$env:LEARNING_TUTOR_TOKEN = "TOKEN"`。配置文件仅保存 URL 和环境变量名，不保存令牌值。worker、hooks 与宿主需使用同一 home/profile；插件启动的 worker 也需继承令牌环境变量。
+Windows PowerShell 对应 `$env:LEARNING_TUTOR_TOKEN = "TOKEN"`。配置文件仅保存 URL 和环境变量名，不保存令牌值。hooks、短任务与宿主需使用同一 home/profile；使用 HTTPS 时短任务继承宿主提供的令牌环境变量。
 
 API 必须实现 [protocol.md](protocol.md)，不是任意 URL。同步校验 profile、server_id、回执 hash；跨域重定向被拒绝。换服务器／换学习身份使用独立状态目录或经过设计的数据迁移，不复用旧游标。
 
-错误区分：未配置、本地存储失败、认证失败、连接失败、协议不符、采集格式变化。服务断联时本地记录继续积压；worker 有界退避，用户检查服务后也可手动 `sync`。本版没有桌面通知；诊断输出在宿主 hook／worker 终端，AI 应读取 status 向用户解释。
+错误区分：未配置、本地存储失败、认证失败、连接失败、协议不符、采集格式变化。服务断联时本地记录继续积压；下一学习事件自动重试；也可在录制开启时手动 `sync`，已停止的 hook 会话仍不上传。本版没有桌面通知；诊断输出在宿主 hook 和 `status`，AI 应读取 status 向用户解释。
 
-## 官方接口依据（核查日期 2026-08-27）
+## 官方接口依据（事件方案核查日期 2026-10-09）
 
 - [Codex hooks](https://learn.chatgpt.com/docs/hooks)：transcript 格式非稳定接口；Stop 不是所有可见消息的逐条拦截点。
 - [Claude hooks](https://code.claude.com/docs/en/hooks)：用户打断不保证触发 Stop，需独立的尾部采集与重启补账。
-- [OpenClaw plugin hooks](https://docs.openclaw.ai/plugins/hooks)、[session storage](https://docs.openclaw.ai/reference/session-management-compaction)：runtime 与版本影响事件和存储接口。
+- [OpenClaw plugin hooks](https://docs.openclaw.ai/plugins/hooks)、[hook reference](https://docs.openclaw.ai/plugins/hooks/reference)、[session storage](https://docs.openclaw.ai/reference/session-management-compaction)：runtime 与版本影响事件和存储接口。
 
 本地曾只读检查 Codex CLI 0.149.1、桌面 bundled binary 0.150.0-alpha.8、Claude Code 2.1.233、OpenClaw 2026.2.26；这不是插件已经在这些宿主实跑成功的声明。

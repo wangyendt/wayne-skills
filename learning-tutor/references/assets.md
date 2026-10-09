@@ -50,7 +50,7 @@ python3 "$SKILL_ROOT/scripts/assets.py" configure \
 python3 "$SKILL_ROOT/scripts/assets.py" status
 ```
 
-Windows PowerShell 用本机 Python 与绝对 skill 路径调用相同参数；SSH alias、密钥与 known_hosts 由该电脑的 OpenSSH 配置提供。Linux/macOS 同理。`--home`、`--profile` 在子命令前，必须与 `learn.py` 和 worker 一致；默认 profile 为 `personal`。配置存入私有本地 SQLite，仅含 SSH 主机与程序路径。
+Windows PowerShell 用本机 Python 与绝对 skill 路径调用相同参数；SSH alias、密钥与 known_hosts 由该电脑的 OpenSSH 配置提供。Linux/macOS 同理。`--home`、`--profile` 在子命令前，必须与 `learn.py` 和宿主 hooks 一致；默认 profile 为 `personal`。配置存入私有本地 SQLite，仅含 SSH 主机与程序路径。
 
 `configure` 只保存连接信息，不代表网络已验收。执行主题 `list` 成功，才说明该电脑的 SSH 图片服务可达。
 
@@ -65,7 +65,7 @@ python3 "$SKILL_ROOT/scripts/assets.py" upload optics/vergence "/absolute/path/t
   --alt-text "双眼间距 b，目标位于中轴线上距离 d 处，总辐辏角为 2 atan(b/(2d))"
 ```
 
-可加 `--session SESSION_UUID`、`--provenance /absolute/path/to/provenance.json`，例如文件内容：
+教学图传 `--session SESSION_UUID`，并先 capture 当前用户输入。多个活动聊天同主题时必须明确 session；唯一活动聊天可自动绑定。图片 bytes 即时落本地，但本轮完整前 `flush` 不发送。录制停止后冻结，重新开启同一聊天再补传。可加 `--provenance /absolute/path/to/provenance.json`，例如文件内容：
 
 ```json
 {"tool":"imagegen","model":"reported-model-or-unknown","prompt":"生成双眼辐辏几何示意图","concepts":["vergence"],"sources":[]}
@@ -73,13 +73,13 @@ python3 "$SKILL_ROOT/scripts/assets.py" upload optics/vergence "/absolute/path/t
 
 3. 输出 `queued` 只说明 SQLite 已提交图片 bytes 与描述。检查 `upload.results` 中**该 asset_id** 的 `state=ready`，才算 OSS 和数据库都确认；队列积压时，本次上传可能排在旧图片后面。
 4. 将回执的 asset_id、oss_key、sha256 加入学习 checkpoint 的 `sources`，保持 caption／来源说明。不编造这些值。
-5. 断网时提示检查 SSH／网络／服务。待上传图片以 BLOB 保存在本地 SQLite，即使原始临时图片消失仍可补传；`learn.py worker` 在已配置图片连接时每轮重试一个，或手动执行：
+5. 断网时提示检查 SSH／网络／服务。待上传图片以 BLOB 保存在本地 SQLite，即使原始临时图片消失仍可补传；宿主事件中的短任务重试已完成轮次的图片；没有常驻 worker。录制仍开启时也可手动执行：
 
 ```sh
 python3 "$SKILL_ROOT/scripts/assets.py" retry
 ```
 
-只有匹配的 `ready` 回执到达才清除队列中的图片 BLOB；元数据收据保留。图片和文字是两条独立通路；文字记录后端已可按 [setup.md](setup.md)配置，但图片成功仍不代表文字／评估已同步。hook 目前只采集图片描述，并不保证每张生成图自动调用 upload；Agent 必须执行上述显式入队步骤。
+只有匹配的 `ready` 回执到达才清除队列中的图片 BLOB；元数据收据保留。图片和文字是两条独立通路；文字记录后端已可按 [setup.md](setup.md)配置，但图片成功仍不代表文字／评估已同步。hook 只采集图片描述。Skill 要求 Agent 每次生成教学图后执行显式入队；仅出现图片描述不等于 bytes 已保存，登记缺口必须报告。图上传失败不回滚文字回执，文字成功不表示图片成功。
 
 ## 查询、取图与删除
 
