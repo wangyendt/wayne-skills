@@ -316,12 +316,12 @@ class Ledger:
             args = (topic,)
         return [json.loads(r[0]) for r in self.db.execute(query + " ORDER BY ordinal", args)]
 
-    def pending(self, limit=100, max_bytes=4 * 1024 * 1024 - 1024, scope=None):
+    def pending(self, limit=100, max_bytes=4 * 1024 * 1024 - 1024, scope=None, snapshot=None):
         result, used = [], 0
         for row in self.db.execute("SELECT envelope FROM events WHERE ack IS NULL ORDER BY ordinal"):
             from delivery import event_allowed
             event = json.loads(row[0])
-            if not event_allowed(self, event, scope):
+            if not event_allowed(self, event, scope, snapshot=snapshot):
                 continue
             size = len(row[0].encode()) + 1
             if len(result) >= limit or used + size > max_bytes:

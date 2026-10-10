@@ -94,14 +94,14 @@ def enqueue(store, key, path, caption, alt_text, provenance, session=None):
     return {"asset_id": m["asset_id"], "state": "local-pending", "sha256": m["sha256"]}
 
 
-def flush(store, limit=1, scope=None, deadline=None):
+def flush(store, limit=1, scope=None, deadline=None, snapshot=None, timeout=10):
     initialize(store)
     results = []
     for job in store.db.execute("SELECT * FROM asset_jobs WHERE state IN ('pending','delete-pending') ORDER BY created,id").fetchall():
         if len(results) >= limit or (deadline is not None and time.monotonic() >= deadline):
             break
         from delivery import asset_allowed
-        if job["state"] != "delete-pending" and not asset_allowed(store, job["id"], scope):
+        if job["state"] != "delete-pending" and not asset_allowed(store, job["id"], scope, snapshot):
             continue
         if job["state"] == "delete-pending" and scope is not None:
             continue  # Explicit administrative deletion is separate from learning uploads.
@@ -114,9 +114,15 @@ def flush(store, limit=1, scope=None, deadline=None):
         if request["action"] == "upload":
             request["bytes_b64"] = base64.b64encode(job["image"]).decode("ascii")
         try:
-            if not asset_allowed(store, job["id"], scope) and request["action"] == "upload":
+            if not asset_allowed(store, job["id"], scope, snapshot) and request["action"] == "upload":
                 continue
-            receipt = remote(store, request, timeout=min(10, deadline - time.monotonic())) if deadline is not None else remote(store, request)
+            if deadline is not None:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    break
+                receipt = remote(store, request, timeout=min(timeout, remaining))
+            else:
+                receipt = remote(store, request)
             expected = "ready" if request["action"] == "upload" else "deleted"
             if not isinstance(receipt, dict) or receipt.get("asset_id") != job["id"] or receipt.get("state") != expected:
                 raise AssetError("Image receipt does not match this operation")

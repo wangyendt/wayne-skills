@@ -84,6 +84,24 @@ delete-topic 是删除整个主题的显式操作：清除本机原文，加入�
 
 ## 手工诊断模式
 
+### 停止后的显式补传与缺口核验
+
+用户明确要求上传已有记录时，可执行 `learn.py flush --host codex --host-session VERIFIED_CHAT_ID`，保持采集关闭。该操作不扫描 transcript；仅已完整的原学习轮次和对应图片有资格。`confirmed` 只覆盖本次停止前快照，不能推出整个本地账本已同步；`partial`／`failed` 时转达 `remaining` 和具体错误。
+
+宿主重启／切换存储导致绑定 JSONL 缺失真实最终回复时，先从可信 `codex_app.read_thread` 读取指定聊天；确认原始用户消息 ID、助手 final_answer ID、turn ID、status=completed、error=null、startedAt/completedAt。不要从 AI 记忆生成回执，也不要依赖文字相似度将重复提问或中断轮次合并。只有用户显式授权修复时才导入停止前的缺失完整轮次：
+
+```sh
+python3 "$SKILL_ROOT/scripts/learn.py" reconcile \
+  --host codex --host-session VERIFIED_CHAT_ID \
+  --json /absolute/path/to/private-host-read.json
+```
+
+私有 JSON 为 `{"source":"codex_app.read_thread","threadId":"VERIFIED_CHAT_ID","turn":HOST_TURN,"assets":[]}`。HOST_TURN 保留工具返回的 `id,status,error,startedAt,completedAt,items`；items 至少含一个原始 userMessage 和一个最终 agentMessage，不截断文字。图片可在 assets 中列 `{"asset_id":"REAL_ASSET_ID","host_item_id":"REAL_ENQUEUE_TOOL_ID"}`，对应 items 必须包含成功 commandExecution 的未截断 output，其中逐行 JSON 有该 asset_id 和 state=local-pending。不得手填占位符执行真实导入。
+
+该管理导入验证形状、身份、启停时间区间与图片入队关联，**不对宿主 JSON 作密码学认证**；真实性来自 Agent 的可信宿主读取，任意手工 JSON 不算已核验证据。导入数据标 `host-read-recovery`，与 `host-transcript` 自动采集区分。旧中断轮次保持不完整；新完整轮次按原生消息 ID 幂等补入，原时间区间内已有 assessment/checkpoint 与经验证的图片重新关联。恢复回执持久存于私有本地 meta，保留来源 hash、消息 IDs 与原 stop ID；flush 可以读取这份明确的停止前修复清单，但不延长学习时间边界。
+
+reconcile 全程离线，不发网络请求、不改变 captures／active／游标；成功导入不等于上传完成，随后仍需 flush 及逐项服务端回执。暂仅实现 Codex 的上述可信读取格式，不将 Claude／OpenClaw 的摘要当兼容回执。
+
 ```sh
 python3 "$SKILL_ROOT/scripts/learn.py" start optics/vergence "辐辏角" --host-session MANUAL_SESSION
 python3 "$SKILL_ROOT/scripts/learn.py" record --host-session MANUAL_SESSION --source-id UNIQUE_MESSAGE_ID --json "/absolute/path/to/message.json"

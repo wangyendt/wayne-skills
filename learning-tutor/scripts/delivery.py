@@ -1,5 +1,6 @@
 """Local-only turn gates and bounded, event-driven delivery. No daemon or wire changes."""
 from contextlib import contextmanager
+from dataclasses import dataclass
 import hashlib
 import json
 import os
@@ -121,7 +122,9 @@ def event_complete(store, eid):
     return bool(state and state[0] == "complete")
 
 
-def run_active(store, session, scope=None):
+def run_active(store, session, scope=None, snapshot=None):
+    if snapshot is not None:
+        return snapshot.valid(store, scope) and session in snapshot.sessions
     run = store.db.execute("SELECT * FROM delivery_runs WHERE session=?", (session,)).fetchone()
     if not run:
         return scope is None
@@ -131,13 +134,17 @@ def run_active(store, session, scope=None):
     return bool(store.binding(run["host"], run["external"]))
 
 
-def event_allowed(store, event, scope=None, seen=None):
-    if event["kind"] == "topic" and scope:
+def event_allowed(store, event, scope=None, seen=None, snapshot=None):
+    if snapshot is not None and (event["id"] not in snapshot.events or not snapshot.valid(store, scope)):
+        return False
+    if snapshot is not None and event["kind"] == "topic":
+        return True  # Only the fixed structural envelope is borrowed, not its owner's messages.
+    if event["kind"] == "topic" and scope and snapshot is None:
         current = store.binding(*scope)
         return bool(current and (current["topic"] == event["topic"] or run_active(store, event["session"], scope)))
     row = store.db.execute("SELECT * FROM delivery_events WHERE event=?", (event["id"],)).fetchone()
     if row:
-        if not run_active(store, row["session"], scope):
+        if not run_active(store, row["session"], scope, snapshot):
             return False
         if event["kind"] not in {"topic", "session", "alias"} and not event_complete(store, event["id"]):
             return False
@@ -146,7 +153,7 @@ def event_allowed(store, event, scope=None, seen=None):
         if event["kind"] != "topic":
             return False
         current = store.binding(*scope)
-        if not current or current["topic"] != event["topic"]:
+        if snapshot is None and (not current or current["topic"] != event["topic"]):
             return False
     seen = set() if seen is None else seen
     if event["id"] in seen:
@@ -159,17 +166,122 @@ def event_allowed(store, event, scope=None, seen=None):
         refs = event["data"]["parents"]
     for eid in refs:
         ref = store.db.execute("SELECT envelope,ack FROM events WHERE id=?", (eid,)).fetchone()
-        if not ref or (not ref["ack"] and not event_allowed(store, json.loads(ref["envelope"]), scope, seen.copy())):
+        if not ref or (not ref["ack"] and not event_allowed(store, json.loads(ref["envelope"]), scope, seen.copy(), snapshot)):
             return False
     return True
 
 
-def asset_allowed(store, aid, scope=None):
+def asset_allowed(store, aid, scope=None, snapshot=None):
+    if snapshot is not None and (aid not in snapshot.assets or not snapshot.valid(store, scope)):
+        return False
     row = store.db.execute("SELECT * FROM delivery_assets WHERE asset=?", (aid,)).fetchone()
     if not row:
         return scope is None
     state = store.db.execute("SELECT state FROM delivery_turns WHERE session=? AND id=?", (row["session"], row["turn"])).fetchone()
-    return run_active(store, row["session"], scope) and bool(state and state[0] == "complete")
+    return run_active(store, row["session"], scope, snapshot) and bool(state and state[0] == "complete")
+
+
+@dataclass(frozen=True)
+class StoppedSnapshot:
+    """Call-local permission for fixed IDs, not a persistent recording toggle."""
+    scope: tuple
+    binding_session: str
+    sessions: frozenset
+    events: frozenset
+    assets: frozenset
+
+    def valid(self, store, scope):
+        if scope != self.scope:
+            return False
+        row = store.db.execute("SELECT active,session FROM captures WHERE host=? AND external=?", self.scope).fetchone()
+        return bool(row and not row["active"] and row["session"] == self.binding_session)
+
+
+def stopped_snapshot(store, host, external):
+    """Freeze existing pre-stop IDs for this chat; never drain its transcript."""
+    from assets import initialize as initialize_assets
+    initialize_assets(store)
+    scope = (host, external)
+    with store.db:
+        store.db.execute("BEGIN IMMEDIATE")
+        binding = store.db.execute("SELECT * FROM captures WHERE host=? AND external=?", scope).fetchone()
+        if not binding or binding["active"]:
+            raise LedgerError("Explicit flush requires an existing stopped chat")
+        sessions, ids, image_ids, topics = set(), set(), set(), set()
+        for run in store.db.execute("SELECT session FROM delivery_runs WHERE host=? AND external=?", scope).fetchall():
+            rows = store.db.execute("SELECT e.ordinal,e.id,e.envelope FROM events e JOIN delivery_events d ON d.event=e.id WHERE d.session=? ORDER BY e.ordinal", (run["session"],)).fetchall()
+            stops = []
+            for row in rows:
+                event = json.loads(row["envelope"])
+                if event["kind"] == "session" and event["data"].get("state") == "stopped":
+                    stops.append(row)
+            if not stops:
+                if run["session"] == binding["session"]:
+                    raise LedgerError("Stopped chat has no verified local stop boundary")
+                continue  # Legacy runs without a boundary remain local.
+            boundary = stops[-1]
+            stopped_at = json.loads(boundary["envelope"])["at"]
+            sessions.add(run["session"])
+            for row in rows:
+                if row["ordinal"] <= boundary["ordinal"]:
+                    ids.add(row["id"])
+                    topics.add(json.loads(row["envelope"])["topic"])
+            image_ids.update(r[0] for r in store.db.execute(
+                "SELECT d.asset FROM delivery_assets d JOIN asset_jobs j ON j.id=d.asset WHERE d.session=? AND j.created<=? AND j.state='pending'", (run["session"], stopped_at)))
+            for row in store.db.execute("SELECT value FROM meta WHERE key LIKE ?", ("host_recovery:" + run["session"] + ":%",)):
+                receipt = json.loads(row[0])
+                if receipt.get("stop_event") == boundary["id"]:
+                    ids.update(receipt["events"])
+        # A reused topic's structural creation may belong to an earlier session.
+        # Borrow only its topic envelope, never messages from another chat.
+        for row in store.db.execute("SELECT id,topic FROM events WHERE kind='topic'"):
+            if row["topic"] in topics:
+                ids.add(row["id"])
+        return StoppedSnapshot(scope, binding["session"], frozenset(sessions), frozenset(ids), frozenset(image_ids))
+
+
+def frozen_remaining(store, snapshot):
+    text, blocked, images, image_blocked = [], [], [], []
+    for row in store.db.execute("SELECT id,envelope FROM events WHERE ack IS NULL"):
+        if row["id"] in snapshot.events:
+            (text if event_allowed(store, json.loads(row["envelope"]), snapshot.scope, snapshot=snapshot) else blocked).append(row["id"])
+    for row in store.db.execute("SELECT id FROM asset_jobs WHERE state='pending'"):
+        if row["id"] in snapshot.assets:
+            (images if asset_allowed(store, row["id"], snapshot.scope, snapshot) else image_blocked).append(row["id"])
+    return {"text_eligible": text, "text_blocked": blocked, "images_eligible": images, "images_blocked": image_blocked}
+
+
+def flush_stopped(store, host, external, budget=180):
+    """One explicit foreground attempt. No capture, restart, daemon or retries."""
+    if not isinstance(budget, (int, float)) or not 1 <= budget <= 600:
+        raise LedgerError("Flush budget must be between 1 and 600 seconds")
+    deadline = time.monotonic() + budget
+    with upload_lock(store) as acquired:
+        if not acquired:
+            return {"state": "busy", "note": "Another upload is in flight; no new request started"}
+        snapshot = stopped_snapshot(store, host, external)
+        report, errors = {"scope": list(snapshot.scope), "recording": "stopped"}, []
+        remaining = frozen_remaining(store, snapshot)
+        if remaining["text_eligible"] or remaining["images_eligible"]:
+            from sync import synchronize
+            from assets import flush
+            try:
+                report["text"] = synchronize(store, timeout=60, scope=snapshot.scope, deadline=deadline, snapshot=snapshot)
+            except LedgerError as e:
+                errors.append(str(e))
+            if time.monotonic() < deadline and snapshot.valid(store, snapshot.scope):
+                try:
+                    report["images"] = flush(store, len(snapshot.assets), scope=snapshot.scope, deadline=deadline, snapshot=snapshot, timeout=60)
+                    errors.extend(r["error"] for r in report["images"]["results"] if r.get("error"))
+                except (LedgerError, ValueError, OSError) as e:
+                    errors.append(str(e) if isinstance(e, LedgerError) else type(e).__name__)
+        if not snapshot.valid(store, snapshot.scope):
+            errors.append("Chat binding changed; explicit flush permission revoked")
+            report["recording"] = "binding changed externally"
+        remaining = frozen_remaining(store, snapshot)
+        report.update(state="failed" if errors else ("partial" if any(remaining.values()) else "confirmed"), errors=errors, remaining=remaining,
+                      note="Only pre-stop snapshot IDs were considered. Incomplete turns stay local; no automatic retry is scheduled.")
+        return report
 
 
 def register_asset(store, aid, topic, session):

@@ -67,8 +67,8 @@ def load_config(store):
 
 
 class Client:
-    def __init__(self, store, timeout=5, deadline=None, scope=None):
-        self.deadline, self.scope, self.store = deadline, scope, store
+    def __init__(self, store, timeout=5, deadline=None, scope=None, snapshot=None):
+        self.deadline, self.scope, self.store, self.snapshot = deadline, scope, store, snapshot
         config = load_config(store)
         if not config:
             raise LedgerError("Server not configured; records stay on this device. Configure the learning SSH service or HTTPS API, not the PostgreSQL port or existing context API.")
@@ -88,7 +88,9 @@ class Client:
 
     def request(self, path, body=None):
         timeout = self.timeout
-        if self.scope and not self.store.binding(*self.scope):
+        if self.snapshot is not None and not self.snapshot.valid(self.store, self.scope):
+            raise LedgerError("Explicit flush permission revoked; no new network requests")
+        if self.snapshot is None and self.scope and not self.store.binding(*self.scope):
             raise LedgerError("Recording stopped; no new network requests")
         if self.deadline is not None:
             timeout = min(timeout, self.deadline - time.monotonic())
@@ -144,18 +146,18 @@ def pull(store, client, max_pages=100):
     raise LedgerError("Pull page limit reached; run sync again before uploading")
 
 
-def synchronize(store, timeout=5, scope=None, deadline=None, max_batches=100, pull_only=False):
+def synchronize(store, timeout=5, scope=None, deadline=None, max_batches=100, pull_only=False, snapshot=None):
     try:
-        client = Client(store, timeout, deadline, scope) if deadline is not None or scope else Client(store, timeout)
+        client = Client(store, timeout, deadline, scope, snapshot) if deadline is not None or scope or snapshot else Client(store, timeout)
         identity(store, client)
         received = pull(store, client)  # Apply remote tombstones before sending old local work.
         sent_count = 0
         for _ in range(0 if pull_only else max_batches):
-            batch = store.pending(scope=scope)
+            batch = store.pending(scope=scope, snapshot=snapshot)
             if not batch:
                 break
             # Recheck stop/turn eligibility immediately before a new upload request.
-            batch = [e for e in batch if __import__("delivery").event_allowed(store, e, scope)]
+            batch = [e for e in batch if __import__("delivery").event_allowed(store, e, scope, snapshot=snapshot)]
             if not batch:
                 break
             reply = client.request("/v1/events", {"v": 1, "profile": store.profile, "events": batch})
@@ -167,7 +169,7 @@ def synchronize(store, timeout=5, scope=None, deadline=None, max_batches=100, pu
         with store.db:
             store.set_meta("last_sync", now())
             store.set_meta("sync_error", "")
-        return dict(uploaded=sent_count, downloaded=received, pending=store.status()["pending"], state="remote history refreshed; no uploads" if pull_only else ("server confirmed" if not store.pending(scope=scope) else "partial; more eligible batches remain"))
+        return dict(uploaded=sent_count, downloaded=received, pending=store.status()["pending"], state="remote history refreshed; no uploads" if pull_only else ("server confirmed" if not store.pending(scope=scope, snapshot=snapshot) else "partial; more eligible batches remain"))
     except LedgerError as e:
         with store.db:
             store.set_meta("sync_error", str(e))

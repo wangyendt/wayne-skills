@@ -79,6 +79,14 @@ def parser():
     a.add_argument("--service", required=True)
     a = sub.add_parser("sync")
     a.add_argument("--pull-only", action="store_true", help="Read remote history without uploading local events")
+    a = sub.add_parser("flush", help="Explicit one-shot upload of a stopped chat's existing complete records/images; never restarts capture")
+    a.add_argument("--host", required=True, choices=["codex", "claude", "openclaw"])
+    a.add_argument("--host-session", required=True)
+    a.add_argument("--budget", type=int, default=180, help="Total foreground budget in seconds (1-600); no background retry")
+    a = sub.add_parser("reconcile", help="Offline stopped-chat repair from an agent-verified Codex host read; not automatic capture")
+    a.add_argument("--host", required=True, choices=["codex"])
+    a.add_argument("--host-session", required=True)
+    a.add_argument("--json", required=True, help="Verified codex_app.read_thread packet; never fabricated completion evidence")
     a = sub.add_parser("tick", help="One bounded capture/delivery event; never loops")
     a.add_argument("--host", required=True, choices=["codex", "claude", "openclaw"])
     a.add_argument("--host-session", required=True)
@@ -265,6 +273,12 @@ def execute(args, store):
         return configure_ssh(store, args.ssh, args.python, args.service)
     if cmd == "sync":
         return synchronize(store, pull_only=args.pull_only)
+    if cmd == "flush":
+        from delivery import flush_stopped
+        return flush_stopped(store, args.host, args.host_session, args.budget)
+    if cmd == "reconcile":
+        from reconcile import reconcile_stopped
+        return reconcile_stopped(store, args.host, args.host_session, read_json(args.json))
     if cmd == "prune":
         return store.prune(args.days)
     if cmd == "hook":

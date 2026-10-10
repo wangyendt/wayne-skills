@@ -65,7 +65,7 @@ python3 "$SKILL_ROOT/scripts/assets.py" upload optics/vergence "/absolute/path/t
   --alt-text "双眼间距 b，目标位于中轴线上距离 d 处，总辐辏角为 2 atan(b/(2d))"
 ```
 
-教学图传 `--session SESSION_UUID`，并先 capture 当前用户输入。多个活动聊天同主题时必须明确 session；唯一活动聊天可自动绑定。图片 bytes 即时落本地，但本轮完整前 `flush` 不发送。录制停止后冻结，重新开启同一聊天再补传。可加 `--provenance /absolute/path/to/provenance.json`，例如文件内容：
+教学图传 `--session SESSION_UUID`，并先 capture 当前用户输入。多个活动聊天同主题时必须明确 session；唯一活动聊天可自动绑定。图片 bytes 即时落本地，但本轮完整前 `flush` 不发送。录制停止后冻结，重新开启同一聊天再补传；用户显式要求停止后一次性补传时，使用下面的 `learn.py flush`，不重新开启采集。可加 `--provenance /absolute/path/to/provenance.json`，例如文件内容：
 
 ```json
 {"tool":"imagegen","model":"reported-model-or-unknown","prompt":"生成双眼辐辏几何示意图","concepts":["vergence"],"sources":[]}
@@ -78,6 +78,15 @@ python3 "$SKILL_ROOT/scripts/assets.py" upload optics/vergence "/absolute/path/t
 ```sh
 python3 "$SKILL_ROOT/scripts/assets.py" retry
 ```
+
+采集已停止、用户明确要求补传旧数据时：
+
+```sh
+python3 "$SKILL_ROOT/scripts/learn.py" flush \
+  --host codex --host-session VERIFIED_CHAT_ID --budget 180
+```
+
+这是前台一次性操作，只处理指定聊天各次已停止会话的停止前固定 ID 清单；不调用 capture、不更新 active／transcript 游标、不含停止后新消息或其他聊天。文字与图片共用上传锁，沿用 SHA-256／身份／服务端回执校验；一旦聊天被外部重开，后续请求撤销。默认总预算 180 秒、范围 1–600 秒，单次 RPC 最多 60 秒；预算用尽／失败后退出，无后台重试。查看 `remaining` 中 eligible／blocked 的具体 IDs；`partial` 不代表全部成功。不完整轮次图片仍受门控，证据核验与补传是两件事，见 [assessment.md](assessment.md)。普通 `assets.py retry` 和 hooks 不自动获得这项停止后上传权限。
 
 只有匹配的 `ready` 回执到达才清除队列中的图片 BLOB；元数据收据保留。图片和文字是两条独立通路；文字记录后端已可按 [setup.md](setup.md)配置，但图片成功仍不代表文字／评估已同步。hook 只采集图片描述。Skill 要求 Agent 每次生成教学图后执行显式入队；仅出现图片描述不等于 bytes 已保存，登记缺口必须报告。图上传失败不回滚文字回执，文字成功不表示图片成功。
 
