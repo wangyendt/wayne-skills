@@ -49,6 +49,8 @@ hook 根据宿主提供的 `session_id` 与 `transcript_path` 绑定；开始边
 
 hook 覆盖 SessionStart、UserPromptSubmit、PostToolUse、Stop、SessionEnd。记录来源只采用主 transcript，避免同时收 prompt、Stop 文本造成重复；完整性仍取决于该宿主是否把消息写进已绑定 transcript。`codex exec --json` 通常只输出助手事件，不包含完整用户输入，因此不是双向完整采集的替代品。
 
+JSONL 宿主事件包与可见消息分开限额：单个原始事件最多 64 MiB，正常解析后只导入可见内容（上限 2 MiB），图片附件保留摘要而非 base64。已识别的工具／图片元数据不入学习原文，不因超过旧的 2 MiB 行限额阻断后续回复；完成回执仍照常处理。半条事件等待后续补全；完整坏行、未知格式、超出限额仍报错并保留原游标。修复适配器后可在原绑定上运行 `capture` 补采，无需重开学习或重置游标。
+
 本版已删除常驻 `worker` 命令。安装器为 Codex 和 Claude 生成不同入口：`scripts/hooks/codex.py`、`scripts/hooks/claude.py`；两个入口复用公共采集、轮次门控、上传代码。
 
 - `SessionStart`、`UserPromptSubmit`、`PostToolUse`：同步 handler 保存本地，单次异步 handler 尝试补传。`Stop`：同步保存后，由有预算的同步上传收尾（网络预算 30 秒，handler 超时 35 秒），避免 CLI 退出取消最后一轮异步任务。文字与图片分别验证回执，失败保留本地。没有循环或跨退出存活进程。

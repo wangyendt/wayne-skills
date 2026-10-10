@@ -7,6 +7,9 @@ import time
 from ledger import LedgerError, now
 
 MAX_LINE = 2 * 1024 * 1024
+# Host image/tool envelopes can be much larger than their visible messages.
+# Keep decoding bounded, then apply the original budget to captured content.
+MAX_RECORD = 64 * 1024 * 1024
 
 
 def visible(content):
@@ -125,11 +128,11 @@ def drain(store, host, external):
                     raise LedgerError("Transcript was truncated/replaced; capture paused, rebind explicitly")
                 offset = binding["offset"]
                 while True:
-                    line = f.readline(MAX_LINE + 1)
+                    line = f.readline(MAX_RECORD + 1)
                     if not line:
                         break
-                    if len(line) > MAX_LINE:
-                        raise LedgerError("Transcript line exceeds capture limit")
+                    if len(line) > MAX_RECORD:
+                        raise LedgerError("Transcript record exceeds envelope limit")
                     if not line.endswith(b"\n"):
                         partial_tail = True
                         break  # Torn tail remains pending for the next drain.
@@ -140,6 +143,11 @@ def drain(store, host, external):
                     if not isinstance(record, dict):
                         raise LedgerError("Transcript record is not an object")
                     message = parse_record(host, record)
+                    if message and len(line) > MAX_LINE:
+                        # Binary attachments become descriptors; never drop text
+                        # or completion proofs merely because a tool/image is big.
+                        if len(json.dumps(message, ensure_ascii=False).encode()) > MAX_LINE:
+                            raise LedgerError("Visible message exceeds capture limit")
                     if host == "codex" and record.get("type") == "turn_context":
                         native = record.get("payload", {}).get("turn_id")
                         if isinstance(native, str):

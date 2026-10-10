@@ -239,6 +239,92 @@ class CaptureTests(Base):
         self.assertIsNone(parse_record("codex", {"type": "event_msg", "payload": {"type": "agent_reasoning", "text": "hidden"}}))
         self.assertIsNone(parse_record("claude", {"type": "assistant", "message": {"role": "assistant", "content": [{"type": "thinking", "thinking": "hidden"}]}}))
 
+    def large_capture(self):
+        a = self.store()
+        path = self.root / "transcript"
+        path.write_bytes(b"")
+        a.start("x", "X", "codex", "s", path)
+        return a, path
+
+    def test_large_tool_metadata_does_not_block_final_or_completion(self):
+        import hashlib
+        from capture import MAX_LINE
+        from delivery import event_complete
+        a, path = self.large_capture()
+        self.append_line(path, {"type": "turn_context", "payload": {"turn_id": "native-turn"}})
+        self.append_line(path, self.line("codex", "draw an image"))
+        for record in (
+            {"type": "event_msg", "payload": {"type": "item_completed", "item": {"data": "B" * MAX_LINE}}},
+            {"type": "response_item", "payload": {"type": "function_call_output", "output": "B" * MAX_LINE}},
+            {"type": "item.completed", "item": {"type": "tool_result", "data": "B" * MAX_LINE}},
+        ):
+            self.append_line(path, record)
+        final = self.line("codex", "here is the diagram", "assistant")
+        final["payload"]["channel"] = "final"
+        self.append_line(path, final)
+        self.append_line(path, {"type": "event_msg", "payload": {"type": "task_complete", "turn_id": "native-turn", "last_agent_message": "here is the diagram", "extra": "B" * MAX_LINE}})
+        self.assertEqual(drain(a, "codex", "s")["captured"], 2)
+        messages = [e for e in a.events() if e["kind"] == "message"]
+        self.assertTrue(all(event_complete(a, e["id"]) for e in messages))
+        self.assertEqual(a.binding("codex", "s")["offset"], path.stat().st_size)
+        self.assertEqual(a.binding("codex", "s")["prefix"], hashlib.sha256(path.read_bytes()).hexdigest())
+        self.assertIsNone(a.binding("codex", "s")["error"])
+        self.assertEqual(drain(self.store(), "codex", "s")["captured"], 0)
+
+    def test_large_metadata_torn_tail_waits_without_advancing(self):
+        from capture import MAX_LINE
+        a, path = self.large_capture()
+        raw = json.dumps({"type": "event_msg", "payload": {"type": "item_completed", "data": "B" * MAX_LINE}}).encode()
+        path.write_bytes(raw)
+        result = drain(a, "codex", "s")
+        self.assertTrue(result["partial_tail"])
+        self.assertEqual(result["offset"], 0)
+        with path.open("ab") as f:
+            f.write(b"\n")
+        self.append_line(path, self.line("codex", "next"))
+        self.assertEqual(drain(a, "codex", "s")["captured"], 1)
+
+    def test_large_invalid_or_unknown_record_still_rolls_back(self):
+        from capture import MAX_LINE
+        for raw in (b'{"type":"event_msg","data":"' + b"B" * MAX_LINE + b'"broken}\n',
+                    json.dumps({"type": "unknown", "data": "B" * MAX_LINE}).encode() + b"\n"):
+            a, path = self.large_capture()
+            self.append_line(path, self.line("codex", "valid"))
+            with path.open("ab") as f:
+                f.write(raw)
+            with self.assertRaisesRegex(LedgerError, "Malformed|Unknown"):
+                drain(a, "codex", "s")
+            self.assertEqual(a.binding("codex", "s")["offset"], 0)
+            self.assertFalse(any(e["kind"] == "message" for e in a.events()))
+
+    def test_large_visible_text_is_rejected_not_skipped(self):
+        from capture import MAX_LINE
+        a, path = self.large_capture()
+        self.append_line(path, self.line("codex", "B" * MAX_LINE))
+        with self.assertRaisesRegex(LedgerError, "Visible message exceeds capture limit"):
+            drain(a, "codex", "s")
+        self.assertEqual(a.binding("codex", "s")["offset"], 0)
+
+    def test_large_attachment_keeps_text_and_digest_not_binary(self):
+        from capture import MAX_LINE
+        a, path = self.large_capture()
+        record = self.line("codex", "describe this image")
+        record["payload"]["content"].append({"type": "input_image", "image_url": "B" * MAX_LINE})
+        self.append_line(path, record)
+        self.assertEqual(drain(a, "codex", "s")["captured"], 1)
+        message = [e for e in a.events() if e["kind"] == "message"][0]["data"]
+        self.assertEqual(message["text"], "describe this image")
+        self.assertEqual(len(message["attachments"]), 1)
+        self.assertLess(len(json.dumps(message)), 1000)
+
+    def test_record_envelope_hard_limit_remains_bounded(self):
+        a, path = self.large_capture()
+        self.append_line(path, {"type": "event_msg", "payload": {"data": "B" * 2000}})
+        with patch("capture.MAX_RECORD", 1024, create=True):
+            with self.assertRaisesRegex(LedgerError, "Transcript record exceeds envelope limit"):
+                drain(a, "codex", "s")
+        self.assertEqual(a.binding("codex", "s")["offset"], 0)
+
     def test_attachments_are_descriptors_not_binary(self):
         raw = {"type": "message", "message": {"role": "user", "content": [{"type": "image", "source": {"data": "SECRET_BASE64"}}]}}
         parsed = parse_record("openclaw", raw)
